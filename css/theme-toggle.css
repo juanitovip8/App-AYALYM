@@ -1,0 +1,54 @@
+/* ═══════════════════════════════════════════════
+   AYALYM — Theme Toggle Button
+   Shared by landing.html and index.html
+   ═══════════════════════════════════════════════ */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,.15);
+  background: rgba(0,0,0,.05);
+  color: rgba(0,0,0,.55);
+  cursor: pointer;
+  font-family: 'Fjalla One', sans-serif;
+  font-size: 11px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  transition: background .2s, color .2s, border-color .2s;
+  white-space: nowrap;
+  line-height: 1;
+}
+.theme-toggle:hover {
+  background: rgba(0,0,0,.1);
+  color: rgba(0,0,0,.85);
+  border-color: rgba(0,0,0,.25);
+}
+.tt-icon  { font-size: 14px; line-height: 1; }
+.tt-label { line-height: 1; }
+
+/* ── Dark mode ─────────────────────────────── */
+html.dark-mode .theme-toggle {
+  border-color: rgba(255,255,255,.13);
+  background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.55);
+}
+html.dark-mode .theme-toggle:hover {
+  background: rgba(255,255,255,.13);
+  color: rgba(255,255,255,.9);
+  border-color: rgba(255,255,255,.26);
+}
+
+/* ── Light mode (explicit, same as default) ── */
+html.light-mode .theme-toggle {
+  border-color: rgba(0,0,0,.15);
+  background: rgba(0,0,0,.05);
+  color: rgba(0,0,0,.55);
+}
+html.light-mode .theme-toggle:hover {
+  background: rgba(0,0,0,.1);
+  color: rgba(0,0,0,.85);
+  border-color: rgba(0,0,0,.25);
+}

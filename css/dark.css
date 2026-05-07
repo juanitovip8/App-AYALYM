@@ -1,0 +1,833 @@
+/* ═══════════════════════════════════════════════
+   AYALYM — Dark Theme Override
+   Aplica el diseño oscuro de la landing a la app
+   ═══════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fjalla+One&family=Source+Sans+3:wght@300;400;600&display=swap');
+
+:root {
+  --dk-bg:      #111111;
+  --dk-panel:   #1b1b1b;
+  --dk-card:    #242424;
+  --dk-mid:     #2a2a2a;
+  --dk-border:  rgba(255,255,255,.08);
+  --dk-border2: rgba(255,255,255,.12);
+  --dk-text:    #ffffff;
+  --dk-sub:     rgba(255,255,255,.55);
+  --dk-muted:   rgba(255,255,255,.3);
+  --dk-blue-glow: rgba(26,86,219,.15);
+  --blue:       #1A56DB;
+  --blue-dark:  #042C53;
+}
+
+/* ─── BASE ─── */
+body {
+  background: var(--dk-bg) !important;
+  color: var(--dk-text) !important;
+  font-family: 'Source Sans 3', 'Inter', sans-serif !important;
+}
+.app { padding: 1rem; }
+
+/* Fjalla One en títulos de la app */
+.header-brand-name,
+.ctitle,
+.confirm-title,
+.section-heading {
+  font-family: 'Fjalla One', sans-serif !important;
+  letter-spacing: .4px;
+}
+
+/* ─── LOGIN SCREEN ─── */
+.login-wrap { gap: 12px; }
+
+.brand {
+  background: var(--dk-panel) !important;
+  border-color: var(--dk-border) !important;
+}
+.brand-logo-text { color: rgba(255,255,255,.92) !important; }
+.brand-logo-text span { color: #7ec8f5 !important; }
+.brand-tag { color: var(--dk-sub) !important; }
+.header-brand-lym { color: #7ec8f5 !important; }
+
+/* Botón "← Sitio web" en login */
+.back-to-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--dk-sub);
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1px solid var(--dk-border);
+  border-radius: 20px;
+  margin-top: 10px;
+  transition: color .2s, border-color .2s;
+  font-family: 'Fjalla One', sans-serif;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.back-to-site:hover {
+  color: var(--dk-text);
+  border-color: rgba(255,255,255,.25);
+}
+
+.client-panel {
+  background: var(--dk-panel) !important;
+  border-color: var(--dk-border) !important;
+}
+.client-tabs {
+  background: rgba(255,255,255,.05) !important;
+}
+.ctab { color: var(--dk-sub) !important; }
+.ctab.active {
+  background: var(--dk-card) !important;
+  color: var(--dk-text) !important;
+  box-shadow: 0 0 0 .5px var(--dk-border2) !important;
+}
+
+.staff-panel {
+  background: var(--dk-panel) !important;
+  border-color: var(--dk-border) !important;
+}
+.staff-body { background: var(--dk-panel) !important; }
+
+.staff-access-link {
+  color: var(--dk-sub) !important;
+  background: rgba(255,255,255,.04) !important;
+  border-color: var(--dk-border) !important;
+}
+.staff-access-link:hover {
+  background: rgba(255,255,255,.09) !important;
+  color: var(--dk-text) !important;
+}
+
+.recover-panel {
+  background: rgba(255,255,255,.05) !important;
+}
+
+/* Quick access */
+.quick-access {
+  background: var(--dk-panel) !important;
+  border-color: var(--dk-border) !important;
+}
+.qa-title { color: var(--dk-muted) !important; }
+.qa-dot { background: #1A56DB !important; }
+.qa-group-label { color: var(--dk-muted) !important; }
+.qa-card {
+  background: var(--dk-card) !important;
+  border-color: var(--dk-border) !important;
+}
+.qa-card p { color: var(--dk-text) !important; }
+.qa-card span { color: var(--dk-sub) !important; }
+.qa-email { color: var(--dk-muted) !important; }
+
+/* ─── FORMS & INPUTS ─── */
+label { color: var(--dk-sub) !important; }
+.fld label { color: var(--dk-sub) !important; }
+
+input, select, textarea,
+input[type=text], input[type=email],
+input[type=password], input[type=number],
+input[type=date], input[type=time] {
+  background: var(--dk-mid) !important;
+  color: var(--dk-text) !important;
+  border-color: var(--dk-border2) !important;
+}
+input::placeholder, textarea::placeholder {
+  color: rgba(255,255,255,.22) !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: rgba(26,86,219,.5) !important;
+}
+select option {
+  background: var(--dk-mid);
+  color: var(--dk-text);
+}
+
+/* ─── HEADER ─── */
+.header {
+  background: #0d0d0d !important;
+  border: 1px solid var(--dk-border) !important;
+  border-radius: 12px;
+}
+.header-brand-name { color: #ffffff !important; font-size: 17px !important; }
+.ubadge { color: var(--dk-sub) !important; background: rgba(255,255,255,.08) !important; }
+.header-urole { color: var(--dk-sub) !important; }
+.header-uname { color: var(--dk-text) !important; }
+.notif-bell { background: rgba(255,255,255,.08) !important; }
+
+/* Botón "Sitio web" en el header */
+.btn-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: 'Fjalla One', sans-serif;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.55);
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 8px;
+  padding: 5px 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color .2s, background .2s;
+}
+.btn-site:hover {
+  color: #ffffff;
+  background: rgba(255,255,255,.13);
+}
+
+/* ─── NOTIFICATIONS ─── */
+.notif-panel {
+  background: var(--dk-panel) !important;
+  border-color: var(--dk-border) !important;
+}
+.notif-header { background: #0d0d0d !important; }
+.notif-header p { color: var(--dk-text) !important; }
+.notif-header span { color: var(--dk-sub) !important; }
+.notif-item { border-color: var(--dk-border) !important; }
+.notif-item.unread { background: rgba(26,86,219,.08) !important; }
+.notif-body p { color: var(--dk-text) !important; }
+.notif-body span, .notif-time { color: var(--dk-sub) !important; }
+
+/* ─── NAV BUTTONS ─── */
+.nav-btn {
+  background: var(--dk-card) !important;
+  color: var(--dk-sub) !important;
+  border: 1px solid var(--dk-border) !important;
+}
+.nav-btn:hover { background: var(--dk-mid) !important; color: var(--dk-text) !important; }
+.nav-btn.active { background: var(--blue) !important; color: #fff !important; border-color: transparent !important; }
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--dk-panel) !important;
+  border-color: var(--dk-border) !important;
+}
+.ctitle { color: var(--dk-text) !important; }
+.csub { color: var(--dk-sub) !important; }
+
+/* ─── DIVIDERS & ROWS ─── */
+.div { background: var(--dk-border) !important; }
+.hrow  { border-color: var(--dk-border) !important; }
+.hrow-c { border-color: var(--dk-border) !important; }
+.prow3  { border-color: var(--dk-border) !important; }
+.srow   { border-color: var(--dk-border) !important; }
+.wcrow  { border-color: var(--dk-border) !important; }
+.cbrow  { border-color: var(--dk-border) !important; }
+
+/* ─── TEXT IN ROWS ─── */
+.hinfo p, .wi p, .sit p, .avi p, .ai-left p,
+.hrow-c-title, .hrow-c-price, .zi-hdr p,
+.prow3 label { color: var(--dk-text) !important; }
+
+.hinfo span, .wi span, .sit span, .avi span, .ai-left span,
+.ai-time p, .ai-time span, .hrow-c-sub,
+.rlabel, .csub { color: var(--dk-sub) !important; }
+
+/* ─── LIGHT-BG ELEMENTS → DARK ─── */
+.agenda-item {
+  background: rgba(26,86,219,.1) !important;
+  border: 1px solid rgba(26,86,219,.2) !important;
+}
+.ai-left p { color: var(--dk-text) !important; }
+.ai-left span, .ai-time p, .ai-time span { color: var(--dk-sub) !important; }
+
+.metric {
+  background: var(--dk-card) !important;
+  border: 1px solid var(--dk-border) !important;
+}
+.metric p { color: var(--dk-sub) !important; }
+.metric span { color: var(--dk-text) !important; }
+
+.zona-item {
+  background: var(--dk-card) !important;
+  border: 1px solid var(--dk-border) !important;
+}
+.zi-hdr p { color: var(--dk-text) !important; }
+
+.rbar {
+  background: rgba(99,56,6,.25) !important;
+  border: 1px solid rgba(239,159,39,.2) !important;
+}
+.rbar-compact { background: rgba(99,56,6,.2) !important; }
+.rscore, .rscore-sm { color: #EF9F27 !important; }
+
+/* ─── WORKER CARDS ─── */
+.wkr-av {
+  background: var(--dk-card) !important;
+  border-color: var(--dk-border) !important;
+}
+.wkr-av:hover { background: var(--dk-mid) !important; }
+.avi p { color: var(--dk-text) !important; }
+.avi span { color: var(--dk-sub) !important; }
+
+/* ─── TABS & FILTERS ─── */
+.svc-tab, .ttab {
+  background: var(--dk-card) !important;
+  color: var(--dk-sub) !important;
+}
+.svc-tab.active, .ttab.active {
+  background: var(--blue) !important;
+  color: #fff !important;
+}
+.svc-tabs, .tariff-nav { border-bottom: 1px solid var(--dk-border); padding-bottom: 8px; }
+
+/* ─── FBOX (toggles) ─── */
+.fbox { border-color: var(--dk-border) !important; }
+.ftoggle p { color: var(--dk-text) !important; }
+
+/* ─── PERSONA TABS ─── */
+.persona-tabs { background: rgba(255,255,255,.05) !important; }
+.ptab { color: var(--dk-sub) !important; }
+.ptab.active { background: #042C53 !important; color: #fff !important; }
+
+/* ─── UPLOAD AREA ─── */
+.upload-area {
+  background: var(--dk-card) !important;
+  border-color: var(--dk-border2) !important;
+}
+.upload-area p { color: var(--dk-sub) !important; }
+.upload-area span { color: rgba(126,200,245,.8) !important; }
+
+/* ─── OVERLAYS (Ficha, Confirm) ─── */
+.ficha-ov, .confirm-ov {
+  background: rgba(0,0,0,.75) !important;
+}
+.ficha-card, .confirm-card {
+  background: var(--dk-panel) !important;
+  border: 1px solid var(--dk-border2) !important;
+  border-radius: 16px !important;
+}
+.fname { color: var(--dk-text) !important; }
+.frole { color: var(--dk-sub) !important; }
+.fstat p { color: var(--dk-sub) !important; font-size: 11px; }
+.fstat span { color: var(--dk-text) !important; }
+.fstats { border-color: var(--dk-border) !important; }
+.confirm-title { color: var(--dk-text) !important; }
+.confirm-total span:first-child { color: var(--dk-sub) !important; }
+.confirm-total span:last-child { color: var(--dk-text) !important; }
+.confirm-card > p { color: var(--dk-sub) !important; }
+
+/* Pay methods */
+.pay-methods { gap: 8px; }
+.pay-btn {
+  background: var(--dk-card) !important;
+  border-color: var(--dk-border) !important;
+  color: var(--dk-sub) !important;
+}
+.pay-btn.active {
+  background: var(--blue) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+#pay-detail {
+  background: rgba(26,86,219,.1) !important;
+  color: rgba(126,200,245,.9) !important;
+  border: 1px solid rgba(26,86,219,.2) !important;
+}
+
+/* ─── STAFF ROLE TABS ─── */
+.srole-btn {
+  background: var(--dk-card) !important;
+  color: var(--dk-sub) !important;
+  border-color: var(--dk-border) !important;
+}
+.srole-btn.active {
+  background: #042C53 !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+
+/* ─── BADGES ─── */
+.bok   { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.bwarn { background: rgba(99,56,6,.2) !important;   color: #EF9F27 !important; }
+.berr  { background: rgba(121,31,31,.2) !important; color: #F87171 !important; }
+.b-activo   { background: rgba(5,150,105,.2) !important; color: #34d399 !important; }
+.b-inactivo { background: rgba(121,31,31,.2) !important; color: #F87171 !important; }
+.b-revoked  { background: rgba(255,255,255,.1) !important; color: var(--dk-text) !important; }
+.ztag { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+
+/* ─── TOASTS ─── */
+.toast.green { background: rgba(5,150,105,.15) !important; color: #34d399 !important; border-color: rgba(5,150,105,.3) !important; }
+.toast.blue  { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; border-color: rgba(26,86,219,.3) !important; }
+.toast.amber { background: rgba(99,56,6,.2) !important;   color: #EF9F27 !important; border-color: rgba(239,159,39,.3) !important; }
+.toast.red   { background: rgba(121,31,31,.2) !important; color: #F87171 !important; border-color: rgba(248,113,113,.3) !important; }
+
+/* ─── STEP INDICATOR (registro) ─── */
+.step-dot { background: var(--dk-border2) !important; }
+.step-dot.done { background: var(--blue) !important; }
+
+/* ─── CHAT ─── */
+.chat-locked {
+  background: var(--dk-card) !important;
+  border: 1px solid var(--dk-border) !important;
+  border-radius: 12px;
+}
+.chat-locked-title { color: var(--dk-text) !important; }
+.chat-locked-sub, .chat-locked-svc { color: var(--dk-sub) !important; }
+
+/* ─── MISC ─── */
+.no-avail { color: var(--dk-sub) !important; }
+.att-period-label { color: var(--dk-sub) !important; }
+
+/* Scrollbar dark */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--dk-bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.25); }
+
+/* ─── THEME TOGGLE (dark mode overrides) ─── */
+.theme-toggle {
+  border-color: rgba(255,255,255,.13) !important;
+  background: rgba(255,255,255,.07) !important;
+  color: rgba(255,255,255,.55) !important;
+}
+.theme-toggle:hover {
+  background: rgba(255,255,255,.13) !important;
+  color: rgba(255,255,255,.9) !important;
+  border-color: rgba(255,255,255,.26) !important;
+}
+
+/* ═══════════════════════════════════════════════
+   REMAP CSS VARIABLES — dark context
+   Convierte colores oscuros en claros automáticamente
+   en todos los elementos que usen var(--blue-*)
+   ═══════════════════════════════════════════════ */
+:root {
+  /* Text/foreground: dark blue → near-white */
+  --blue-dark:   rgba(255,255,255,.90);
+  --blue-mid:    rgba(255,255,255,.55);
+  /* Backgrounds: light blue → dark card */
+  --blue-light:  #242424;
+  --blue-border: rgba(255,255,255,.12);
+  /* Status colors: luminous for dark bg */
+  --green-dark:  #34d399;
+  --green-light: rgba(5,150,105,.20);
+  --amber-dark:  #EF9F27;
+  --amber-light: rgba(99,56,6,.22);
+  --red-dark:    #F87171;
+  --red-light:   rgba(121,31,31,.20);
+}
+
+/* ─── FIX: elementos que usan --blue-dark como FONDO ─── */
+/* (ahora que --blue-dark = rgba blanco, estos necesitan fondo explícito) */
+.av      { background: #1A56DB !important; }
+.fphoto  { background: var(--dk-card) !important; border: 1px solid var(--dk-border) !important; }
+.header-av { background: #1A56DB !important; }
+.user-av { background: #1A56DB !important; }
+.admin-badge { background: #1A56DB !important; }
+/* Dash tabs */
+.dash-tab        { background: var(--dk-card) !important; color: var(--dk-sub) !important; border: 1px solid var(--dk-border) !important; }
+.dash-tab.active { background: var(--blue) !important; color: #fff !important; border-color: transparent !important; }
+/* Dashboard KPIs */
+.dash-kpi        { background: var(--dk-card) !important; }
+.dash-kpi.accent { background: #042C53 !important; }
+.dash-kpi.accent p    { color: rgba(255,255,255,.7) !important; }
+.dash-kpi.accent span { color: #fff !important; }
+.dash-kpi.green span  { color: #34d399 !important; }
+.dash-kpi.red   { background: rgba(121,31,31,.2) !important; }
+/* Finance cards gradient (keep original dark blue gradient) */
+.fc-income  { background: linear-gradient(135deg, #042C53, #185FA5) !important; }
+/* Banner con gradiente */
+.discount-banner { background: linear-gradient(135deg, var(--blue), #042C53) !important; }
+/* Dur banner */
+.dur-banner  { background: var(--dk-panel) !important; border: 1px solid var(--dk-border) !important; }
+/* Chat pill */
+.sv-chat-pill        { background: var(--dk-card) !important; border: 1px solid var(--dk-border) !important; }
+.sv-chat-pill.active { background: var(--blue) !important; border-color: transparent !important; color: #fff !important; }
+/* Zone / clean type selected state */
+.clean-type-card.selected  { background: rgba(26,86,219,.12) !important; border-color: var(--blue) !important; }
+.zone-card.selected        { background: rgba(26,86,219,.12) !important; border-color: var(--blue) !important; }
+
+/* ─── INLINE STYLE OVERRIDES (colores hardcodeados) ─── */
+[style*="color:#042C53"]   { color: rgba(255,255,255,.90) !important; }
+[style*="color:#185FA5"]   { color: rgba(255,255,255,.55) !important; }
+[style*="color:#1A56DB"]   { color: #7ec8f5 !important; }
+[style*="background:#E6F1FB"] { background: #242424 !important; }
+[style*="background:var(--blue-light)"] { background: #242424 !important; }
+
+/* ─── BOTONES ─── */
+.btn-sec   { background: rgba(255,255,255,.08) !important; color: var(--dk-text) !important; border: none !important; }
+.btn-light { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.btn-edit  { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.btn-restore { background: rgba(5,150,105,.18) !important; color: #34d399 !important; }
+.btn-amber   { background: rgba(99,56,6,.22) !important; color: #EF9F27 !important; }
+.btn-danger  { background: rgba(121,31,31,.20) !important; color: #F87171 !important; }
+.btn-revoke  { background: rgba(255,255,255,.1) !important; color: var(--dk-text) !important; }
+
+/* ─── USER ROLE BADGES ─── */
+.rb-admin      { background: rgba(60,52,137,.25) !important; color: #a5b4fc !important; }
+.rb-supervisor { background: rgba(8,80,65,.25) !important;  color: #34d399 !important; }
+.rb-cliente    { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.rb-trabajador { background: rgba(99,56,6,.22) !important;   color: #EF9F27 !important; }
+
+/* User role filter buttons */
+.urf-btn        { background: var(--dk-card) !important; color: var(--dk-sub) !important; border: 1px solid var(--dk-border) !important; }
+.urf-btn.active { background: var(--blue) !important; color: #fff !important; border-color: transparent !important; }
+
+/* Date filter */
+.df-btn        { background: var(--dk-card) !important; border: 1px solid var(--dk-border) !important; }
+.df-btn.active { background: var(--blue) !important; border-color: transparent !important; color: #fff !important; }
+
+/* ─── CARDS NUEVAS ─── */
+.support-contact-card  { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.support-contact-card:hover { background: var(--dk-mid) !important; }
+.support-contact-card.active-chat { background: rgba(26,86,219,.1) !important; border-color: var(--blue) !important; }
+.support-contact-info p  { color: var(--dk-text) !important; }
+.support-contact-info span { color: var(--dk-sub) !important; }
+
+.note-card           { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.note-card-header p  { color: var(--dk-text) !important; }
+.note-card-header span { color: var(--dk-sub) !important; }
+.note-card-body      { color: var(--dk-sub) !important; }
+.note-card-meta      { color: rgba(255,255,255,.35) !important; }
+
+.user-card           { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.user-info p         { color: var(--dk-text) !important; }
+.user-info span      { color: var(--dk-sub) !important; }
+.user-edit-panel     { background: var(--dk-mid) !important; }
+
+.conv-btn            { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.conv-btn:hover      { background: var(--dk-mid) !important; }
+.conv-info p         { color: var(--dk-text) !important; }
+.conv-info span      { color: var(--dk-sub) !important; }
+.conv-detail         { background: var(--dk-card) !important; }
+
+.comm-row            { border-color: var(--dk-border) !important; }
+.comm-info p         { color: var(--dk-text) !important; }
+.comm-info span      { color: var(--dk-sub) !important; }
+.comm-amounts p      { color: var(--dk-text) !important; }
+
+.supervisor-card     { background: var(--dk-panel) !important; border-color: var(--dk-border) !important; }
+.sv-card-info p      { color: var(--dk-text) !important; }
+.sv-card-info span   { color: var(--dk-sub) !important; }
+
+.sv-worker-card      { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.sv-worker-info p    { color: var(--dk-text) !important; }
+.sv-worker-info span { color: var(--dk-sub) !important; }
+.sv-metric           { background: var(--dk-mid) !important; }
+.sv-metric p         { color: var(--dk-sub) !important; }
+.sv-metric span      { color: var(--dk-text) !important; }
+.sv-agenda           { background: var(--dk-mid) !important; }
+.sv-agenda p         { color: var(--dk-text) !important; }
+.sv-agenda-row       { border-color: var(--dk-border) !important; color: var(--dk-sub) !important; }
+.sv-worker-pill      { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.sv-assign-panel     { background: var(--dk-mid) !important; }
+.wkr-opt-row         { border-color: var(--dk-border) !important; }
+.wkr-opt-info p      { color: var(--dk-text) !important; }
+.wkr-opt-info span   { color: var(--dk-sub) !important; }
+
+.rev-breakdown       { background: var(--dk-panel) !important; border-color: var(--dk-border) !important; }
+.rev-bd-header       { background: var(--dk-card) !important; }
+.rev-bd-info p       { color: var(--dk-text) !important; }
+.rev-bd-info span    { color: var(--dk-sub) !important; }
+.rev-bd-body.open    { background: var(--dk-panel) !important; }
+.rev-card            { background: var(--dk-card) !important; }
+.rev-comment         { color: var(--dk-text) !important; }
+.rev-meta            { color: var(--dk-sub) !important; }
+
+.discount-card       { background: rgba(99,56,6,.2) !important; border-color: rgba(239,159,39,.25) !important; }
+.q-deduct-row        { background: rgba(121,31,31,.18) !important; border-color: rgba(248,113,113,.2) !important; }
+.svc-type-card       { background: var(--dk-card) !important; }
+.stc-hdr p           { color: var(--dk-text) !important; }
+
+/* ─── PRICE BOX & ROWS ─── */
+.pbox                { background: var(--dk-card) !important; }
+.prow2               { color: var(--dk-sub) !important; }
+.prow2.total         { color: var(--dk-text) !important; border-top-color: var(--dk-border) !important; }
+.frow2               { border-bottom-color: var(--dk-border) !important; }
+.frow2 span:first-child { color: var(--dk-sub) !important; }
+.frow2 span:last-child  { color: var(--dk-text) !important; }
+.str-row             { background: var(--dk-card) !important; }
+.str-row p           { color: var(--dk-text) !important; }
+
+/* ─── ZONA ─── */
+.zone-display        { background: var(--dk-card) !important; }
+.zone-display p      { color: var(--dk-text) !important; }
+.zone-display span   { color: var(--dk-sub) !important; }
+.zone-edit-panel     { background: var(--dk-mid) !important; }
+.zone-card           { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.zone-card:hover     { background: var(--dk-mid) !important; }
+.zone-card-info p    { color: var(--dk-text) !important; }
+.zone-card-info span { color: var(--dk-sub) !important; }
+
+/* ─── CHAT ─── */
+.chat-box            { background: var(--dk-card) !important; }
+.msg.recv            { background: var(--dk-mid) !important; border-color: var(--dk-border) !important; color: var(--dk-text) !important; }
+
+/* ─── FINANZAS ─── */
+.fin-detail-row      { border-bottom-color: var(--dk-border) !important; }
+.fin-detail-row.amber span { color: #EF9F27 !important; }
+.period-badge        { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.dash-rank-row       { border-bottom-color: var(--dk-border) !important; }
+.dash-rank-num       { color: rgba(255,255,255,.35) !important; }
+.dash-kpi p          { color: var(--dk-sub) !important; }
+.dash-kpi span       { color: var(--dk-text) !important; }
+
+/* ─── MISCELÁNEOS ─── */
+.clean-type-card     { border-color: var(--dk-border) !important; background: var(--dk-card) !important; }
+.clean-type-info p   { color: var(--dk-text) !important; }
+.clean-type-info span { color: var(--dk-sub) !important; }
+.locked-tag          { background: rgba(99,56,6,.22) !important; color: #EF9F27 !important; }
+.svc-dur-row span    { color: var(--dk-sub) !important; }
+.star-bar-label      { color: var(--dk-sub) !important; }
+.star-bar-count      { color: var(--dk-sub) !important; }
+.star-bar-track      { background: var(--dk-card) !important; }
+.map-container       { background: var(--dk-mid) !important; }
+.ph-ph               { color: var(--dk-sub) !important; }
+.ph-circle           { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+
+/* ─── PANEL PROMOCIONES ─── */
+.ptp-btn             { background: var(--dk-card) !important; border-color: var(--dk-border) !important; color: var(--dk-sub) !important; }
+.ptp-btn:hover       { border-color: #7ec8f5 !important; color: #7ec8f5 !important; }
+.ptp-btn.active      { background: var(--blue) !important; color: #fff !important; border-color: var(--blue) !important; }
+.pcp-btn             { background: var(--dk-mid) !important; border-color: var(--dk-border) !important; color: var(--dk-sub) !important; }
+.pcp-btn.active      { background: var(--blue) !important; color: #fff !important; border-color: var(--blue) !important; }
+.plpc-nombre         { color: var(--dk-text) !important; }
+.plpc-code           { background: rgba(26,86,219,.18) !important; color: #7ec8f5 !important; }
+.promo-admin-item    { border-color: var(--dk-border) !important; background: var(--dk-card) !important; }
+.pai-nombre          { color: var(--dk-text) !important; }
+.pai-desc            { color: var(--dk-sub) !important; }
+.pai-meta            { color: rgba(255,255,255,.3) !important; }
+
+/* ─── BOTTOM NAV (todos los roles) ─── */
+.bottom-nav          { background: var(--dk-panel) !important; border-color: var(--dk-border) !important; }
+.bnav-btn            { background: transparent !important; color: var(--dk-muted) !important; }
+.bnav-btn:hover      { background: rgba(255,255,255,.06) !important; color: var(--dk-sub) !important; }
+.bnav-btn.active     { background: rgba(26,86,219,.18) !important; color: #7ec8f5 !important; }
+.bnav-icon           { opacity: .75; }
+.bnav-btn.active .bnav-icon { opacity: 1; }
+
+/* ─── ADMIN NAV WRAPPER ─── */
+.admin-nav-wrap      { background: var(--dk-panel) !important; border-color: var(--dk-border) !important; }
+.admin-nav-row       { border-bottom-color: var(--dk-border) !important; }
+
+/* ─── ADMIN KPI BAR ─── */
+.admin-kpi-cell               { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.admin-kpi-cell .akc-val      { color: var(--dk-text) !important; }
+.admin-kpi-cell .akc-lbl      { color: var(--dk-sub) !important; }
+.admin-kpi-cell.akc-green .akc-val  { color: #34d399 !important; }
+.admin-kpi-cell.akc-amber .akc-val  { color: #EF9F27 !important; }
+.admin-kpi-cell.akc-purple .akc-val { color: #a5b4fc !important; }
+.admin-kpi-cell.akc-red .akc-val    { color: #F87171 !important; }
+
+/* ─── DESTACADOS DEL MES (.top-card gradients) ─── */
+.top-card.gold  { background: rgba(99,56,6,.22) !important; background-image: none !important; border-color: rgba(239,159,39,.30) !important; }
+.top-card.teal  { background: rgba(5,150,105,.18) !important; background-image: none !important; border-color: rgba(52,211,153,.25) !important; }
+.top-card-score > p:first-child { color: var(--dk-text) !important; }
+.top-card-score > p:last-child  { color: var(--dk-sub) !important; }
+.top-card-body > p              { color: var(--dk-text) !important; }
+.top-card-body > span           { color: var(--dk-sub) !important; }
+
+/* ─── MESSAGE TABS ─── */
+.msg-tab             { background: var(--dk-card) !important; color: var(--dk-sub) !important; border-color: var(--dk-border) !important; }
+.msg-tab.active      { background: var(--blue) !important; color: #fff !important; border-color: transparent !important; }
+
+/* ─── PROMO PREVIEW CARD (sub-textos faltantes) ─── */
+.plpc-desc           { color: var(--dk-sub) !important; }
+.plpc-dates          { color: var(--dk-muted) !important; }
+.plpc-tipo           { color: var(--dk-sub) !important; }
+
+/* ─── INLINE STYLE OVERRIDES (adicionales) ─── */
+[style*="color:#5C7A9A"]         { color: var(--dk-sub) !important; }
+[style*="background:#EEF5FF"]    { background: var(--dk-card) !important; }
+[style*="background:#F7FAFF"]    { background: var(--dk-card) !important; }
+[style*="background:#FFF8E6"]    { background: rgba(99,56,6,.18) !important; }
+[style*="background:#FAEEDA"]    { background: rgba(99,56,6,.20) !important; }
+[style*="background:#EAF3DE"]    { background: rgba(5,150,105,.15) !important; }
+[style*="color:#412402"]         { color: #EF9F27 !important; }
+[style*="background:#F7FAFE"]    { background: var(--dk-card) !important; }
+[style*="background:#F4F8FD"]    { background: var(--dk-card) !important; }
+[style*="background:#FAFCFF"]    { background: var(--dk-panel) !important; }
+[style*="color:#7A4900"]         { color: #EF9F27 !important; }
+[style*="color:#991B1B"]         { color: #F87171 !important; }
+[style*="color:#27500A"]         { color: #34d399 !important; }
+[style*="color:#1A7A3B"]         { color: #34d399 !important; }
+[style*="color:#A05C00"]         { color: #EF9F27 !important; }
+
+/* ─── TRABAJADOR — PAY FLOW ─── */
+.tw-kpi.navy                 { background: rgba(26,86,219,.18) !important; }
+.tw-kpi.navy .tw-kpi-label   { color: var(--dk-sub) !important; }
+.tw-kpi.navy .tw-kpi-val     { color: #7ec8f5 !important; }
+.tw-kpi.navy .tw-kpi-sub     { color: rgba(126,200,245,.65) !important; }
+.tw-kpi.amber                { background: rgba(99,56,6,.22) !important; }
+.tw-kpi.amber .tw-kpi-val    { color: #EF9F27 !important; }
+.tw-kpi.amber .tw-kpi-sub    { color: rgba(239,159,39,.7) !important; }
+.tw-kpi.green .tw-kpi-val    { color: #34d399 !important; }
+.tw-kpi.green .tw-kpi-sub    { color: rgba(52,211,153,.7) !important; }
+.tw-kpi.red .tw-kpi-val      { color: #F87171 !important; }
+.tw-pay-flow                 { background: rgba(5,150,105,.12) !important; border-color: rgba(52,211,153,.15) !important; }
+.tw-pay-flow-title           { color: #34d399 !important; }
+.tw-pay-row span             { color: var(--dk-sub) !important; }
+.tw-pay-row strong           { color: #34d399 !important; }
+.tw-pay-row.deduct span      { color: #F87171 !important; }
+.tw-pay-row.deduct strong    { color: #F87171 !important; }
+.tw-pay-row.total span       { color: var(--dk-text) !important; }
+.tw-pay-row.total strong     { color: #34d399 !important; }
+.tw-pay-divider              { background: var(--dk-border) !important; }
+.tw-deduct-row               { background: rgba(121,31,31,.18) !important; border-color: rgba(248,113,113,.15) !important; }
+.tw-deduct-info p            { color: #F87171 !important; }
+.tw-deduct-info span         { color: rgba(248,113,113,.7) !important; }
+.tw-deduct-amount            { color: #F87171 !important; }
+.tw-rating-big strong        { color: #7ec8f5 !important; }
+.tw-review-card              { border-color: var(--dk-border) !important; background: var(--dk-card) !important; }
+
+/* ─── PERSONAL INMUEBLES (.pi-*) ─── */
+.pi-session-hdr              { background: var(--dk-card) !important; box-shadow: none !important; }
+.pi-session-info h2          { color: var(--dk-text) !important; }
+.pi-role-badge               { background: rgba(8,80,65,.25) !important; color: #34d399 !important; }
+.pi-attendance-card          { background: var(--dk-card) !important; box-shadow: none !important; border-color: var(--dk-border) !important; }
+.pi-att-title                { color: #7ec8f5 !important; }
+.pi-att-date                 { color: var(--dk-text) !important; }
+.pi-att-times                { background: var(--dk-mid) !important; }
+.pi-att-time-label           { color: var(--dk-muted) !important; }
+.pi-att-time-val             { color: var(--dk-text) !important; }
+.pi-att-time-block.confirmed { background: rgba(5,150,105,.1) !important; }
+.pi-att-time-block.confirmed .pi-att-time-val { color: #34d399 !important; }
+.pi-att-divider              { background: var(--dk-border) !important; }
+.pi-att-btn-sec              { background: var(--dk-mid) !important; color: var(--dk-sub) !important; border-color: var(--dk-border) !important; }
+.pi-section                  { background: var(--dk-card) !important; box-shadow: none !important; border-color: var(--dk-border) !important; }
+.pi-section-title            { color: #7ec8f5 !important; }
+.pi-svc-info p               { color: var(--dk-text) !important; }
+.pi-svc-info span            { color: var(--dk-sub) !important; }
+.pi-svc-row                  { border-bottom-color: var(--dk-border) !important; }
+.pi-hist-row                 { background: var(--dk-mid) !important; }
+.pi-hist-date                { color: var(--dk-text) !important; }
+.pi-hist-chip.entry          { background: rgba(8,80,65,.25) !important; color: #34d399 !important; }
+.pi-hist-chip.exit           { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.pi-hist-dur                 { color: var(--dk-sub) !important; }
+.pi-admin-card               { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.pi-chip                     { background: var(--blue) !important; }
+.pi-assign-btn               { background: rgba(8,80,65,.25) !important; color: #34d399 !important; }
+.pi-asig-chip                { background: var(--dk-mid) !important; border-color: rgba(52,211,153,.25) !important; color: #34d399 !important; }
+
+/* ─── INMUEBLES (.inm-*) ─── */
+.inm-card                          { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.inm-desc, .inm-field              { color: var(--dk-sub) !important; }
+.inm-pay-row                       { color: #7ec8f5 !important; background: rgba(26,86,219,.08) !important; }
+.inm-status.pendiente              { background: rgba(99,56,6,.22) !important; color: #EF9F27 !important; }
+.inm-status.activo                 { background: rgba(5,150,105,.2) !important; color: #34d399 !important; }
+.inm-status.completado             { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.inm-status.vencido                { background: rgba(121,31,31,.2) !important; color: #F87171 !important; }
+.inm-contrato-badge.firmado        { background: rgba(5,150,105,.2) !important; color: #34d399 !important; }
+.inm-contrato-badge.por_firmar     { background: rgba(99,56,6,.22) !important; color: #EF9F27 !important; }
+.inm-contrato-badge.sin_contrato   { background: var(--dk-mid) !important; color: var(--dk-sub) !important; }
+.inm-group-hdr                     { background: #042C53 !important; color: #fff !important; }
+.inm-form-hdr                      { background: var(--dk-mid) !important; color: var(--dk-text) !important; border-color: var(--dk-border) !important; }
+.inm-row-hdr                       { background: var(--dk-card) !important; }
+.inm-row-hdr:hover                 { background: var(--dk-mid) !important; }
+.inm-row-hdr.open                  { background: var(--dk-mid) !important; border-bottom-color: var(--dk-border) !important; }
+.inm-row-body                      { background: var(--dk-panel) !important; }
+.inm-row                           { border-bottom-color: var(--dk-border) !important; }
+.inm-group-body                    { border-color: var(--dk-border) !important; }
+.rep-card                          { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.rep-fecha                         { color: var(--dk-text) !important; }
+.rep-sv, .rep-obs                  { color: var(--dk-sub) !important; }
+
+/* ─── CLIENTE INMUEBLES (.cinm-*) ─── */
+.cinm-summary-item                 { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.cinm-summary-item div p           { color: var(--dk-sub) !important; }
+.cinm-summary-item div span        { color: var(--dk-text) !important; }
+.cinm-person-card                  { background: var(--dk-card) !important; border-bottom-color: var(--dk-border) !important; }
+.cinm-person-info p                { color: var(--dk-text) !important; }
+.cinm-person-info span             { color: var(--dk-sub) !important; }
+.cinm-lr-info p                    { color: var(--dk-text) !important; }
+.cinm-lr-info span                 { color: var(--dk-sub) !important; }
+.cinm-rc-header                    { background: var(--dk-mid) !important; }
+.cinm-rc-meta p                    { color: var(--dk-text) !important; }
+.cinm-rc-meta span                 { color: var(--dk-sub) !important; }
+.cinm-rc-label                     { color: var(--dk-sub) !important; }
+.cinm-rc-text                      { color: var(--dk-text) !important; }
+.cinm-rc-obs                       { background: var(--dk-mid) !important; color: var(--dk-sub) !important; border-color: var(--dk-border) !important; }
+.cinm-dg-item span                 { color: var(--dk-sub) !important; }
+.cinm-dg-item p                    { color: var(--dk-text) !important; }
+.cinm-report-card                  { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.cinm-st-activo                    { background: rgba(5,150,105,.2) !important; color: #34d399 !important; }
+.cinm-st-pendiente                 { background: rgba(99,56,6,.22) !important; color: #EF9F27 !important; }
+.cinm-st-vencido                   { background: rgba(121,31,31,.2) !important; color: #F87171 !important; }
+
+/* ─── ASISTENCIAS (.att-*) ─── */
+.att-tab                           { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.att-tab-name                      { color: var(--dk-sub) !important; }
+.att-tab--active                   { background: var(--blue) !important; border-color: var(--blue) !important; }
+.att-tab--active .att-tab-name     { color: #fff !important; }
+.att-today-card                    { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.att-today-card--active            { background: rgba(5,150,105,.1) !important; border-color: rgba(52,211,153,.25) !important; }
+.att-today-card--done              { background: rgba(26,86,219,.1) !important; border-color: rgba(26,86,219,.2) !important; }
+.att-today-label                   { color: var(--dk-sub) !important; }
+.att-today-date                    { color: var(--dk-text) !important; }
+.att-today-time-lbl                { color: var(--dk-muted) !important; }
+.att-today-time-val                { color: var(--dk-text) !important; }
+.att-kpis                          { background: var(--dk-mid) !important; }
+.att-kpi-val                       { color: var(--dk-text) !important; }
+.att-kpi-lbl                       { color: var(--dk-sub) !important; }
+.att-kpi-div                       { background: var(--dk-border) !important; }
+.att-row                           { border-bottom-color: var(--dk-border) !important; }
+.att-dd, .att-time-val             { color: var(--dk-text) !important; }
+.att-dur                           { color: var(--dk-sub) !important; }
+.att-section-block                 { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.att-section-hdr                   { color: var(--dk-text) !important; }
+.att-filter-pill                   { background: var(--dk-card) !important; color: var(--dk-sub) !important; border-color: var(--dk-border) !important; }
+.att-filter-pill--active           { background: var(--blue) !important; color: #fff !important; border-color: var(--blue) !important; }
+.att-empty-state                   { background: var(--dk-mid) !important; color: var(--dk-sub) !important; }
+.pi-att-toggle                     { background: var(--dk-card) !important; color: var(--dk-sub) !important; border-color: var(--dk-border) !important; }
+.att-adm-panel                     { background: var(--dk-mid) !important; }
+
+/* ─── AGENDA ACCORDION ─── */
+.agenda-acc-hdr.open               { background: #042C53 !important; }
+.agenda-acc-hdr.open p             { color: #fff !important; }
+.agenda-acc-hdr.hist p             { color: #34d399 !important; }
+.agenda-acc-hdr.hist > div > span  { color: rgba(52,211,153,.7) !important; }
+.agenda-acc-hdr.hist.open          { background: rgba(5,150,105,.28) !important; }
+.agenda-acc-hdr.hist.open p        { color: #fff !important; }
+.agenda-gap::before,
+.agenda-gap::after                 { background: var(--dk-border) !important; }
+
+/* ─── TOGGLE BUTTON ─── */
+.toggle-btn                        { background: var(--dk-mid) !important; color: var(--dk-muted) !important; }
+.toggle-btn.on                     { background: rgba(5,150,105,.2) !important; color: #34d399 !important; }
+
+/* ─── INACTIVE WORKER STATES ─── */
+.srow--inactive                    { background: var(--dk-mid) !important; }
+.sv-worker-card--inactive          { background: var(--dk-mid) !important; border-color: var(--dk-border) !important; }
+.sv-inactive-banner                { background: rgba(121,31,31,.18) !important; color: #F87171 !important; border-color: rgba(248,113,113,.2) !important; }
+.srow-inactive-note                { background: rgba(121,31,31,.18) !important; color: #F87171 !important; }
+.sv-svc-assign-panel               { background: var(--dk-mid) !important; border-color: var(--dk-border) !important; }
+
+/* ─── ADDRESS CARDS ─── */
+.cdir-card                         { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.cdir-alias                        { color: var(--dk-text) !important; }
+.cdir-addr                         { color: var(--dk-sub) !important; }
+.cdir-ref                          { color: var(--dk-muted) !important; }
+.res-dir-card                      { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.res-dir-card:hover                { background: var(--dk-mid) !important; }
+.res-dir-card.selected             { background: rgba(26,86,219,.12) !important; border-color: var(--blue) !important; }
+.res-dir-alias                     { color: var(--dk-text) !important; }
+.res-dir-addr                      { color: var(--dk-sub) !important; }
+
+/* ─── URGENCIAS (.urg-*) ─── */
+.urg-label, .urg-pct-sign          { color: var(--dk-sub) !important; }
+.urg-step2-block                   { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.urg-step2-title                   { color: var(--dk-text) !important; }
+.urg-step2-hint                    { color: var(--dk-sub) !important; }
+.urg-step2-hint--amber             { background: rgba(99,56,6,.2) !important; color: #EF9F27 !important; }
+.urg-filter-badge                  { background: rgba(99,56,6,.2) !important; color: #EF9F27 !important; }
+.urg-filter-badge--ok              { background: rgba(5,150,105,.2) !important; color: #34d399 !important; }
+.urg-llegada-tag                   { background: rgba(26,86,219,.15) !important; color: #7ec8f5 !important; }
+.urg-filter-hint                   { color: var(--dk-sub) !important; }
+.stc-sec-hdr                       { background: var(--dk-mid) !important; color: var(--dk-text) !important; }
+.stc-sec-body                      { background: var(--dk-panel) !important; }
+.svc-price-inp                     { background: var(--dk-mid) !important; border-color: var(--dk-border) !important; }
+.svc-price-inp span                { color: var(--dk-sub) !important; }
+.svc-price-lbl, .svc-extra-name    { color: var(--dk-text) !important; }
+.svc-extras-client-block           { background: var(--dk-card) !important; }
+
+/* ─── CHAT SUPPORT START SCREEN ─── */
+.support-start-title               { color: var(--dk-text) !important; }
+.support-start-sub                 { color: var(--dk-sub) !important; }
+.chat-sys-msg                      { background: var(--dk-mid) !important; color: var(--dk-muted) !important; }
+.support-reopen-row                { border-top-color: var(--dk-border) !important; }

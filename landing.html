@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Limpieza De Inmuebles — AYA</title>
+  <meta name="description" content="Empresa dedicada a la innovación y cuidado del medio ambiente, principalmente en servicio de Limpieza y Mantenimiento con el propósito de generar ambientes amigables con entornos limpios y elegantes.">
+  <link rel="icon" href="img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme-toggle.css?v=2">
+  <link rel="stylesheet" href="css/landing-light.css?v=2">
+  <!-- Prevenir flash: aplicar tema antes de pintar -->
+  <script>!function(){var t=localStorage.getItem('ayalym-theme')||'dark';document.documentElement.classList.add(t+'-mode');}();</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:     #111111;
+      --dark:      #1b1b1b;
+      --mid:       #2a2a2a;
+      --gray:      #5e5e5e;
+      --light-gray:#d1d1d1;
+      --white:     #ffffff;
+      --accent:    #ffffff;
+      --portal-bg: #042C53;
+      --portal-hover: #1A56DB;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Source Sans 3', 'Source Sans Pro', Arial, sans-serif;
+      font-size: 16px;
+      color: var(--white);
+      background: var(--black);
+      line-height: 1.6;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(17,17,17,0.97);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .logo-wrap img {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo-text {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 22px;
+      color: var(--white);
+      letter-spacing: .5px;
+      line-height: 1;
+    }
+    .logo-text span { color: #b0c8e8; }
+
+    nav { display: flex; align-items: center; gap: 6px; }
+    .nav-link {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--light-gray);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: color .2s, background .2s;
+    }
+    .nav-link:hover { color: var(--white); background: rgba(255,255,255,.07); }
+
+    .btn-portal {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--portal-bg);
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      transition: background .2s, transform .15s;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-portal:hover { background: var(--portal-hover); transform: translateY(-1px); }
+
+    /* Mobile nav toggle */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 6px;
+      border: none;
+      background: none;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+      transition: .3s;
+    }
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(17,17,17,.98);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav .nav-link { font-size: 20px; }
+    .mobile-close {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      background: none;
+      border: none;
+      color: var(--white);
+      font-size: 32px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('img/hero-bg.jpg');
+      background-size: cover;
+      background-position: center 40%;
+      filter: brightness(.32);
+      transform: scale(1.03);
+      transition: transform 10s ease;
+    }
+    /* Gradient overlay for cleaner bottom edge */
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 180px;
+      background: linear-gradient(to bottom, transparent, var(--black));
+      z-index: 1;
+    }
+    .hero:hover .hero-bg { transform: scale(1); }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 720px;
+      padding: 40px 24px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #7ec8f5;
+      margin-bottom: 24px;
+    }
+    .hero-eyebrow::before,
+    .hero-eyebrow::after {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: rgba(126,200,245,.5);
+    }
+    .hero h1 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: clamp(44px, 8.5vw, 84px);
+      line-height: 1.0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      text-shadow: none;
+    }
+    /* Línea 1: "¡ESPACIOS" — intro compacto */
+    .hero h1 .h1-intro {
+      font-size: .52em;
+      letter-spacing: 7px;
+      color: rgba(255,255,255,.72);
+      text-shadow: 0 2px 16px rgba(0,0,0,.6);
+      line-height: 1.2;
+    }
+    /* Línea 2: "LIMPIOS," — protagonista en azul */
+    .hero h1 em {
+      font-style: normal;
+      font-size: 1.08em;
+      color: #7ec8f5;
+      line-height: .95;
+      text-shadow:
+        0 0 60px rgba(126,200,245,.55),
+        0 0 20px rgba(126,200,245,.35),
+        0 4px 32px rgba(0,0,0,.8);
+      letter-spacing: 1px;
+    }
+    /* Línea 3: "ENTORNOS FELICES!" — cierre en blanco */
+    .hero h1 .h1-close {
+      font-size: .68em;
+      color: #ffffff;
+      letter-spacing: 3px;
+      text-shadow: 0 4px 24px rgba(0,0,0,.75);
+      line-height: 1.15;
+    }
+    .hero-price-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      backdrop-filter: blur(8px);
+      padding: 10px 22px;
+      border-radius: 40px;
+      font-size: 13px;
+      color: rgba(255,255,255,.75);
+      margin-bottom: 28px;
+    }
+    .hero-price-tag strong {
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 16px;
+      letter-spacing: .3px;
+    }
+    .hero-price-tag .hpt-sep {
+      width: 1px; height: 16px;
+      background: rgba(255,255,255,.2);
+    }
+    .hero-cta-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #1A56DB;
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 15px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 16px 38px;
+      border-radius: 8px;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 6px 28px rgba(26,86,219,.45);
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 36px rgba(26,86,219,.6);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: rgba(255,255,255,.75);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 16px 24px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.2);
+      transition: border-color .2s, color .2s, background .2s, transform .15s;
+    }
+    .btn-secondary:hover {
+      border-color: rgba(255,255,255,.5);
+      color: var(--white);
+      background: rgba(255,255,255,.06);
+      transform: translateY(-2px);
+    }
+
+    /* ─── BARRA COMPACTA DE PROMOCIONES (sticky bajo navbar) ─── */
+    #promos-scroll-section {
+      position: sticky;
+      top: 70px; /* igual al alto del header */
+      z-index: 90;
+      background: linear-gradient(90deg, #0f0514 0%, #150b30 50%, #0a1a10 100%);
+      border-bottom: 1px solid rgba(249,115,22,.35);
+      box-shadow: 0 3px 16px rgba(249,115,22,.14), 0 1px 6px rgba(0,0,0,.4);
+      display: none;
+      overflow: hidden;
+      padding: 0;
+    }
+    #promos-scroll-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 25% 300% at 3% 50%, rgba(249,115,22,.14) 0%, transparent 65%),
+        radial-gradient(ellipse 20% 300% at 97% 50%, rgba(239,68,68,.10) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    /* Fila única de la barra */
+    .promos-bar {
+      display: flex;
+      align-items: center;
+      height: 36px;
+      padding: 0 16px;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .ps-label {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,.80);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .ps-live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #f97316;
+      box-shadow: 0 0 5px #f97316;
+      flex-shrink: 0;
+      animation: ps-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes ps-pulse {
+      0%,100% { transform: scale(1);   box-shadow: 0 0 5px #f97316; }
+      50%      { transform: scale(1.6); box-shadow: 0 0 10px #f97316, 0 0 20px rgba(249,115,22,.40); }
+    }
+    .ps-sep { width: 1px; height: 20px; background: rgba(255,255,255,.18); flex-shrink: 0; }
+    /* Track — ocupa el espacio sobrante */
+    .promos-track-wrap {
+      flex: 1;
+      overflow: hidden;
+      mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+    }
+    .promos-track {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: promos-scroll 30s linear infinite;
+      width: max-content;
+    }
+    .promos-track:hover { animation-play-state: paused; }
+    @keyframes promos-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    /* Tarjeta compacta tipo píldora — enlace al login */
+    .promo-scroll-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px 3px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      flex-shrink: 0;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .18s, border-color .18s, transform .18s;
+    }
+    .promo-scroll-card:hover {
+      background: rgba(255,255,255,.16);
+      border-color: rgba(255,255,255,.35);
+      transform: translateY(-1px);
+    }
+    .psc-glow {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      border-radius: 20px 20px 0 0;
+    }
+    .psc-emoji { font-size: 12px; flex-shrink: 0; line-height: 1; }
+    .psc-nombre {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 11px;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+    .psc-pct {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .psc-pct::after { content: ' OFF'; font-size: 8px; opacity: .75; letter-spacing: .5px; }
+    .psc-code {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px dashed rgba(255,255,255,.28);
+    }
+    .psc-sep { width: 1px; height: 12px; background: rgba(255,255,255,.20); }
+    /* Badge de conteo — también es enlace al login */
+    .ps-count {
+      font-size: 9px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-decoration: none;
+      box-shadow: 0 0 8px rgba(249,115,22,.40);
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: filter .15s;
+    }
+    .ps-count:hover { filter: brightness(1.2); }
+
+    /* ─── SERVICIOS / PROMO ─── */
+    .promo-section {
+      background: var(--black);
+      padding: 0 32px 72px;
+    }
+    .promo-heading {
+      max-width: 1200px;
+      margin: 0 auto 36px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .promo-heading-text { flex-shrink: 0; }
+    .promo-heading-text .ph-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #7ec8f5;
+      margin-bottom: 4px;
+    }
+    .promo-heading-text .ph-title {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: clamp(22px, 3vw, 34px);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      line-height: 1.1;
+      color: var(--white);
+    }
+    .promo-heading-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,.07);
+    }
+    .promo-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    /* Premium dark service cards */
+    .promo-banner {
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 18px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: transform .3s, box-shadow .3s, border-color .3s;
+      text-decoration: none;
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+    .promo-banner:hover {
+      transform: translateY(-7px);
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+      border-color: rgba(126,200,245,.2);
+    }
+    /* Top gradient accent bar */
+    .pb-accent {
+      height: 4px;
+      width: 100%;
+      border-radius: 18px 18px 0 0;
+    }
+    .pb-accent-1 { background: linear-gradient(90deg, #042C53, #1A56DB, #7ec8f5); }
+    .pb-accent-2 { background: linear-gradient(90deg, #064e3b, #059669, #34d399); }
+    .pb-accent-3 { background: linear-gradient(90deg, #3b0764, #7c3aed, #a78bfa); }
+    /* Subtle corner glow */
+    .promo-banner::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity .4s;
+    }
+    .promo-banner:nth-child(1)::after { background: radial-gradient(circle, rgba(26,86,219,.12), transparent 70%); }
+    .promo-banner:nth-child(2)::after { background: radial-gradient(circle, rgba(5,150,105,.12), transparent 70%); }
+    .promo-banner:nth-child(3)::after { background: radial-gradient(circle, rgba(124,58,237,.12), transparent 70%); }
+    .promo-banner:hover::after { opacity: 1; }
+
+    .pb-body {
+      padding: 28px 28px 26px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .pb-icon-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .pb-icon { font-size: 36px; }
+    .pb-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.5);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .pb-name {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: clamp(18px, 1.8vw, 22px);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      color: var(--white);
+    }
+
+    /* Price highlight */
+    .pb-price-main {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .pb-desde {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+      margin-bottom: 2px;
+    }
+    .pb-amount {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 38px;
+      line-height: 1;
+      color: var(--white);
+    }
+    .pb-iva {
+      font-size: 11px;
+      color: rgba(255,255,255,.35);
+      line-height: 1.4;
+    }
+
+    /* Price detail rows */
+    .pb-prices {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+    .pb-price-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .pb-price-item .pi-label {
+      color: rgba(255,255,255,.5);
+      font-weight: 300;
+    }
+    .pb-price-item .pi-val {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      color: rgba(255,255,255,.8);
+      letter-spacing: .3px;
+    }
+
+    /* CTA Button */
+    .pb-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.75);
+      transition: background .25s, color .25s, border-color .25s;
+    }
+    .pb-cta .cta-arrow { transition: transform .25s; font-size: 14px; }
+    .promo-banner:hover .pb-cta {
+      background: rgba(255,255,255,.11);
+      border-color: rgba(255,255,255,.2);
+      color: var(--white);
+    }
+    .promo-banner:hover .pb-cta .cta-arrow { transform: translateX(5px); }
+
+    @media (max-width: 900px) {
+      .promo-grid { grid-template-columns: 1fr; }
+      .promo-section { padding: 0 20px 48px; }
+    }
+
+    /* ─── STATS BAR ─── */
+    .stats-bar {
+      background: var(--dark);
+      border-top: 1px solid rgba(255,255,255,.06);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .stats-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stat-item {
+      padding: 28px 24px;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,.06);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-number {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 36px;
+      letter-spacing: .5px;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-number em { font-style: normal; color: #7ec8f5; }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+    }
+    @media (max-width: 768px) {
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .stat-item { border-right: 1px solid rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.06); }
+      .stat-item:nth-child(2n) { border-right: none; }
+      .stat-item:nth-child(3), .stat-item:nth-child(4) { border-bottom: none; }
+    }
+
+    /* ─── SECTIONS ─── */
+    section { padding: 80px 32px; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #7ec8f5;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: clamp(28px, 4vw, 48px);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+    .section-sub {
+      font-size: 16px;
+      color: rgba(255,255,255,.6);
+      max-width: 600px;
+      font-weight: 300;
+    }
+    .divider {
+      width: 48px;
+      height: 3px;
+      background: #7ec8f5;
+      margin: 20px 0 40px;
+    }
+    /* ─── NOSOTROS ─── */
+    #nosotros { background: var(--black); }
+    .nosotros-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      margin-top: 40px;
+    }
+    .nosotros-text p {
+      font-size: 16px;
+      color: rgba(255,255,255,.7);
+      font-weight: 300;
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+    .nosotros-text .highlight {
+      font-size: 18px;
+      color: var(--white);
+      font-weight: 600;
+      font-style: italic;
+      border-left: 3px solid #7ec8f5;
+      padding-left: 16px;
+      margin: 24px 0;
+    }
+    .values-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .value-item {
+      background: var(--mid);
+      border-radius: 8px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.06);
+      transition: border-color .25s, background .25s;
+    }
+    .value-item:hover {
+      border-color: rgba(126,200,245,.3);
+      background: rgba(126,200,245,.04);
+    }
+    .value-item .vi-icon { font-size: 24px; margin-bottom: 8px; }
+    .value-item h4 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 6px;
+    }
+    .value-item p { font-size: 13px; color: rgba(255,255,255,.55); font-weight: 300; line-height: 1.5; }
+
+    /* ─── CÓMO FUNCIONA (RESERVA) ─── */
+    #reserva {
+      background: var(--black);
+      padding: 80px 32px;
+    }
+    .como-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 64px;
+    }
+    .steps-grid {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      position: relative;
+    }
+    /* Connector line between circles */
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 31px;
+      left: calc(50% / 3 + 8px);
+      right: calc(50% / 3 + 8px);
+      height: 1px;
+      background: linear-gradient(90deg,
+        rgba(126,200,245,.35) 0%,
+        rgba(126,200,245,.1) 50%,
+        rgba(126,200,245,.35) 100%);
+      z-index: 0;
+    }
+    .step-card {
+      text-align: center;
+      padding: 0 28px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .step-circle {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--mid);
+      border: 1.5px solid rgba(126,200,245,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 26px;
+      position: relative;
+    }
+    .step-num {
+      position: absolute;
+      top: -8px; right: -8px;
+      width: 20px; height: 20px;
+      background: #1A56DB;
+      border-radius: 50%;
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 10px;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0;
+    }
+    .step-card h3 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 10px;
+      color: var(--white);
+    }
+    .step-card p {
+      font-size: 14px;
+      color: rgba(255,255,255,.45);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 220px;
+      margin: 0 auto;
+    }
+    .steps-cta {
+      text-align: center;
+      margin-top: 56px;
+    }
+    .btn-reserva {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #1A56DB;
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 15px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 18px 48px;
+      border-radius: 10px;
+      transition: background .2s, transform .2s, box-shadow .2s;
+      box-shadow: 0 8px 32px rgba(26,86,219,.4);
+    }
+    .btn-reserva:hover {
+      background: #2563eb;
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(26,86,219,.55);
+    }
+    .btn-reserva-arrow { font-size: 18px; transition: transform .2s; }
+    .btn-reserva:hover .btn-reserva-arrow { transform: translateX(5px); }
+    @media (max-width: 768px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .steps-grid::before { display: none; }
+      .step-card p { max-width: 100%; }
+      #reserva { padding: 56px 20px; }
+      .btn-reserva { width: 100%; justify-content: center; }
+    }
+
+    /* ─── REPSE ─── */
+    #repse {
+      background: var(--dark);
+      text-align: center;
+      padding: 48px 32px;
+    }
+    .repse-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px;
+      padding: 16px 32px;
+      margin-top: 20px;
+    }
+    .repse-badge .rb-icon { font-size: 32px; }
+    .repse-badge .rb-text h3 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 18px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .repse-badge .rb-text p { font-size: 13px; color: var(--light-gray); font-weight: 300; }
+
+    /* ─── CONTACT ─── */
+    #contacto { background: var(--black); }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 40px;
+    }
+    .contact-block h3 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 16px;
+    }
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .contact-item .ci-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .contact-item .ci-body { font-weight: 300; font-size: 14px; color: rgba(255,255,255,.7); line-height: 1.6; }
+    .contact-item .ci-body strong { display: block; color: var(--white); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+    .btn-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #25D366;
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 14px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 13px 28px;
+      border-radius: 8px;
+      transition: background .2s, transform .15s;
+      margin-top: 8px;
+    }
+    .btn-whatsapp:hover { background: #1ebe59; transform: translateY(-2px); }
+    .subscribe-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .subscribe-form input {
+      flex: 1;
+      min-width: 180px;
+      padding: 12px 16px;
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 6px;
+      color: var(--white);
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .subscribe-form input::placeholder { color: rgba(255,255,255,.35); }
+    .subscribe-form input:focus { outline: none; border-color: rgba(255,255,255,.4); }
+    .subscribe-form button {
+      background: var(--white);
+      color: var(--black);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .subscribe-form button:hover { background: #e8e8e8; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--dark);
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding: 32px;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .footer-brand {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 14px;
+      color: var(--light-gray);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .footer-logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .footer-logo-img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .footer-logo-text {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 20px;
+      color: var(--white);
+      letter-spacing: .5px;
+      line-height: 1;
+    }
+    .footer-logo-text span { color: #7ec8f5; }
+    .footer-brand strong { color: var(--white); display: block; font-size: 13px; margin-bottom: 2px; }
+    .footer-social { display: flex; gap: 12px; align-items: center; }
+    .social-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,.1);
+      color: var(--white);
+      text-decoration: none;
+      font-size: 16px;
+      transition: background .2s, transform .15s;
+    }
+    .social-link:hover { background: rgba(255,255,255,.15); transform: translateY(-2px); }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,.3); text-align: center; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.05); margin-top: 16px; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      nav { display: none; }
+      .hamburger { display: flex; }
+      .nosotros-grid,
+      .contact-grid { grid-template-columns: 1fr; }
+      .values-grid { grid-template-columns: 1fr; }
+      .badge-bar-inner { gap: 20px; }
+      section { padding: 56px 20px; }
+      .header-inner { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo-wrap">
+      <img src="img/logo.png" alt="AYA Logo">
+      <span class="logo-text">AYA<span>LYM</span></span>
+    </a>
+    <nav>
+      <a href="#" class="nav-link">Inicio</a>
+      <a href="#servicios" class="nav-link">Servicios</a>
+      <a href="#nosotros" class="nav-link">Nosotros</a>
+      <a href="#repse" class="nav-link">Repse</a>
+      <a href="#contacto" class="nav-link">Contacto</a>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar a modo claro" aria-label="Cambiar tema">
+        <span class="tt-icon">☀️</span>
+        <span class="tt-label">Claro</span>
+      </button>
+    </nav>
+    <a href="index.html" class="btn-portal">✨ Reserva tu limpieza</a>
+    <button class="hamburger" onclick="document.querySelector('.mobile-nav').classList.add('open')" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav">
+  <button class="mobile-close" onclick="document.querySelector('.mobile-nav').classList.remove('open')" aria-label="Cerrar menú">✕</button>
+  <a href="#" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Inicio</a>
+  <a href="#servicios" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Servicios</a>
+  <a href="#nosotros" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Nosotros</a>
+  <a href="#repse" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Repse</a>
+  <a href="#contacto" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Contacto</a>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema" style="margin-top:4px;">
+    <span class="tt-icon">☀️</span>
+    <span class="tt-label">Claro</span>
+  </button>
+  <a href="index.html" class="btn-portal" style="margin-top:12px;">✨ Reserva tu limpieza</a>
+</div>
+
+<!-- BARRA COMPACTA DE PROMOCIONES — sticky bajo navbar -->
+<section id="promos-scroll-section">
+  <div class="promos-bar">
+    <span class="ps-label">
+      <span class="ps-live-dot"></span>
+      🔥 OFERTAS
+    </span>
+    <span class="ps-sep"></span>
+    <div class="promos-track-wrap">
+      <div class="promos-track" id="promos-track">
+        <!-- Cards inyectadas por landing-promos.js -->
+      </div>
+    </div>
+    <a class="ps-count" id="ps-count" href="index.html">0 ofertas</a>
+  </div>
+</section>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Limpieza profesional</div>
+    <h1>
+      <span class="h1-intro">¡Espacios</span>
+      <em>limpios,</em>
+      <span class="h1-close">entornos felices!</span>
+    </h1>
+    <div class="hero-price-tag">
+      <span>Reserva desde</span>
+      <div class="hpt-sep"></div>
+      <strong><span id="lp-hero-desde">$500</span> + IVA</strong>
+    </div>
+    <div class="hero-cta-wrap">
+      <a href="#reserva" class="btn-primary">✨ Reserva tu limpieza</a>
+      <a href="#servicios" class="btn-secondary">Ver servicios</a>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section id="reserva">
+  <div class="como-header">
+    <div class="section-label">Proceso simple</div>
+    <h2 class="section-title">Reserva en 3 pasos</h2>
+    <div class="divider" style="margin:20px auto 0;"></div>
+  </div>
+  <div class="steps-grid">
+
+    <div class="step-card">
+      <div class="step-circle">
+        📱
+        <div class="step-num">1</div>
+      </div>
+      <h3>Elige tu servicio</h3>
+      <p>Selecciona el tipo de limpieza, la fecha, el horario y tu zona en CDMX.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="34" height="34" fill="none" aria-hidden="true">
+          <!-- Cabeza -->
+          <circle cx="24" cy="10" r="5.5" fill="#fff" opacity=".95"/>
+          <!-- Cuerpo -->
+          <path d="M16 26c0-5 3.5-9 8-9s8 4 8 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".95"/>
+          <!-- Brazo izq con mopa -->
+          <line x1="16" y1="26" x2="10" y2="36" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+          <!-- Palo de mopa -->
+          <line x1="10" y1="36" x2="6" y2="44" stroke="#7ec8f5" stroke-width="2.6" stroke-linecap="round"/>
+          <!-- Cabeza de mopa -->
+          <path d="M3 44 Q6 41 9 44 Q6 47 3 44Z" fill="#7ec8f5" opacity=".9"/>
+          <!-- Brazo der -->
+          <line x1="32" y1="26" x2="38" y2="33" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+          <!-- Piernas -->
+          <line x1="24" y1="35" x2="20" y2="46" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+          <line x1="24" y1="35" x2="28" y2="46" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+          <!-- Brillo / burbujas -->
+          <circle cx="38" cy="20" r="2" fill="#7ec8f5" opacity=".7"/>
+          <circle cx="43" cy="26" r="1.3" fill="#7ec8f5" opacity=".5"/>
+          <circle cx="40" cy="30" r="1" fill="#7ec8f5" opacity=".4"/>
+        </svg>
+        <div class="step-num">2</div>
+      </div>
+      <h3>Te asignamos un experto</h3>
+      <p>Conectamos con el especialista mejor calificado y disponible en tu zona.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-circle">
+        ✨
+        <div class="step-num">3</div>
+      </div>
+      <h3>Disfruta tu espacio</h3>
+      <p>Nuestro equipo llega puntual y deja cada rincón impecable. Tú solo relájate.</p>
+    </div>
+
+  </div>
+  <div class="steps-cta">
+    <a href="index.html" class="btn-reserva">
+      Reserva tu limpieza
+      <span class="btn-reserva-arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- SERVICIOS -->
+<section class="promo-section" id="servicios">
+  <div class="promo-heading">
+    <div class="promo-heading-text">
+      <div class="ph-eyebrow">Lo que ofrecemos</div>
+      <div class="ph-title">Nuestros servicios</div>
+    </div>
+    <div class="promo-heading-line"></div>
+  </div>
+  <div class="promo-grid">
+
+    <!-- LIMPIEZA DE DEPARTAMENTO -->
+    <a href="index.html" class="promo-banner" id="lp-card-depto">
+      <div class="pb-accent pb-accent-1"></div>
+      <div class="pb-body">
+        <div class="pb-icon-row">
+          <span class="pb-icon">🏠</span>
+          <span class="pb-badge">Depto · Casa · Oficina</span>
+        </div>
+        <div class="pb-name">Limpieza de departamento</div>
+        <div class="pb-price-main">
+          <div>
+            <div class="pb-desde">Desde</div>
+            <div class="pb-amount" id="lp-depto-desde">$500</div>
+          </div>
+          <div class="pb-iva">+ IVA<br>por visita</div>
+        </div>
+        <div class="pb-prices">
+          <div class="pb-price-item">
+            <span class="pi-label" id="lp-depto-lbl-general">General (1 hab, 1 baño)</span>
+            <span class="pi-val" id="lp-depto-general">$500</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label" id="lp-depto-lbl-fina">Limpieza fina ×<span id="lp-fina-factor">1.2</span></span>
+            <span class="pi-val" id="lp-depto-fina">$600</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label" id="lp-depto-lbl-profunda">Limpieza profunda ×<span id="lp-prof-factor">1.4</span></span>
+            <span class="pi-val" id="lp-depto-profunda">$700</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">+Habitación extra</span>
+            <span class="pi-val" id="lp-depto-hab">+$120</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">+Baño extra</span>
+            <span class="pi-val" id="lp-depto-bano">+$80</span>
+          </div>
+        </div>
+        <div class="pb-cta">
+          Reservar ahora
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- LAVADO DE AUTO -->
+    <a href="index.html" class="promo-banner" id="lp-card-auto">
+      <div class="pb-accent pb-accent-2"></div>
+      <div class="pb-body">
+        <div class="pb-icon-row">
+          <span class="pb-icon">🚗</span>
+          <span class="pb-badge">Exterior · Interior</span>
+        </div>
+        <div class="pb-name">Lavado de auto</div>
+        <div class="pb-price-main">
+          <div>
+            <div class="pb-desde">Desde</div>
+            <div class="pb-amount" id="lp-auto-desde">$400</div>
+          </div>
+          <div class="pb-iva">+ IVA<br>por servicio</div>
+        </div>
+        <div class="pb-prices">
+          <div class="pb-price-item">
+            <span class="pi-label">Sedán (exterior)</span>
+            <span class="pi-val" id="lp-auto-sedan">$400</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">SUV (exterior)</span>
+            <span class="pi-val" id="lp-auto-suv">$500</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Pickup (exterior)</span>
+            <span class="pi-val" id="lp-auto-pickup">$620</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">+Limpieza interior</span>
+            <span class="pi-val" id="lp-auto-interior">+$900</span>
+          </div>
+        </div>
+        <div class="pb-cta">
+          Reservar ahora
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- LAVADO DE TAPICERÍA -->
+    <a href="index.html" class="promo-banner" id="lp-card-tapiceria">
+      <div class="pb-accent pb-accent-3"></div>
+      <div class="pb-body">
+        <div class="pb-icon-row">
+          <span class="pb-icon">🛋️</span>
+          <span class="pb-badge">Tapicería · Alfombras · Colchones</span>
+        </div>
+        <div class="pb-name">Lavado de tapicería</div>
+        <div class="pb-price-main">
+          <div>
+            <div class="pb-desde">Desde</div>
+            <div class="pb-amount" id="lp-tap-desde">$1,200</div>
+          </div>
+          <div class="pb-iva">+ IVA<br>mínimo</div>
+        </div>
+        <div class="pb-prices">
+          <div class="pb-price-item">
+            <span class="pi-label">Silla (por pieza)</span>
+            <span class="pi-val" id="lp-tap-silla">$100</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Sofá tela (por pieza)</span>
+            <span class="pi-val" id="lp-tap-sofa-tela">$380</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Sofá piel (por pieza)</span>
+            <span class="pi-val" id="lp-tap-sofa-piel">$560</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Colchón individual</span>
+            <span class="pi-val" id="lp-tap-colchon">$500</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Tapete / Alfombra</span>
+            <span class="pi-val" id="lp-tap-tapete">$80/m²</span>
+          </div>
+        </div>
+        <div class="pb-cta">
+          Reservar ahora
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-number">+500<em>*</em></div>
+      <div class="stat-label">Servicios realizados</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">100<em>%</em></div>
+      <div class="stat-label">Satisfacción garantizada</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">REPSE</div>
+      <div class="stat-label">ACR15827 / 2025</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">CDMX</div>
+      <div class="stat-label">Área Metropolitana</div>
+    </div>
+  </div>
+</div>
+
+<!-- NOSOTROS -->
+<section id="nosotros">
+  <div class="section-inner">
+    <div class="nosotros-grid">
+      <div>
+        <div class="section-label">Quiénes somos</div>
+        <h2 class="section-title">Misión y Visión</h2>
+        <div class="divider"></div>
+        <div class="nosotros-text">
+          <p class="highlight">Empresa dedicada a la innovación y cuidado del medio ambiente, generando ambientes amigables con entornos limpios y elegantes.</p>
+          <p>Brindamos la seguridad de que nuestros clientes y sus colaboradores se sientan como en casa al llegar a sus instalaciones, obteniendo su entera satisfacción con la calidad de nuestro servicio.</p>
+          <p>Nuestro equipo de profesionales está comprometido con los más altos estándares de calidad, utilizando productos eco-amigables y tecnología de punta.</p>
+        </div>
+      </div>
+      <div class="values-grid">
+        <div class="value-item">
+          <div class="vi-icon">🌿</div>
+          <h4>Sustentabilidad</h4>
+          <p>Productos y procesos respetuosos con el medio ambiente.</p>
+        </div>
+        <div class="value-item">
+          <div class="vi-icon">⭐</div>
+          <h4>Excelencia</h4>
+          <p>Estándares de calidad en cada servicio que realizamos.</p>
+        </div>
+        <div class="value-item">
+          <div class="vi-icon">🤝</div>
+          <h4>Confianza</h4>
+          <p>Personal capacitado y certificado para tu tranquilidad.</p>
+        </div>
+        <div class="value-item">
+          <div class="vi-icon">⏱️</div>
+          <h4>Puntualidad</h4>
+          <p>Cumplimos con tiempos y compromisos establecidos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REPSE -->
+<section id="repse">
+  <div class="section-inner">
+    <div class="section-label">Registro oficial</div>
+    <h2 class="section-title" style="color:var(--white);">Certificación REPSE</h2>
+    <p style="color:rgba(255,255,255,.6);font-weight:300;">Contamos con registro ante el Registro de Prestadoras de Servicios Especializados u Obras Especializadas.</p>
+    <div class="repse-badge">
+      <div class="rb-icon">📜</div>
+      <div class="rb-text">
+        <h3>Aviso de registro REPSE</h3>
+        <p>No. ACR15827/2025 — AYA LIMPIEZA Y MANTENIMIENTO S.A. DE C.V.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto">
+  <div class="section-inner">
+    <div class="section-label">Estamos para ti</div>
+    <h2 class="section-title">Contáctanos</h2>
+    <div class="divider"></div>
+    <div class="contact-grid">
+      <div class="contact-block">
+        <h3>Información de contacto</h3>
+        <div class="contact-item">
+          <span class="ci-icon">🏢</span>
+          <div class="ci-body">
+            <strong>Empresa</strong>
+            AYA LIMPIEZA Y MANTENIMIENTO S.A. DE C.V.
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="ci-icon">📍</span>
+          <div class="ci-body">
+            <strong>Dirección</strong>
+            Prol. Paseo de la Reforma No. 799 Int. 1308,<br>
+            Col. Lomas de Santa Fe, Alcaldía Álvaro Obregón,<br>
+            C.P. 01219, CDMX.
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="ci-icon">🕐</span>
+          <div class="ci-body">
+            <strong>Horario de atención</strong>
+            Lunes a Viernes: 8:00 — 18:00 hrs<br>
+            Sábado: 9:00 — 14:00 hrs
+          </div>
+        </div>
+        <a href="https://wa.me/521XXXXXXXXXX" class="btn-whatsapp" target="_blank" rel="noopener">
+          💬 Envíanos un WhatsApp
+        </a>
+      </div>
+      <div class="contact-block">
+        <h3>Suscríbete</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,.6);font-weight:300;margin-bottom:16px;">
+          Suscríbete para recibir noticias sobre promociones de limpieza de inmuebles.
+        </p>
+        <div class="subscribe-form">
+          <input type="email" placeholder="Correo electrónico">
+          <button type="button" onclick="alert('¡Gracias por suscribirte!')">Registrarse</button>
+        </div>
+        <div style="margin-top:32px;">
+          <h3 style="margin-bottom:14px;">Síguenos</h3>
+          <div style="display:flex;gap:12px;">
+            <a href="https://www.facebook.com/ayalym23" class="social-link" target="_blank" rel="noopener" aria-label="Facebook">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="https://www.instagram.com/ayalym23" class="social-link" target="_blank" rel="noopener" aria-label="Instagram">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+            <a href="https://www.tiktok.com/@ayalym23" class="social-link" target="_blank" rel="noopener" aria-label="TikTok">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo-wrap">
+        <img src="img/logo.png" alt="AYA Logo" class="footer-logo-img">
+        <span class="footer-logo-text">AYA<span>LYM</span></span>
+      </div>
+      <strong>AYA LIMPIEZA Y MANTENIMIENTO</strong>
+      S.A. DE C.V. — CDMX, México
+    </div>
+    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+      <a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none;">Política de privacidad</a>
+      <a href="index.html" class="btn-portal" style="font-size:12px;padding:7px 16px;">✨ Reservar</a>
+    </div>
+  </div>
+  <div class="footer-copy">
+    © 2025 AYA LIMPIEZA Y MANTENIMIENTO S.A. DE C.V. — Con tecnología de AYALYM Portal
+  </div>
+</footer>
+
+<script src="js/theme.js"></script>
+<script src="js/landing-prices.js?v=3"></script>
+<script src="js/landing-promos.js?v=3"></script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════════════
+   AYALYM — Landing Light Mode Override
+   Activado con html.light-mode (theme.js)
+   ═══════════════════════════════════════════════ */
+
+/* ── Variables ────────────────────────────────── */
+html.light-mode {
+  --black:      #f4f6fb;
+  --dark:       #e8edf6;
+  --mid:        #ffffff;
+  --gray:       #9ca3af;
+  --light-gray: #6b7280;
+  --white:      #111827;   /* inverted: used as main text */
+  --accent:     #111827;
+  --portal-bg:  #1A56DB;
+  --portal-hover: #2563eb;
+}
+
+/* ── Base ─────────────────────────────────────── */
+html.light-mode body {
+  background: #f4f6fb;
+  color: #111827;
+}
+
+/* ── Header ───────────────────────────────────── */
+html.light-mode header {
+  background: rgba(244,246,251,.97);
+  border-bottom-color: rgba(0,0,0,.08);
+}
+html.light-mode .logo-text          { color: #111827; }
+html.light-mode .logo-text span     { color: #1A56DB; }
+html.light-mode .nav-link           { color: #4b5563; }
+html.light-mode .nav-link:hover     { color: #111827; background: rgba(0,0,0,.05); }
+html.light-mode .hamburger span     { background: #111827; }
+
+/* ── Mobile nav ───────────────────────────────── */
+html.light-mode .mobile-nav {
+  background: rgba(244,246,251,.99);
+}
+html.light-mode .mobile-close { color: #111827; }
+html.light-mode .mobile-nav .nav-link { color: #111827; }
+
+/* ── Hero ─────────────────────────────────────── */
+/* Background image: slightly brighter in light mode */
+html.light-mode .hero-bg { filter: brightness(.45); }
+
+/* Bottom gradient fades to the light bg */
+html.light-mode .hero::after {
+  background: linear-gradient(to bottom, transparent, #f4f6fb);
+}
+
+/* Hero text stays white (it's over a dark photo) */
+html.light-mode .hero-eyebrow        { color: #7ec8f5; }
+html.light-mode .hero h1             { color: #ffffff; }
+html.light-mode .hero h1 em          { color: #7ec8f5; }
+html.light-mode .hero h1 .h1-intro   { color: rgba(255,255,255,.72); }
+html.light-mode .hero h1 .h1-close   { color: #ffffff; }
+
+html.light-mode .hero-price-tag {
+  background: rgba(0,0,0,.35);
+  border-color: rgba(255,255,255,.25);
+  color: rgba(255,255,255,.85);
+}
+html.light-mode .hero-price-tag strong { color: #ffffff; }
+html.light-mode .hero-price-tag .hpt-sep { background: rgba(255,255,255,.25); }
+
+html.light-mode .btn-secondary {
+  color: rgba(255,255,255,.8);
+  border-color: rgba(255,255,255,.3);
+}
+html.light-mode .btn-secondary:hover {
+  color: #ffffff;
+  border-color: rgba(255,255,255,.6);
+  background: rgba(255,255,255,.08);
+}
+
+/* ── Promo section ────────────────────────────── */
+html.light-mode .promo-section { background: #f4f6fb; }
+html.light-mode .promo-heading-line { background: rgba(0,0,0,.08); }
+html.light-mode .ph-eyebrow { color: #1A56DB; }
+html.light-mode .ph-title   { color: #111827; }
+
+html.light-mode .promo-banner {
+  background: #ffffff;
+  border-color: rgba(0,0,0,.1);
+  color: #111827;
+}
+html.light-mode .promo-banner:hover {
+  box-shadow: 0 24px 60px rgba(0,0,0,.13);
+  border-color: rgba(26,86,219,.25);
+}
+html.light-mode .pb-badge {
+  color: rgba(0,0,0,.45);
+  background: rgba(0,0,0,.05);
+  border-color: rgba(0,0,0,.1);
+}
+html.light-mode .pb-name    { color: #111827; }
+html.light-mode .pb-price-main { border-bottom-color: rgba(0,0,0,.08); }
+html.light-mode .pb-desde   { color: rgba(0,0,0,.38); }
+html.light-mode .pb-amount  { color: #111827; }
+html.light-mode .pb-iva     { color: rgba(0,0,0,.35); }
+html.light-mode .pi-label   { color: rgba(0,0,0,.5); }
+html.light-mode .pi-val     { color: rgba(0,0,0,.8); }
+html.light-mode .pb-cta {
+  background: rgba(0,0,0,.04);
+  border-color: rgba(0,0,0,.1);
+  color: rgba(0,0,0,.6);
+}
+html.light-mode .promo-banner:hover .pb-cta {
+  background: rgba(0,0,0,.08);
+  border-color: rgba(0,0,0,.18);
+  color: #111827;
+}
+
+/* ── Stats bar ────────────────────────────────── */
+html.light-mode .stats-bar {
+  background: #e8edf6;
+  border-top-color: rgba(0,0,0,.07);
+  border-bottom-color: rgba(0,0,0,.07);
+}
+html.light-mode .stat-item    { border-right-color: rgba(0,0,0,.07); }
+html.light-mode .stat-number  { color: #111827; }
+html.light-mode .stat-number em { color: #1A56DB; }
+html.light-mode .stat-label   { color: rgba(0,0,0,.45); }
+
+/* ── Sections (generic) ───────────────────────── */
+html.light-mode .section-label { color: #1A56DB; }
+html.light-mode .section-title { color: #111827; }
+html.light-mode .section-sub   { color: rgba(0,0,0,.6); }
+html.light-mode .divider       { background: #1A56DB; }
+
+/* ── Nosotros ─────────────────────────────────── */
+html.light-mode #nosotros { background: #f4f6fb; }
+html.light-mode .nosotros-text p { color: rgba(0,0,0,.65); }
+html.light-mode .nosotros-text .highlight {
+  color: #111827;
+  border-left-color: #1A56DB;
+}
+html.light-mode .value-item {
+  background: #ffffff;
+  border-color: rgba(0,0,0,.08);
+}
+html.light-mode .value-item:hover {
+  border-color: rgba(26,86,219,.2);
+  background: rgba(26,86,219,.03);
+}
+html.light-mode .value-item h4  { color: #111827; }
+html.light-mode .value-item p   { color: rgba(0,0,0,.55); }
+
+/* ── Reserva / Pasos ──────────────────────────── */
+html.light-mode #reserva { background: #f4f6fb; }
+html.light-mode .steps-grid::before {
+  background: linear-gradient(90deg,
+    rgba(26,86,219,.2) 0%,
+    rgba(26,86,219,.07) 50%,
+    rgba(26,86,219,.2) 100%);
+}
+html.light-mode .step-circle {
+  background: #ffffff;
+  border-color: rgba(26,86,219,.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,.07);
+}
+html.light-mode .step-card h3 { color: #111827; }
+html.light-mode .step-card p  { color: rgba(0,0,0,.55); }
+
+/* ── REPSE ────────────────────────────────────── */
+html.light-mode #repse { background: #e8edf6; }
+html.light-mode .repse-badge {
+  background: #ffffff;
+  border-color: rgba(0,0,0,.1);
+}
+html.light-mode .repse-badge .rb-text h3 { color: #111827; }
+html.light-mode .repse-badge .rb-text p  { color: rgba(0,0,0,.55); }
+html.light-mode #repse .section-label    { color: #1A56DB; }
+html.light-mode #repse .section-title    { color: #111827; }
+html.light-mode #repse .section-sub      { color: rgba(0,0,0,.6); }
+
+/* ── Contacto ─────────────────────────────────── */
+html.light-mode #contacto { background: #f4f6fb; }
+html.light-mode .contact-block h3 { color: #111827; }
+html.light-mode .contact-item .ci-body { color: rgba(0,0,0,.65); }
+html.light-mode .contact-item .ci-body strong { color: #111827; }
+html.light-mode .subscribe-form input {
+  background: #ffffff;
+  border-color: rgba(0,0,0,.15);
+  color: #111827;
+}
+html.light-mode .subscribe-form input::placeholder { color: rgba(0,0,0,.35); }
+html.light-mode .subscribe-form input:focus { border-color: rgba(26,86,219,.5); }
+html.light-mode .subscribe-form button {
+  background: #111827;
+  color: #ffffff;
+}
+html.light-mode .subscribe-form button:hover { background: #1f2937; }
+
+/* ── Footer ───────────────────────────────────── */
+html.light-mode footer {
+  background: #e8edf6;
+  border-top-color: rgba(0,0,0,.07);
+}
+html.light-mode .footer-brand         { color: #6b7280; }
+html.light-mode .footer-brand strong  { color: #111827; }
+html.light-mode .footer-logo-text     { color: #111827; }
+html.light-mode .footer-logo-text span{ color: #1A56DB; }
+html.light-mode .social-link {
+  background: #ffffff;
+  border-color: rgba(0,0,0,.1);
+  color: #111827;
+}
+html.light-mode .social-link:hover { background: rgba(0,0,0,.07); }
+html.light-mode .footer-copy {
+  color: rgba(0,0,0,.3);
+  border-top-color: rgba(0,0,0,.06);
+}
+
+/* ─── Inline styles hardcodeados con color blanco ─── */
+/* Footer: "Política de privacidad" link */
+html.light-mode [style*="color:rgba(255,255,255,.4)"] { color: rgba(0,0,0,.45) !important; }
+html.light-mode [style*="color:rgba(255,255,255,.3)"] { color: rgba(0,0,0,.35) !important; }
+html.light-mode [style*="color:rgba(255,255,255,.7)"] { color: rgba(0,0,0,.65) !important; }
+html.light-mode [style*="color:rgba(255,255,255,.6)"] { color: rgba(0,0,0,.6)  !important; }
+html.light-mode [style*="color:rgba(255,255,255,.5)"] { color: rgba(0,0,0,.5)  !important; }
+
+/* ── Scroll de promociones en light mode ─────── */
+html.light-mode #promos-scroll-section  { background: #e8edf6; }
+html.light-mode .ps-label               { color: rgba(0,0,0,.4); }
+html.light-mode .ps-divider             { background: rgba(0,0,0,.1); }
+html.light-mode .promos-track-wrap {
+  mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+html.light-mode .promo-scroll-card      { background: #ffffff; border-color: rgba(0,0,0,.1) !important; }
+html.light-mode .promo-scroll-card:hover{ box-shadow: 0 8px 24px rgba(0,0,0,.10); }
+html.light-mode .psc-nombre             { color: #111827 !important; }
+html.light-mode .psc-desc               { color: rgba(0,0,0,.5) !important; }
+html.light-mode .psc-dates              { color: rgba(0,0,0,.35) !important; }
+html.light-mode .psc-code               { background: rgba(0,0,0,.05) !important; }
+
+/* ─── Secciones con padding inline ─── */
+html.light-mode #repse .section-label { color: #1A56DB; }
+html.light-mode #repse .section-title { color: #111827; }
+
+/* ─── Secciones con padding inline ─── */
+html.light-mode #repse .section-label { color: #1A56DB; }
+html.light-mode #repse .section-title { color: #111827; }
