@@ -2,13 +2,17 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#042C53">
   <title>AYALYM — Limpieza profesional a domicilio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=42">
+  <link rel="stylesheet" href="css/style.css?v=43">
   <link rel="stylesheet" href="css/theme-toggle.css?v=1">
-  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=9">
+  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=10">
   <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
   <script>!function(){var t=localStorage.getItem('ayalym-theme')||'dark';document.documentElement.classList.add(t+'-mode');if(t==='light'){document.addEventListener('DOMContentLoaded',function(){var l=document.getElementById('dark-css-link');if(l)l.disabled=true;});};}();</script>
   <link rel="icon" type="image/png" href="img/logo.png">
@@ -481,36 +485,9 @@
       </div>
     </div>
     <div id="c-historial" class="sec">
-      <div class="card"><p class="ctitle">Historial y evaluaciones</p>
-        <div class="rbar-compact"><span class="rscore-sm" id="client-avg">4.5</span><div id="client-avg-stars" style="display:flex;gap:2px;"></div><span class="rlabel" style="margin-left:4px;">Promedio · <span id="c-total">2</span> servicios</span></div>
-        <!-- Servicio 1 -->
-        <div class="hrow-c">
-          <div class="hrow-c-main">
-            <div class="hrow-c-info">
-              <span class="hrow-c-title">Limpieza profunda · Depto</span>
-              <span class="badge bok" style="font-size:10px;padding:2px 6px;">Completado</span>
-            </div>
-            <div class="hrow-c-sub">12 abr · Juan Morales · 3h est.</div>
-          </div>
-          <div class="hrow-c-right">
-            <span class="hrow-c-price">$1,036</span>
-            <button class="btn-amber hrow-c-btn" onclick="openIR(this,'Limpieza depto',0)">Evaluar</button>
-          </div>
-        </div>
-        <div id="ir-0" style="display:none;background:#E6F1FB;border-radius:8px;padding:10px 12px;margin:2px 0 6px;"><p style="font-size:12px;color:#185FA5;margin-bottom:6px;">¿Cómo fue el servicio?</p><div class="stars-row" id="isr-0"><span class="star" onclick="setIS(0,1)">★</span><span class="star" onclick="setIS(0,2)">★</span><span class="star" onclick="setIS(0,3)">★</span><span class="star" onclick="setIS(0,4)">★</span><span class="star" onclick="setIS(0,5)">★</span></div><p id="isl-0" style="font-size:11px;color:#185FA5;margin-bottom:6px;">Selecciona estrellas</p><textarea id="ic-0" placeholder="Comentario (opcional)..." style="margin-bottom:8px;min-height:44px;"></textarea><div style="display:flex;gap:8px;"><button class="btn-sm" style="flex:1;" onclick="submitIR(0,'Limpieza depto')">Enviar</button><button class="btn-sec" onclick="closeIR(0)">Cancelar</button></div></div>
-        <!-- Servicio 2 -->
-        <div class="hrow-c">
-          <div class="hrow-c-main">
-            <div class="hrow-c-info">
-              <span class="hrow-c-title">Lavado auto SUV + interior</span>
-              <span class="badge bok" style="font-size:10px;padding:2px 6px;">Completado</span>
-            </div>
-            <div class="hrow-c-sub">3 abr · Polanco · 45 min</div>
-          </div>
-          <div class="hrow-c-right">
-            <span class="hrow-c-price">$1,624</span>
-          </div>
-        </div>
+      <div class="card">
+        <p class="ctitle">Historial y evaluaciones</p>
+        <div id="c-historial-list"></div>
       </div>
     </div>
     <div id="c-mensajes" class="sec">
@@ -660,21 +637,21 @@
           </div>
           <div class="chat-box" id="chat-t-c"></div>
           <div class="chat-input-row">
-            <input type="text" id="cinput-t-c" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('c-t','t','Juan','cinput-t-c','chat-t-c')">
-            <button class="btn-sm" onclick="sendChat('c-t','t','Juan','cinput-t-c','chat-t-c')">Enviar</button>
+            <input type="text" id="cinput-t-c" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('c-t','t',_tName(),'cinput-t-c','chat-t-c')">
+            <button class="btn-sm" onclick="sendChat('c-t','t',_tName(),'cinput-t-c','chat-t-c')">Enviar</button>
           </div>
         </div>
         <!-- Chat con supervisor -->
         <div id="t-msg-supervisor" class="msg-panel">
           <div class="chat-contact-bar">
-            <div class="av" style="width:34px;height:34px;font-size:11px;background:#085041;">LS</div>
-            <div><p>Laura Supervisor</p><span>Supervisora de zona</span></div>
+            <div class="av" style="width:34px;height:34px;font-size:11px;background:#085041;" id="t-sv-contact-av">LS</div>
+            <div><p id="t-sv-contact-name">Laura Supervisor</p><span>Supervisora de zona</span></div>
             <span class="badge bok" style="margin-left:auto;">En línea</span>
           </div>
           <div class="chat-box" id="chat-t-sv"></div>
           <div class="chat-input-row">
-            <input type="text" id="cinput-t-sv" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('t-sv','t','Juan','cinput-t-sv','chat-t-sv')">
-            <button class="btn-sm" onclick="sendChat('t-sv','t','Juan','cinput-t-sv','chat-t-sv')">Enviar</button>
+            <input type="text" id="cinput-t-sv" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('t-sv','t',_tName(),'cinput-t-sv','chat-t-sv')">
+            <button class="btn-sm" onclick="sendChat('t-sv','t',_tName(),'cinput-t-sv','chat-t-sv')">Enviar</button>
           </div>
         </div>
         <!-- Chat con admin -->
@@ -686,8 +663,8 @@
           </div>
           <div class="chat-box" id="chat-t-a"></div>
           <div class="chat-input-row">
-            <input type="text" id="cinput-t-a" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('t-a','t','Juan','cinput-t-a','chat-t-a')">
-            <button class="btn-sm" onclick="sendChat('t-a','t','Juan','cinput-t-a','chat-t-a')">Enviar</button>
+            <input type="text" id="cinput-t-a" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('t-a','t',_tName(),'cinput-t-a','chat-t-a')">
+            <button class="btn-sm" onclick="sendChat('t-a','t',_tName(),'cinput-t-a','chat-t-a')">Enviar</button>
           </div>
         </div>
       </div>
@@ -699,13 +676,13 @@
     <!-- Tarjeta de perfil -->
     <div class="card role-profile-card" style="background:linear-gradient(135deg,#042C53,#185FA5);border:none;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div class="av" style="width:48px;height:48px;font-size:15px;background:rgba(255,255,255,.2);">LS</div>
-        <div style="flex:1;"><p style="font-size:15px;font-weight:600;color:#fff;" id="sv-name-disp">Laura Supervisor</p><span style="font-size:12px;color:rgba(255,255,255,.7);">Zona Roma / Narvarte</span></div>
+        <div class="av" style="width:48px;height:48px;font-size:15px;background:rgba(255,255,255,.2);" id="sv-av-disp">LS</div>
+        <div style="flex:1;"><p style="font-size:15px;font-weight:600;color:#fff;" id="sv-name-disp">Laura Supervisor</p><span style="font-size:12px;color:rgba(255,255,255,.7);" id="sv-zona-disp">Zona Roma / Narvarte</span></div>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
         <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px;text-align:center;"><p style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:3px;">Trabajadores</p><span style="font-size:20px;font-weight:500;color:#fff;" id="sv-count">2</span></div>
         <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px;text-align:center;"><p style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:3px;">Activos hoy</p><span style="font-size:20px;font-weight:500;color:#fff;" id="sv-active">2</span></div>
-        <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px;text-align:center;"><p style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:3px;">Servicios hoy</p><span style="font-size:20px;font-weight:500;color:#fff;">5</span></div>
+        <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px;text-align:center;"><p style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:3px;">Servicios hoy</p><span style="font-size:20px;font-weight:500;color:#fff;" id="sv-jobs-disp">5</span></div>
       </div>
     </div>
     <!-- Nav inferior -->
@@ -760,8 +737,8 @@
           <div class="sv-chat-selector" id="sv-monitor-selector"></div>
           <div class="chat-box" id="chat-sv-ct"></div>
           <div class="chat-input-row" style="margin-top:8px;">
-            <input type="text" id="cinput-sv-ct" placeholder="Intervenir en la conversación..." onkeydown="if(event.key==='Enter')sendChat('c-t','sv','Laura (Supervisor)','cinput-sv-ct','chat-sv-ct')">
-            <button class="btn-sm" onclick="sendChat('c-t','sv','Laura (Supervisor)','cinput-sv-ct','chat-sv-ct')">Enviar</button>
+            <input type="text" id="cinput-sv-ct" placeholder="Intervenir en la conversación..." onkeydown="if(event.key==='Enter')sendChat('c-t','sv',_svName(),'cinput-sv-ct','chat-sv-ct')">
+            <button class="btn-sm" onclick="sendChat('c-t','sv',_svName(),'cinput-sv-ct','chat-sv-ct')">Enviar</button>
           </div>
         </div>
 
@@ -774,8 +751,8 @@
           </div>
           <div class="chat-box" id="chat-sv-ca"></div>
           <div class="chat-input-row">
-            <input type="text" id="cinput-sv-ca" placeholder="Responder al cliente..." onkeydown="if(event.key==='Enter')sendChat('c-a','sv','Laura (Supervisor)','cinput-sv-ca','chat-sv-ca')">
-            <button class="btn-sm" onclick="sendChat('c-a','sv','Laura (Supervisor)','cinput-sv-ca','chat-sv-ca')">Enviar</button>
+            <input type="text" id="cinput-sv-ca" placeholder="Responder al cliente..." onkeydown="if(event.key==='Enter')sendChat('c-a','sv',_svName(),'cinput-sv-ca','chat-sv-ca')">
+            <button class="btn-sm" onclick="sendChat('c-a','sv',_svName(),'cinput-sv-ca','chat-sv-ca')">Enviar</button>
           </div>
         </div>
 
@@ -788,8 +765,8 @@
           </div>
           <div class="chat-box" id="chat-sv-a"></div>
           <div class="chat-input-row">
-            <input type="text" id="cinput-sv-a" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter')sendChat('sv-a','sv','Laura','cinput-sv-a','chat-sv-a')">
-            <button class="btn-sm" onclick="sendChat('sv-a','sv','Laura','cinput-sv-a','chat-sv-a')">Enviar</button>
+            <input type="text" id="cinput-sv-a" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter')sendChat('sv-a','sv',_svName(),'cinput-sv-a','chat-sv-a')">
+            <button class="btn-sm" onclick="sendChat('sv-a','sv',_svName(),'cinput-sv-a','chat-sv-a')">Enviar</button>
           </div>
         </div>
       </div>
@@ -1280,12 +1257,12 @@
 
 </div>
 
-<script src="js/data.js?v=18"></script>
+<script src="js/data.js?v=20"></script>
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=1"></script>
-<script src="js/app.js?v=57"></script>
+<script src="js/app.js?v=61"></script>
 <script src="js/theme.js?v=1"></script>
 </body>
 </html>

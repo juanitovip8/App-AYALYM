@@ -261,6 +261,8 @@ function doLogin(){
   if(user.password&&user.password!==p){showToast('red','❌','Correo o contraseña incorrectos');return;}
   if(!user.activo){showToast('red','🔒','Tu cuenta ha sido desactivada. Contacta al administrador.');return;}
   if(user.accesoRevocado){showToast('red','🔒','Tu acceso ha sido revocado. Contacta al administrador.');return;}
+  currentUserEmail=e; /* guardar email del usuario logueado */
+  saveSession(e);
   if(user.rol==='cliente_inm'){
     var ci=CLIENTS_INM.find(function(c){return c.email===e;});
     if(!ci||ci.activo===false){showToast('red','🔒','Cuenta sin acceso activo. Contacta al administrador.');return;}
@@ -315,7 +317,7 @@ function doStaffLogin(){
 }
 function changePassword(role){
   const emails={cliente:'ana@cliente.com',trabajador:'juan@ayalym.com',supervisor:'laura@ayalym.com'};
-  const email=emails[role];
+  const email=currentUserEmail||emails[role];
   const curr=document.getElementById('cp-current-'+role).value;
   const n1=document.getElementById('cp-new1-'+role).value;
   const n2=document.getElementById('cp-new2-'+role).value;
@@ -330,7 +332,43 @@ function changePassword(role){
   showToast('green','✅','Contraseña actualizada correctamente');
 }
 function toggleCpPanel(role){const el=document.getElementById('cp-panel-'+role);if(el)el.classList.toggle('open');}
-function doClientRegister(){const nombre=(document.getElementById('r-nombre').value+' '+document.getElementById('r-apellido').value).trim();const zEl=document.getElementById('r-zona');const zId=zEl.value;const zData=ZONAS.find(z=>z.id===zId&&z.activo!==false);if(zId&&zData)clientZoneId=zId;const zonaDisplay=zData?zData.nombre:'Sin zona';launchApp('cliente',nombre,zonaDisplay);}
+function doClientRegister(){
+  var nombre=(document.getElementById('r-nombre').value.trim()+' '+document.getElementById('r-apellido').value.trim()).trim();
+  var email=document.getElementById('r-email')?document.getElementById('r-email').value.trim():'';
+  var tel=document.getElementById('r-tel')?document.getElementById('r-tel').value.trim():'';
+  var pass=document.getElementById('r-pass')?document.getElementById('r-pass').value:'';
+  var zEl=document.getElementById('r-zona');
+  var zId=zEl?zEl.value:'';
+
+  if(!nombre){showToast('amber','⚠️','Ingresa tu nombre');return;}
+  if(!email){showToast('amber','⚠️','Ingresa tu correo');return;}
+  if(!pass||pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
+  if(USERS.find(function(u){return u.email===email;})){
+    showToast('red','❌','Este correo ya tiene una cuenta. Inicia sesión.');return;
+  }
+
+  var zData=ZONAS.find(function(z){return z.id===zId&&z.activo!==false;});
+  if(zId&&zData) clientZoneId=zId;
+  var zonaDisplay=zData?zData.nombre:'Sin zona';
+
+  /* Crear usuario y guardar en Firestore */
+  var newId=USERS.length?Math.max.apply(null,USERS.map(function(u){return u.id;}))+1:100;
+  USERS.push({id:newId,nombre:nombre,email:email,password:pass,rol:'cliente',activo:true,accesoRevocado:false,zona:zId||'narvarte',tel:tel});
+  fbSaveUsers();
+
+  /* Sesión */
+  currentUserEmail=email;
+  saveSession(email);
+
+  /* Limpiar datos demo — nuevo usuario empieza sin historial */
+  clientReviews=[];
+  clientDirecciones=[];
+  clientDiscount=0;
+
+  showLV('main');
+  launchApp('cliente',nombre,zonaDisplay);
+  showToast('green','✅','¡Bienvenido/a, '+nombre.split(' ')[0]+'! Tu cuenta fue creada.');
+}
 function regNext(step){if(step===1){if(!document.getElementById('r-nombre').value.trim()||!document.getElementById('r-email').value.trim()){showToast('amber','⚠️','Completa nombre y correo');return;}document.getElementById('reg-step-1').style.display='none';document.getElementById('reg-step-2').style.display='block';document.getElementById('sd-2').classList.add('done');renderRegisterZoneSelect();}else if(step===2){const p=document.getElementById('r-pass').value,p2=document.getElementById('r-pass2').value;if(p.length<8){showToast('amber','⚠️','Mínimo 8 caracteres');return;}if(p!==p2){showToast('red','❌','Las contraseñas no coinciden');return;}const zEl=document.getElementById('r-zona');const zNombre=zEl.options[zEl.selectedIndex]?zEl.options[zEl.selectedIndex].text:'No seleccionada';document.getElementById('r-summary').innerHTML=`Nombre: <strong>${document.getElementById('r-nombre').value+' '+document.getElementById('r-apellido').value}</strong><br>Correo: <strong>${document.getElementById('r-email').value}</strong><br>Zona: <strong>${zNombre}</strong>`;document.getElementById('reg-step-2').style.display='none';document.getElementById('reg-step-3').style.display='block';document.getElementById('sd-3').classList.add('done');}}
 function regBack(step){if(step===2){document.getElementById('reg-step-2').style.display='none';document.getElementById('reg-step-1').style.display='block';document.getElementById('sd-2').classList.remove('done');}if(step===3){document.getElementById('reg-step-3').style.display='none';document.getElementById('reg-step-2').style.display='block';document.getElementById('sd-3').classList.remove('done');}}
 
@@ -521,17 +559,30 @@ function launchApp(role,nombre,zona){
     const todayStr=new Date().toISOString().split('T')[0];
     const fechaEl=document.getElementById('fecha');if(fechaEl){fechaEl.value=todayStr;fechaEl.min=todayStr;}
     renderSvcSelect();renderUrgenciaSelect();
-    resetReserva();ss('hist-s-1',5);updateClientAvg();renderClientUbicacion();
+    resetReserva();renderClientHistorial();updateClientAvg();renderClientUbicacion();
     renderChatBox('c-t','c','chat-c-t');renderChatBox('c-a','c','chat-c-a');
     renderClientPromos();
-    setTimeout(()=>{setClientDiscount(200,'Compensación por servicio anterior');renderClienteResumen();},800);
+    /* Demo: cargar datos de muestra solo para la cuenta de demo (ana@cliente.com) */
+    if(currentUserEmail==='ana@cliente.com'){
+      clientReviews=[{stars:5,comment:'Excelente servicio',svc:'Limpieza profunda · Depto',fecha:'12 abr',precio:1036},{stars:4,comment:'Muy puntual',svc:'Lavado auto SUV + interior',fecha:'3 abr',precio:1624}];
+      clientDirecciones=[{id:1,alias:'Casa',calle:'Insurgentes Sur 1450, Int. 3B',colonia:'Narvarte Poniente',cp:'03020',ref:'Portón azul, timbre 3B'},{id:2,alias:'Trabajo',calle:'Álvaro Obregón 200, Piso 4',colonia:'Roma Norte',cp:'06700',ref:'Edificio gris, recepción'}];
+      setTimeout(()=>{setClientDiscount(200,'Compensación por servicio anterior');renderClienteResumen();renderClientHistorial();},600);
+    }else{
+      setTimeout(()=>renderClienteResumen(),600);
+    }
   }
   if(role==='trabajador'){
     // Inicializar estado activo/inactivo desde USERS
     const uW=USERS.find(u=>u.nombre===nombre&&u.rol==='trabajador');
     workerActive=uW?uW.activo!==false:true;
     const wRef=WORKERS.find(x=>x.name===nombre)||WORKERS[0];
+    currentWorkerRef=wRef; /* fijar referencia global al trabajador logueado */
     if(wRef)wRef.status=workerActive?'active':'inactive';
+    // ── Actualizar contacto del supervisor en el chat del trabajador ──
+    const mySv=wRef?SUPERVISORS.find(sv=>sv.assignedWorkers.includes(wRef.id)):null;
+    const svInit2=mySv?mySv.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase():'SV';
+    const tSvAv=document.getElementById('t-sv-contact-av');if(tSvAv)tSvAv.textContent=svInit2;
+    const tSvNm=document.getElementById('t-sv-contact-name');if(tSvNm)tSvNm.textContent=mySv?mySv.name:'Supervisor';
     const pill=document.getElementById('sp'),label=document.getElementById('wsl');
     if(label)label.innerHTML=workerActive?'Estatus: <strong style="color:#1A56DB;">Activo</strong>':'Estatus: <strong style="color:#E02020;">Inactivo — el admin te ha desactivado</strong>';
     if(pill){pill.textContent=workerActive?'Inactivarme':'Activarme';pill.className=workerActive?'status-pill sp-inactivar':'status-pill sp-activar';}
@@ -540,6 +591,16 @@ function launchApp(role,nombre,zona){
     renderChatBox('c-t','t','chat-t-c');renderChatBox('t-sv','t','chat-t-sv');renderChatBox('t-a','t','chat-t-a');
   }
   if(role==='supervisor'){
+    currentSupervisorRef=SUPERVISORS.find(sv=>sv.name===nombre)||SUPERVISORS[0];
+    if(currentSupervisorRef){SUPERVISOR_ASSIGNED=currentSupervisorRef.assignedWorkers.slice();}
+    // ── Actualizar tarjeta de perfil del supervisor ──
+    const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    const svAvEl=document.getElementById('sv-av-disp');if(svAvEl)svAvEl.textContent=svInit;
+    const svNmEl=document.getElementById('sv-name-disp');if(svNmEl)svNmEl.textContent=nombre;
+    const svZnEl=document.getElementById('sv-zona-disp');
+    if(svZnEl&&currentSupervisorRef)svZnEl.textContent='Zona '+(currentSupervisorRef.zonas||[]).join(' / ');
+    const svJbEl=document.getElementById('sv-jobs-disp');
+    if(svJbEl&&currentSupervisorRef){const _svW=WORKERS.filter(w=>currentSupervisorRef.assignedWorkers.includes(w.id));svJbEl.textContent=_svW.reduce((a,w)=>a+w.todayJobs.length,0);}
     renderSVWorkers();renderSVMap();renderSVChatSelector();renderSVNotes();renderSupervisorResumen();
     renderChatBox('sv-a','sv','chat-sv-a');
     renderChatBox('c-t','sv','chat-sv-ct');
@@ -563,7 +624,7 @@ function doLogout(){
   document.querySelectorAll('.role-section').forEach(s=>s.style.display='none');
   window.scrollTo({top:0,behavior:'instant'});
   ['login-email','login-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});showLV('main');;
-  uploadedFiles=[];clientDiscount=0;workerDeductions=[];selectedTimeSlot='';selectedWorkerId=null;fichaWorkerId=null;
+  uploadedFiles=[];clientDiscount=0;workerDeductions=[];selectedTimeSlot='';selectedWorkerId=null;fichaWorkerId=null;currentWorkerRef=null;currentSupervisorRef=null;currentUserEmail='';clearSession();
   ['prev-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   facturaOn=false;const ft=document.getElementById('ftoggle');if(ft)ft.classList.remove('on');const ff=document.getElementById('ffields');if(ff)ff.classList.remove('show');
   document.getElementById('ficha-ov').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');notifPanelOpen=false;
@@ -585,6 +646,7 @@ function navGo(role,sec,btn){
   }
   if(role==='cliente'&&sec==='resumen')renderClienteResumen();
   if(role==='cliente'&&sec==='reserva')resetReserva();
+  if(role==='cliente'&&sec==='historial')renderClientHistorial();
   if(role==='cliente'&&sec==='perfil')renderClientDirs();
   if(role==='cliente'&&sec==='mensajes'){renderChatBox('c-t','c','chat-c-t');renderChatBox('c-a','c','chat-c-a');setTimeout(()=>renderClientUbicacion(),50);}
   if(role==='trabajador'&&sec==='resumen')renderTrabajadorResumen();
@@ -690,7 +752,7 @@ function _renderSupportBox(){
 function chatSvcWindow(){
   const now=new Date(),today=now.toISOString().split('T')[0];
   const nowMin=now.getHours()*60+now.getMinutes();
-  const w=WORKERS[0];if(!w)return false;
+  const w=currentWorkerRef||WORKERS[0];if(!w)return false;
   return w.todayJobs.some(j=>{
     if(j.fecha!==today||j.status==='completed')return false;
     const[h,m]=j.hora.split(':').map(Number);
@@ -727,7 +789,7 @@ function renderChatBox(convKey,myRole,boxId){
   if(!open){
     const now=new Date(),today=now.toISOString().split('T')[0];
     const nowMin=now.getHours()*60+now.getMinutes();
-    const w=WORKERS[0];
+    const w=currentWorkerRef||WORKERS[0];
     const nextJob=w&&[...w.todayJobs]
       .filter(j=>j.fecha===today&&j.status!=='completed')
       .sort((a,b)=>{const[ah,am]=a.hora.split(':').map(Number);const[bh,bm]=b.hora.split(':').map(Number);return(ah*60+am)-(bh*60+bm);})[0];
@@ -1072,14 +1134,16 @@ function toggleUser(i){
 /* CLIENT NOTES */
 function renderWorkerNotes(){
   const el=document.getElementById('worker-notes-list');if(!el)return;
-  const myNotes=CLIENT_NOTES.filter(n=>n.workerId===0);
+  const myId=(currentWorkerRef||WORKERS[0]).id;
+  const myNotes=CLIENT_NOTES.filter(n=>n.workerId===myId);
   el.innerHTML=myNotes.length?myNotes.map(n=>`<div class="note-card"><div class="note-card-header"><p>👤 ${n.client}</p><span>${n.date}</span></div><p class="note-card-body">${n.note}</p><p class="note-card-meta">Solo visible para tu supervisor y administrador</p></div>`).join(''):`<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin notas aún</p>`;
 }
 function addWorkerNote(){
   const client=document.getElementById('nota-cliente').value;
   const note=document.getElementById('nota-texto').value.trim();
   if(!note){showToast('amber','⚠️','Escribe el contenido de la nota');return;}
-  CLIENT_NOTES.push({workerId:0,workerName:'Juan Morales',client,note,date:new Date().toLocaleDateString('es-MX',{day:'numeric',month:'short'})});
+  const myW=currentWorkerRef||WORKERS[0];
+  CLIENT_NOTES.push({workerId:myW.id,workerName:myW.name,client,note,date:new Date().toLocaleDateString('es-MX',{day:'numeric',month:'short'})});
   selectTrabajadorTab('notas',document.querySelector('#trabajador-dash-tabs .dash-tab.active'));
   showToast('green','📝','Nota guardada. Solo la verán tu supervisor y el admin.');
 }
@@ -1535,7 +1599,7 @@ function updateClientAvg(){if(!clientReviews.length)return;const avg=clientRevie
 function openIR(btn,svcName,idx){const p=document.getElementById('ir-'+idx);if(!p)return;const open=p.style.display==='block';p.style.display=open?'none':'block';btn.textContent=open?'Evaluar':'Cerrar';}
 function closeIR(idx){const p=document.getElementById('ir-'+idx);if(p)p.style.display='none';}
 function setIS(idx,n){inlineStars[idx]=n;const lbl=['','Muy malo','Malo','Regular','Bueno','Excelente'];document.querySelectorAll('#isr-'+idx+' .star').forEach((s,i)=>s.classList.toggle('lit',i<n));const l=document.getElementById('isl-'+idx);if(l)l.textContent=lbl[n]+' ('+n+'/5)';}
-function submitIR(idx,svcName){const stars=inlineStars[idx]||0;if(!stars){showToast('amber','⚠️','Selecciona al menos una estrella');return;}clientReviews.push({stars,comment:document.getElementById('ic-'+idx).value||'',svc:svcName});updateClientAvg();closeIR(idx);if(stars<4){showToast('amber','⭐','Notificamos al administrador.');pushNotif('admin','⭐','red','Evaluación baja',svcName+' — '+stars+' estrellas');pushNotif('supervisor','⭐','amber','Evaluación baja en equipo',svcName+' — '+stars+' estrellas');}else showToast('green','⭐','¡Evaluación enviada, gracias!');updateNotifBadge();}
+function submitIR(idx,svcName){const stars=inlineStars[idx]||0;if(!stars){showToast('amber','⚠️','Selecciona al menos una estrella');return;}clientReviews.push({stars,comment:document.getElementById('ic-'+idx).value||'',svc:svcName});updateClientAvg();renderClientHistorial();closeIR(idx);if(stars<4){showToast('amber','⭐','Notificamos al administrador.');pushNotif('admin','⭐','red','Evaluación baja',svcName+' — '+stars+' estrellas');pushNotif('supervisor','⭐','amber','Evaluación baja en equipo',svcName+' — '+stars+' estrellas');}else showToast('green','⭐','¡Evaluación enviada, gracias!');updateNotifBadge();}
 function openFicha(wid){fichaWorkerId=wid;const w=WORKERS.find(x=>x.id===wid);if(!w)return;const fp=document.getElementById('fp');fp.innerHTML=w.photo?`<img src="${w.photo}" alt="">`:`<span style="font-size:22px;font-weight:500;color:#fff;">${w.initials}</span>`;document.getElementById('fn').textContent=w.name;document.getElementById('fr').textContent=w.type.map(t=>({depto:'Departamento',auto:'Autos',tapiceria:'Tapicería'}[t])).join(' · ');document.getElementById('frat').textContent=w.rating>0?w.rating.toFixed(1):'Nuevo';document.getElementById('fsvc').textContent=w.services;document.getElementById('fsince').textContent=w.since;document.getElementById('fstars').innerHTML=s$(w.rating,18);const svcData=SVC_TYPES.find(s=>s.id===document.getElementById('svc')?.value);const ct=CLEANING_TYPES.find(c=>c.id===selectedCleanTypeId);const durMin=svcData?Math.round(svcData.durMin*(ct?.factor||1)):60;const durMax=svcData?Math.round(svcData.durMax*(ct?.factor||1)):90;document.getElementById('fdetails').innerHTML=`<div class="frow2"><span>Zonas</span><span>${w.zonas.map(z=>{const f=ZONAS.find(x=>x.id===z);return f?f.nombre.split('/')[0].trim():z;}).join(', ')||'No asignadas'}</span></div><div class="frow2"><span>Duración est. para este servicio</span><span>${durMin}–${durMax} min</span></div>${w.desc?`<p style="font-size:12px;color:#185FA5;padding:8px 0;border-bottom:.5px solid #B5D4F4;">${w.desc}</p>`:''}`;document.getElementById('fall-reviews').innerHTML=w.reviews.length?w.reviews.map(r=>`<div class="rev-card"><div style="display:flex;gap:2px;margin-bottom:4px;">${s$(r.stars,13)}</div><p class="rev-comment">"${r.comment}"</p><p class="rev-meta">${r.svc}${r.client?' · '+r.client:''}</p></div>`).join(''):`<p style="font-size:12px;color:#185FA5;text-align:center;padding:.5rem;">Sin reseñas</p>`;document.getElementById('ficha-ov').classList.add('open');}
 function closeFicha(){document.getElementById('ficha-ov').classList.remove('open');}
 function selectWorker(){selectedWorkerId=fichaWorkerId;closeFicha();renderWorkersByZone();showToast('blue','✓',`Trabajador seleccionado — pulsa Continuar para ver horarios`);}
@@ -2255,39 +2319,52 @@ function selectClienteTab(tab,btn){
   if(btn)btn.classList.add('active');
   const panel=document.getElementById('cliente-dash-panel');
   const zona=ZONAS.find(z=>z.id===clientZoneId);
+  const totalSvcs=clientReviews.length;
+  const avgStars=totalSvcs?clientReviews.reduce(function(a,r){return a+(r.stars||0);},0)/totalSvcs:0;
+  const gastoTotal=clientReviews.reduce(function(a,r){return a+(r.precio||0);},0);
+
   if(tab==='actividad'){
+    /* Próximo servicio: buscar solicitudes aceptadas pendientes */
+    const proximo=PENDING_REQUESTS.find(function(r){return r.accepted&&!r.rejected;});
+    const proximoHtml=proximo
+      ?`<div style="background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+          <div><p style="font-size:13px;font-weight:500;color:#042C53;">${proximo.svc}</p><p style="font-size:11px;color:#185FA5;margin-top:3px;">${proximo.fecha} · ${proximo.hora} · ${proximo.zona}</p></div>
+          <span class="badge bwarn">Confirmado</span>
+        </div>`
+      :`<p style="font-size:12px;color:#185FA5;text-align:center;padding:1rem 0;background:#F4F8FD;border-radius:8px;margin-bottom:12px;">Sin próximo servicio. <strong style="color:#1A56DB;cursor:pointer;" onclick="navGo('cliente','reserva',document.querySelectorAll('#nav-cliente .bnav-btn')[1])">Reservar →</strong></p>`;
+    /* Historial reciente */
+    const histHtml=totalSvcs
+      ?clientReviews.slice(-3).reverse().map(function(r){
+          return`<div class="dash-rank-row">
+            <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${(r.svc||'?').split(' ').map(function(n){return n[0];}).join('').slice(0,2).toUpperCase()}</div>
+            <div class="dash-rank-info"><p>${r.svc}</p><span>${r.fecha||''}</span></div>
+            <div style="text-align:right;">${r.precio?`<p style="font-size:13px;font-weight:500;color:#042C53;">$${r.precio.toLocaleString('es-MX')}</p>`:''}
+              <span class="badge bok" style="font-size:10px;">Completado</span>
+            </div></div>`;
+        }).join('')
+      :`<p style="font-size:12px;color:#185FA5;text-align:center;padding:1rem 0;">Aún sin servicios completados.</p>`;
+
     panel.innerHTML=`
       <div class="dash-kpi-grid">
-        <div class="dash-kpi accent"><p>Servicios realizados</p><span>2</span></div>
-        <div class="dash-kpi green"><p>Calificación promedio</p><span>4.5</span></div>
+        <div class="dash-kpi accent"><p>Servicios realizados</p><span>${totalSvcs}</span></div>
+        <div class="dash-kpi green"><p>Calificación promedio</p><span>${totalSvcs?avgStars.toFixed(1):'—'}</span></div>
         <div class="dash-kpi" style="${clientDiscount>0?'background:#EAF3DE;':''}"><p>Descuento disponible</p><span style="${clientDiscount>0?'color:#27500A;font-size:16px;':''}">${clientDiscount>0?'-$'+clientDiscount:'Sin descuento'}</span></div>
         <div class="dash-kpi"><p>Zona de servicio</p><span style="font-size:12px;">${zona?zona.nombre.split('/')[0].trim():'—'}</span></div>
       </div>
       <p class="dash-section-title">Próximo servicio</p>
-      <div style="background:#E6F1FB;border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-        <div><p style="font-size:13px;font-weight:500;color:#042C53;">Limpieza profunda · Depto</p><p style="font-size:11px;color:#185FA5;margin-top:3px;">Hoy 09:00 · Juan Morales</p></div>
-        <span class="badge bwarn">En camino</span>
-      </div>
+      ${proximoHtml}
       <p class="dash-section-title">Historial reciente</p>
-      <div class="dash-rank-row">
-        <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">JM</div>
-        <div class="dash-rank-info"><p>Limpieza profunda · Depto</p><span>12 abr · Juan Morales</span></div>
-        <div style="text-align:right;"><p style="font-size:13px;font-weight:500;color:#042C53;">$1,036</p><span class="badge bok" style="font-size:10px;">Completado</span></div>
-      </div>
-      <div class="dash-rank-row">
-        <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">RM</div>
-        <div class="dash-rank-info"><p>Lavado auto SUV + interior</p><span>3 abr · Polanco</span></div>
-        <div style="text-align:right;"><p style="font-size:13px;font-weight:500;color:#042C53;">$1,624</p><span class="badge bok" style="font-size:10px;">Completado</span></div>
-      </div>`;
+      ${histHtml}`;
   } else if(tab==='zona'){
     const active=WORKERS.filter(w=>w.status==='active');
     const busy=WORKERS.filter(w=>w.status==='busy');
+    const enZona=WORKERS.filter(w=>w.status!=='inactive'&&(w.zonas||[]).includes(clientZoneId));
     panel.innerHTML=`
       <div class="dash-kpi-grid">
         <div class="dash-kpi green"><p>Disponibles ahora</p><span>${active.length}</span></div>
         <div class="dash-kpi" style="background:#FAEEDA;"><p>En servicio</p><span style="color:#633806;">${busy.length}</span></div>
         <div class="dash-kpi accent"><p>Mi zona</p><span style="font-size:12px;">${zona?zona.nombre.split('/')[0].trim():'—'}</span></div>
-        <div class="dash-kpi"><p>Trabajadores en zona</p><span>${WORKERS.filter(w=>w.status!=='inactive').length}</span></div>
+        <div class="dash-kpi"><p>En tu zona</p><span>${enZona.length}</span></div>
       </div>
       <p class="dash-section-title">Disponibles para tu próxima reserva</p>
       ${active.slice(0,4).map(w=>{
@@ -2297,25 +2374,67 @@ function selectClienteTab(tab,btn){
           <div class="dash-rank-info"><p>${w.name}</p><span>${svc}</span></div>
           <div style="text-align:right;">${s$(w.rating,11)}<p style="font-size:12px;font-weight:500;color:#042C53;margin-top:2px;">${w.rating.toFixed(1)}</p></div>
         </div>`;
-      }).join('')}`;
+      }).join('')||'<p style="font-size:12px;color:#185FA5;text-align:center;padding:1rem;">Sin trabajadores disponibles en este momento.</p>'}`;
   } else if(tab==='cuenta'){
+    const userObj=USERS.find(function(u){return u.email===currentUserEmail;})||{};
+    const telDisplay=userObj.tel||'—';
+    const ultimoSvc=clientReviews.length?clientReviews[clientReviews.length-1].fecha||'—':'—';
     panel.innerHTML=`
       <div class="dash-kpi-grid">
-        <div class="dash-kpi accent"><p>Servicios totales</p><span>2</span></div>
-        <div class="dash-kpi green"><p>Gasto total</p><span>$2,660</span></div>
-        <div class="dash-kpi"><p>Último servicio</p><span style="font-size:12px;">12 abr</span></div>
+        <div class="dash-kpi accent"><p>Servicios totales</p><span>${totalSvcs}</span></div>
+        <div class="dash-kpi green"><p>Gasto total</p><span style="font-size:${gastoTotal>0?'15px':'20px'};">${gastoTotal>0?'$'+gastoTotal.toLocaleString('es-MX'):'$0'}</span></div>
+        <div class="dash-kpi"><p>Último servicio</p><span style="font-size:12px;">${ultimoSvc}</span></div>
         <div class="dash-kpi"><p>Zona activa</p><span style="font-size:11px;">${zona?zona.nombre.split('/')[0].trim():'—'}</span></div>
       </div>
       <p class="dash-section-title">Datos de cuenta</p>
       <div style="border:.5px solid #B5D4F4;border-radius:8px;overflow:hidden;">
-        <div class="frow2" style="padding:8px 12px;"><span>Correo</span><span>ana@cliente.com</span></div>
-        <div class="frow2" style="padding:8px 12px;"><span>Teléfono</span><span>+52 55 0000 0000</span></div>
+        <div class="frow2" style="padding:8px 12px;"><span>Correo</span><span>${currentUserEmail||'—'}</span></div>
+        <div class="frow2" style="padding:8px 12px;"><span>Teléfono</span><span>${telDisplay}</span></div>
         <div class="frow2" style="padding:8px 12px;"><span>Zona</span><span>${zona?zona.nombre:'—'}</span></div>
         <div class="frow2" style="padding:8px 12px;border-bottom:none;"><span>Colonias</span><span style="text-align:right;max-width:60%;font-size:11px;">${zona?zona.colonias:'—'}</span></div>
       </div>`;
   }
 }
 function renderClienteResumen(){selectClienteTab('actividad',document.querySelector('#cliente-dash-tabs .dash-tab'));}
+
+/* ── HISTORIAL DINÁMICO DEL CLIENTE ── */
+function renderClientHistorial(){
+  const el=document.getElementById('c-historial-list');if(!el)return;
+  if(!clientReviews.length){
+    el.innerHTML=`<div style="text-align:center;padding:2.5rem 0;">
+      <p style="font-size:32px;margin-bottom:8px;">📋</p>
+      <p style="font-size:14px;font-weight:600;color:#042C53;margin-bottom:4px;">Sin servicios aún</p>
+      <p style="font-size:12px;color:#185FA5;">Aquí verás tu historial de servicios y evaluaciones una vez que realices tu primera reserva.</p>
+    </div>`;
+    return;
+  }
+  const totalStars=clientReviews.reduce(function(a,r){return a+(r.stars||0);},0);
+  const avg=clientReviews.length?totalStars/clientReviews.length:0;
+  el.innerHTML=`<div class="rbar-compact" style="margin-bottom:12px;">
+    <span class="rscore-sm">${avg.toFixed(1)}</span>
+    <div style="display:flex;gap:2px;">${s$(avg,12)}</div>
+    <span style="font-size:11px;color:#185FA5;margin-left:4px;">Promedio · ${clientReviews.length} servicio${clientReviews.length!==1?'s':''}</span>
+  </div>`+
+  clientReviews.map(function(r,i){
+    return`<div class="hrow-c">
+      <div class="hrow-c-main">
+        <div class="hrow-c-info">
+          <span class="hrow-c-title">${r.svc}</span>
+          <span class="badge bok" style="font-size:10px;padding:2px 6px;">Completado</span>
+        </div>
+        ${r.fecha?`<div class="hrow-c-sub">${r.fecha}${r.comment?' · "'+r.comment+'"':''}</div>`:''}
+      </div>
+      <div class="hrow-c-right">
+        ${r.precio?`<span class="hrow-c-price">$${r.precio.toLocaleString('es-MX')}</span>`:''}
+        <div style="display:flex;gap:2px;">${s$(r.stars||0,11)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  // Actualizar contadores en el resumen
+  var avgEl=document.getElementById('client-avg');if(avgEl)avgEl.textContent=avg.toFixed(1);
+  var totEl=document.getElementById('c-total');if(totEl)totEl.textContent=clientReviews.length;
+  var starsEl=document.getElementById('client-avg-stars');if(starsEl)starsEl.innerHTML=s$(avg,12);
+}
 
 /* ── SELECTOR DE PROMOCIONES EN EL PASO 4 ── */
 function populatePromoSelect(){
@@ -2438,7 +2557,7 @@ function selectTrabajadorTab(tab,btn){
   document.querySelectorAll('#trabajador-dash-tabs .dash-tab').forEach(t=>t.classList.remove('active'));
   if(btn)btn.classList.add('active');
   const panel=document.getElementById('trabajador-dash-panel');
-  const worker=WORKERS.find(w=>w.id===0)||WORKERS[0];
+  const worker=currentWorkerRef||WORKERS[0];
   const initials=worker.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   const zonaNombre=worker.zonas.map(z=>{const f=ZONAS.find(x=>x.id===z);return f?f.nombre.split('/')[0].trim():z;}).join(', ');
 
@@ -2633,7 +2752,7 @@ function renderTrabajadorResumen(){selectTrabajadorTab('hoy',document.querySelec
 
 function renderWorkerAgenda(){
   const el=document.getElementById('t-agenda');if(!el)return;
-  const worker=WORKERS[0];
+  const worker=currentWorkerRef||WORKERS[0];
   const fmt=(h,m)=>`${h}:${String(m).padStart(2,'0')}`;
   const todayISO=new Date().toISOString().split('T')[0];
   const fmtDate=iso=>{const d=new Date(iso+'T12:00:00');return d.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});};
@@ -2670,7 +2789,7 @@ function renderWorkerAgenda(){
 
 function renderWorkerHistorial(){
   const el=document.getElementById('t-realizados');if(!el)return;
-  const worker=WORKERS[0];
+  const worker=currentWorkerRef||WORKERS[0];
   const todayISO=new Date().toISOString().split('T')[0];
   const fmtDate=iso=>{const d=new Date(iso+'T12:00:00');return d.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});};
   const completedJobs=worker.todayJobs.filter(j=>j.status==='completed');
@@ -2792,7 +2911,7 @@ function addNewWorker(){const nombre=document.getElementById('nw-nombre').value.
 function toggleWStatus(){
   workerActive=!workerActive;
   // Sync status to WORKERS array so client, supervisor & admin views reflect the change
-  const w=WORKERS[0];
+  const w=currentWorkerRef||WORKERS[0];
   if(w) w.status=workerActive?'active':'inactive';
   const pill=document.getElementById('sp'),label=document.getElementById('wsl');
   if(workerActive){
@@ -2825,7 +2944,7 @@ function renderSolicitudes(){
   const now=new Date();
   const todayISO=now.toISOString().split('T')[0];
   const nowMin=now.getHours()*60+now.getMinutes();
-  const worker=WORKERS[0];
+  const worker=currentWorkerRef||WORKERS[0];
   // Detectar y marcar solicitudes vencidas o a 1h del servicio sin aceptar
   PENDING_REQUESTS.forEach(req=>{
     if(req.accepted||req.rejected)return;
@@ -2918,7 +3037,7 @@ function respondWorker(btn,action){
     if(m){fecha=`${new Date().getFullYear()}-${mAbr[m[2].toLowerCase()]||'04'}-${String(m[1]).padStart(2,'0')}`;}
   }
   if(action==='Aceptada'){
-    const worker=WORKERS[0];
+    const worker=currentWorkerRef||WORKERS[0];
     const newStartMin=sh*60+(sm||0);
     const newEndMin=newStartMin+durMax+BUFFER_MIN;
     // Buscar conflicto en la agenda del mismo día (solo pendientes y en curso)
@@ -4054,7 +4173,7 @@ function buildInmRowSV(ps){
 function renderSVInmuebles(){
   const list=document.getElementById('sv-prop-list');
   if(!list)return;
-  const mySvId=0; // Laura Supervisor
+  const mySvId=currentSupervisorRef?currentSupervisorRef.id:0;
   const mine=PROPERTY_SERVICES.filter(ps=>ps.supervisorId===mySvId&&ps.status==='activo');
   if(!mine.length){
     list.innerHTML=`<div style="text-align:center;padding:30px 0;color:#5C7A9A;font-size:13px;">No tienes servicios activos asignados.</div>`;
@@ -5203,6 +5322,43 @@ document.addEventListener('input', function(e) {
   }
 });
 /* ══════════════════════════════════════════════════
+   SESIÓN PERSISTENTE — localStorage
+   ══════════════════════════════════════════════════ */
+/* Helpers para nombre dinámico en sendChat */
+function _svName(){return(currentSupervisorRef&&currentSupervisorRef.name)||'Supervisor';}
+function _tName(){return(currentWorkerRef&&currentWorkerRef.name)||'Trabajador';}
+
+function saveSession(email){
+  try{localStorage.setItem('ayalym-session',JSON.stringify({email:email}));}catch(e){}
+}
+function clearSession(){
+  try{localStorage.removeItem('ayalym-session');}catch(e){}
+}
+function restoreSession(){
+  var saved;
+  try{saved=JSON.parse(localStorage.getItem('ayalym-session')||'null');}catch(e){return false;}
+  if(!saved||!saved.email)return false;
+  var e=saved.email;
+  var user=USERS.find(function(u){return u.email===e;});
+  if(!user||!user.activo||user.accesoRevocado){clearSession();return false;}
+  currentUserEmail=e;
+  if(user.rol==='cliente_inm'){
+    var ci=CLIENTS_INM.find(function(c){return c.email===e;});
+    if(!ci||ci.activo===false){clearSession();return false;}
+    currentClientInmId=ci.id;
+    launchApp('cliente_inm',ci.nombre,'');
+  }else if(user.rol==='personal_inm'){
+    var pi=PERSONAL_INM.find(function(x){return x.email===e;});
+    if(!pi||pi.activo===false){clearSession();return false;}
+    currentPersonalId=pi.id;
+    launchApp('personal_inm',user.nombre,'');
+  }else{
+    launchApp(user.rol,user.nombre,'');
+  }
+  return true;
+}
+
+/* ══════════════════════════════════════════════════
    INICIO CON FIREBASE — carga datos al arrancar
    ══════════════════════════════════════════════════ */
 (async function initFirebase() {
@@ -5213,5 +5369,6 @@ document.addEventListener('input', function(e) {
     console.warn('Firebase: usando datos locales.', e);
   } finally {
     if (overlay) overlay.style.display = 'none';
+    restoreSession(); /* auto-login si hay sesión guardada */
   }
 })();

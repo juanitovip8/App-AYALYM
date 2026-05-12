@@ -5,7 +5,8 @@
 const IVA=0.16,TAP_MIN=1200,BUFFER_MIN=60;
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 let facturaOn=false,facturaPersonaTipo='fisica',uploadedFiles=[],currentRole='cliente',staffRole='trabajador',workerActive=true,nwPhotoData=null,inlineStars={};
-let clientReviews=[{stars:5,comment:'Excelente',svc:'Limpieza profunda'}];
+let currentWorkerRef=null,currentSupervisorRef=null,currentUserEmail=''; /* referencia al usuario logueado */
+let clientReviews=[]; /* se puebla al iniciar sesión con cuenta demo o al recibir evaluaciones */
 let staffPanelOpen=false,notifPanelOpen=false,userRoleFilter='all',recoverOpen=false,facturaFilter='todas';
 let SOLICITUDES_FACTURA=[];
 let clientDiscount=0,workerDeductions=[],workerBaseTotal=4050;
@@ -78,10 +79,7 @@ let USERS=[
   {id:9,nombre:'Patricia León',email:'pleon@romaboutique.com',rol:'cliente_inm',tel:'+52 55 8800 0022',activo:true,accesoRevocado:false,password:'hotel123'},
 ];
 
-let clientDirecciones=[
-  {id:1,alias:'Casa',calle:'Insurgentes Sur 1450, Int. 3B',colonia:'Narvarte Poniente',cp:'03020',ref:'Portón azul, timbre 3B'},
-  {id:2,alias:'Trabajo',calle:'Álvaro Obregón 200, Piso 4',colonia:'Roma Norte',cp:'06700',ref:'Edificio gris, recepción'},
-];
+let clientDirecciones=[]; /* se puebla con las direcciones del usuario logueado */
 let selectedDirId=null;
 
 let currentPersonalId=null;

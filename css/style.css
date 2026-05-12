@@ -18,7 +18,15 @@
   --red-light:#FCEBEB;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-sans);background:#F4F8FD;-webkit-font-smoothing:antialiased;}
+body{font-family:var(--font-sans);background:#F4F8FD;-webkit-font-smoothing:antialiased;overflow-x:hidden;overscroll-behavior-y:none;}
+html{scroll-behavior:smooth;}
+
+/* ── TOUCH OPTIMIZATIONS — global ── */
+button,.btn-royal,.btn-sm,.btn-sec,.btn-light,.btn-danger,.btn-amber,.btn-revoke,.btn-restore,.btn-edit,.btn-logout,.status-pill,.nav-btn,.bnav-btn,.dash-tab,.msg-tab,.svc-tab,.df-btn,.ctab,.srole-btn,.clean-type-card,.pay-btn,.promo-card,.notif-bell,.lb-eye{
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+input,select,textarea,a{-webkit-tap-highlight-color:transparent;}
 
 /* ── CONTENEDOR PRINCIPAL — full width ── */
 .app{max-width:100%;padding:0;min-height:100vh;}
@@ -777,120 +785,141 @@ textarea{resize:vertical;min-height:60px;}
    RESPONSIVE — MÓVILES
    ══════════════════════════════════════════════ */
 @media (max-width:600px){
-  /* App wrapper */
+  /* ── App wrapper ── */
   .app{padding:0;}
+
+  /* ── LOGIN ── */
   #screen-login{padding:1rem .75rem 2rem;min-height:100vh;}
   #screen-login .login-wrap{max-width:100%;}
-  .role-section{padding:.75rem .875rem 5rem;} /* padding-bottom para que el bottom-nav sticky no tape contenido */
-
-  /* Login */
   .client-panel{padding:1rem 1rem 1.25rem;}
   .staff-panel{padding:1rem 1rem 1.25rem;}
   .brand{padding:1.5rem .75rem 1rem;}
-  .brand-logo-img{width:100px;height:100px;}
-
-  /* Quick access — ya es row, solo ajustar padding */
+  .brand-logo-img{width:80px;height:80px;}
   .qa-card{padding:6px 8px;gap:7px;}
   .qa-btn{padding:4px 10px;font-size:10px;}
 
-  /* Header */
-  .header{padding:.55rem 1rem;}
-  .header-logo{height:34px;width:34px;}
-  .header-brand-name{font-size:14px;}
-  .header-uname{font-size:11px;}
-  .header-urole{display:none;}
-  .btn-site{display:none;}  /* ocultar en móvil para ahorrar espacio */
-  .btn-logout{font-size:11px;padding:4px 8px;}
+  /* ── ROLE SECTION — extra pb para bottom-nav + safe area iPhone ── */
+  .role-section{padding:.75rem .875rem calc(5.25rem + env(safe-area-inset-bottom,0px));}
 
-  /* Bottom nav */
-  .bottom-nav{border-radius:0;}
-  .bnav-btn{font-size:10px;padding:8px 2px 6px;}
-  .bnav-icon{font-size:14px;}
-
-  /* Admin nav */
-  .admin-nav-row{grid-template-columns:repeat(3,1fr);}
-  .admin-nav-row.anr-5{grid-template-columns:repeat(5,1fr);}
-  .nav-btn{font-size:10px;padding:8px 2px;}
-  .nav-icon{font-size:13px;}
-  .admin-kpi-bar{grid-template-columns:repeat(4,1fr);gap:6px;}
-  .admin-kpi-cell .akc-val{font-size:18px;}
-  .admin-kpi-cell .akc-lbl{font-size:9px;}
-
-  /* Cards */
-  .card{padding:.875rem 1rem;}
-  .ctitle{font-size:13px;}
-
-  /* Form rows → stack vertically */
+  /* ── INPUTS — font-size 16px evita zoom automático en iOS ── */
+  select,input[type=number],input[type=date],input[type=time],
+  input[type=text],input[type=email],input[type=password],textarea{
+    font-size:16px;
+    padding:12px 12px;
+    border-radius:10px;
+  }
   .frow{grid-template-columns:1fr;}
   .frow > div{grid-column:1/-1;}
 
-  /* Finance grid → stack */
+  /* ── BOTONES PRINCIPALES — touch target ≥ 44px ── */
+  .btn-royal{padding:14px;font-size:15px;border-radius:10px;}
+  .btn-sm{padding:10px 16px;font-size:13px;}
+  .btn-sec{padding:10px 16px;font-size:13px;}
+  .btn-light{padding:10px 14px;font-size:13px;}
+
+  /* ── HEADER ── */
+  .header{padding:.5rem .875rem;}
+  .header-logo{height:32px;width:32px;}
+  .header-brand-name{font-size:13px;}
+  .header-uname{font-size:12px;}
+  .header-urole{display:none;}
+  .btn-site{display:none;}
+  .btn-logout{font-size:11px;padding:7px 10px;border-radius:8px;}
+
+  /* ── BOTTOM NAV — safe area iPhone home bar ── */
+  .bottom-nav{border-radius:0;padding-bottom:env(safe-area-inset-bottom,0px);}
+  .bnav-btn{font-size:10px;padding:10px 2px 8px;min-height:54px;}
+  .bnav-icon{font-size:16px;margin-bottom:2px;}
+
+  /* ── ADMIN NAV ── */
+  .admin-nav-row{grid-template-columns:repeat(3,1fr);}
+  .admin-nav-row.anr-5{grid-template-columns:repeat(5,1fr);}
+  .nav-btn{font-size:10px;padding:10px 2px;min-height:50px;}
+  .nav-icon{font-size:14px;}
+  .admin-kpi-bar{grid-template-columns:repeat(2,1fr);gap:6px;}
+  .admin-kpi-cell .akc-val{font-size:18px;}
+  .admin-kpi-cell .akc-lbl{font-size:9px;}
+
+  /* ── CARDS ── */
+  .card{padding:.875rem 1rem;border-radius:12px;}
+  .ctitle{font-size:13px;}
+
+  /* ── FINANZAS ── */
   .finance-grid{grid-template-columns:1fr;}
   .fc .amount{font-size:18px;}
 
-  /* KPI grid */
+  /* ── KPIs ── */
   .dash-kpi-grid{grid-template-columns:repeat(2,1fr);}
-  .dash-kpi span{font-size:16px;}
+  .dash-kpi span{font-size:18px;}
 
-  /* Pay methods */
+  /* ── MÉTODOS DE PAGO ── */
   .pay-methods{grid-template-columns:repeat(3,1fr);gap:6px;}
-  .pay-btn{padding:8px 4px;font-size:11px;}
-  .pay-btn .pay-icon{font-size:18px;}
+  .pay-btn{padding:10px 4px;font-size:11px;min-height:60px;}
+  .pay-btn .pay-icon{font-size:20px;}
 
-  /* Supervisor metrics */
+  /* ── SUPERVISOR ── */
   .sv-metrics{grid-template-columns:1fr 1fr;}
+  .sv-card-header{flex-wrap:wrap;}
 
-  /* Stats in ficha */
+  /* ── OVERLAYS (ficha / confirm) ── */
   .fstats{grid-template-columns:1fr 1fr;}
+  .ficha-card{
+    padding:1.25rem 1rem calc(1.75rem + env(safe-area-inset-bottom,0px));
+    border-radius:20px 20px 0 0;
+    max-height:94vh;
+  }
+  .confirm-card{
+    padding:18px 14px calc(28px + env(safe-area-inset-bottom,0px));
+    border-radius:20px 20px 0 0;
+    max-height:94vh;
+  }
 
-  /* Overlays */
-  .ficha-card{padding:1.25rem 1rem 1.75rem;}
-  .confirm-card{padding:16px 14px 28px;}
+  /* ── CHAT ── */
+  .chat-box{max-height:260px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
 
-  /* Worker/staff rows */
+  /* ── TABS SCROLLABLES (sin scrollbar visible) ── */
+  .dash-tabs,.msg-tabs,.svc-tabs,.date-filter-row{
+    display:flex;flex-wrap:nowrap;overflow-x:auto;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;gap:6px;padding-bottom:4px;
+  }
+  .dash-tabs::-webkit-scrollbar,.msg-tabs::-webkit-scrollbar,
+  .svc-tabs::-webkit-scrollbar,.date-filter-row::-webkit-scrollbar{display:none;}
+  .dash-tab,.msg-tab,.svc-tab,.df-btn{flex-shrink:0;}
+  .svc-tab{padding:7px 12px;font-size:11px;}
+  .df-btn{padding:7px 12px;font-size:11px;}
+
+  /* ── FILAS STAFF / WORKER ── */
   .wcrow{flex-wrap:wrap;gap:6px;}
   .wa{flex-wrap:wrap;}
-
-  /* User card */
   .user-card-top{flex-wrap:wrap;}
   .user-card-top > div:last-child{width:100%;display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;justify-content:flex-start;}
 
-  /* Supervisor card header */
-  .sv-card-header{flex-wrap:wrap;}
-
-  /* Agenda accordion */
+  /* ── AGENDA ── */
   .agenda-acc-hdr{padding:10px 12px;}
   .agenda-item{padding:10px!important;}
 
-  /* Tariff / svc tabs */
-  .svc-tabs{gap:4px;}
-  .svc-tab{padding:5px 10px;font-size:11px;}
+  /* ── WORKER RESUMEN ── */
+  .tw-kpi-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .tw-kpi-val{font-size:20px;}
+  .tw-banner{border-radius:12px;}
 
-  /* Date filter */
-  .date-filter-row{gap:4px;}
-  .df-btn{padding:5px 10px;font-size:11px;}
+  /* ── TOAST ── */
+  .toast{font-size:12px;white-space:normal;max-width:88vw;min-width:0;text-align:left;}
 
-  /* Support chat */
-  .chat-box{max-height:180px;}
-
-  /* Toast */
-  .toast{font-size:12px;}
-
-  /* Staff role tabs inside login */
+  /* ── LOGIN TABS ── */
   .client-tabs{gap:0;}
-  .ctab{font-size:12px;padding:7px 4px;}
+  .ctab{font-size:12px;padding:9px 4px;}
 
-  /* Prow2 total */
+  /* ── MISC ── */
   .prow2.total{font-size:15px;}
-
-  /* Top cards */
   .top-card{gap:8px;}
   .top-card-score p{font-size:17px;}
-
-  /* Role switcher */
   .role-switcher{padding:12px 1rem;}
 }
 
+/* ══════════════════════════════════════════════
+   RESPONSIVE — MUY PEQUEÑO (≤ 380px)
+   ══════════════════════════════════════════════ */
 @media (max-width:380px){
   .nav-menu.c3{grid-template-columns:repeat(3,1fr);}
   .nav-menu.c4{grid-template-columns:repeat(2,1fr);}
@@ -902,6 +931,9 @@ textarea{resize:vertical;min-height:60px;}
   .dash-kpi-grid{grid-template-columns:1fr 1fr;}
   .fc .amount{font-size:16px;}
   .qa-card{padding:10px 8px;}
+  .admin-kpi-bar{grid-template-columns:repeat(2,1fr);}
+  .header-brand-name{display:none;} /* pantallas muy pequeñas: ocultar nombre marca */
+  .tw-kpi-val{font-size:18px;}
 }
 
 /* ── Worker panel resumen ─────────────────────────── */
