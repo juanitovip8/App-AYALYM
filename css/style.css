@@ -21,22 +21,20 @@
 body{font-family:var(--font-sans);background:#F4F8FD;-webkit-font-smoothing:antialiased;}
 
 /* ── CONTENEDOR PRINCIPAL — full width ── */
-.app{max-width:100%;padding:0;min-height:100vh;display:flex;flex-direction:column;}
-.screen{display:none;}.screen.active{display:block;}
+.app{max-width:100%;padding:0;min-height:100vh;}
+/* Ocultar/mostrar pantallas */
+.screen{display:none!important;}
+.screen.active{display:block!important;}
 
 /* ── LOGIN — pantalla completa centrada ── */
-/* IMPORTANTE: usar #screen-login.active (no solo #screen-login) para que
-   display:flex no sobreescriba el display:none de .screen cuando no está activo */
-#screen-login{
-  min-height:100vh;
-  padding:2rem 1rem 3rem;
-  background:linear-gradient(160deg,#042C53 0%,#0b1e35 60%,#111 100%);
-}
 #screen-login.active{
   display:flex!important;
   flex-direction:column;
   align-items:center;
   justify-content:center;
+  min-height:100vh;
+  padding:2rem 1rem 3rem;
+  background:linear-gradient(160deg,#042C53 0%,#0b1e35 60%,#111 100%);
 }
 #screen-login .login-wrap{width:100%;max-width:640px;}
 #screen-login .brand{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.1)!important;border-radius:12px 12px 0 0;border-bottom:none!important;}
