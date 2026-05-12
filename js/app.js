@@ -1538,9 +1538,28 @@ function addUser(){
       SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[],photo:null});
       fbSaveSupervisors();
     }
+  } else if(rol==='personal_inm'){
+    /* Crear entrada en PERSONAL_INM si no existe */
+    if(!PERSONAL_INM.find(p=>p.email===email)){
+      const piInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const piNewId=PERSONAL_INM.length?Math.max(...PERSONAL_INM.map(p=>p.id))+1:0;
+      PERSONAL_INM.push({id:piNewId,nombre,initials:piInit,email,password:pass,tel:'',activo:true,serviciosAsignados:[],asistencias:[],photo:null});
+      fbSavePersonalInm();
+      if(typeof renderPersonalInmAdmin==='function')renderPersonalInmAdmin();
+    }
+  } else if(rol==='cliente_inm'){
+    /* Crear entrada en CLIENTS_INM si no existe */
+    if(!CLIENTS_INM.find(c=>c.email===email)){
+      const ciNewId=CLIENTS_INM.length?Math.max(...CLIENTS_INM.map(c=>c.id))+1:0;
+      CLIENTS_INM.push({id:ciNewId,nombre,empresa:'',email,password:pass,tel:'',contratoId:null,activo:true,photo:null});
+      fbSaveClientsInm();
+      if(typeof renderAdminClientesInm==='function')renderAdminClientesInm();
+    }
   }
   _closeModal();
-  renderUsersPanel();fbSaveUsers();showToast('green','✅','"'+nombre+'" registrado como '+rolLabel(rol));
+  renderUsersPanel();
+  if(rol==='trabajador'&&typeof renderStaffList==='function')renderStaffList('all');
+  fbSaveUsers();showToast('green','✅','"'+nombre+'" registrado como '+rolLabel(rol));
 }
 
 /* ── ADMIN: FACTURACIÓN ── */
@@ -3748,7 +3767,41 @@ function toggleAssign(id){document.getElementById('assign-'+id).classList.toggle
 function twz(wid,zid,checked){const w=WORKERS.find(x=>x.id===wid);if(!w)return;if(checked&&!w.zonas.includes(zid))w.zonas.push(zid);if(!checked)w.zonas=w.zonas.filter(z=>z!==zid);clearTimeout(window._twzTimer);window._twzTimer=setTimeout(fbSaveWorkers,1200);}
 function filterStaff(type,el){document.querySelectorAll('.svc-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderStaffList(type);}
 function previewNWPhoto(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{nwPhotoData=ev.target.result;document.getElementById('nw-photo-circle').innerHTML=`<img src="${nwPhotoData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;};r.readAsDataURL(file);}
-function addNewWorker(){const nombre=document.getElementById('nw-nombre').value.trim();if(!nombre){showToast('amber','⚠️','Escribe el nombre');return;}const types=[];if(document.getElementById('nw-depto').checked)types.push('depto');if(document.getElementById('nw-auto').checked)types.push('auto');if(document.getElementById('nw-tap').checked)types.push('tapiceria');if(!types.length){showToast('amber','⚠️','Selecciona especialidad');return;}const since=parseInt(document.getElementById('nw-since').value)||2024,initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();WORKERS.push({id:WORKERS.length,name:nombre,initials,photo:nwPhotoData,type:types,zonas:[],status:'active',rating:0,services:0,since,desc:document.getElementById('nw-desc').value,mapX:Math.round(Math.random()*70+15),mapY:Math.round(Math.random()*60+15),reviews:[],todayJobs:[]});showToast('green','✅','"'+nombre+'" agregado');nwPhotoData=null;document.getElementById('nw-photo-circle').innerHTML='<div class="ph-ph">Foto</div>';['nw-nombre','nw-tel','nw-email','nw-desc'].forEach(id=>document.getElementById(id).value='');['nw-depto','nw-auto','nw-tap'].forEach(id=>document.getElementById(id).checked=false);fbSaveWorkers();navGo('admin','personal',document.querySelectorAll('#nav-admin .nav-btn')[1]);renderStaffList('all');}
+function addNewWorker(){
+  const nombre=document.getElementById('nw-nombre').value.trim();
+  if(!nombre){showToast('amber','⚠️','Escribe el nombre');return;}
+  const types=[];
+  if(document.getElementById('nw-depto').checked)types.push('depto');
+  if(document.getElementById('nw-auto').checked)types.push('auto');
+  if(document.getElementById('nw-tap').checked)types.push('tapiceria');
+  if(!types.length){showToast('amber','⚠️','Selecciona al menos una especialidad');return;}
+  const email=(document.getElementById('nw-email')||{}).value?.trim()||'';
+  const pass=(document.getElementById('nw-pass')||{}).value?.trim()||'';
+  const tel=(document.getElementById('nw-tel')||{}).value?.trim()||'';
+  if(email&&pass&&pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
+  if(email&&USERS.find(u=>u.email===email)){showToast('red','❌','Este correo ya está registrado en el sistema');return;}
+  const since=parseInt(document.getElementById('nw-since').value)||new Date().getFullYear();
+  const initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  const newWId=WORKERS.length?Math.max(...WORKERS.map(w=>w.id))+1:0;
+  WORKERS.push({id:newWId,name:nombre,initials,photo:nwPhotoData,type:types,zonas:[],status:'active',rating:0,services:0,since,desc:(document.getElementById('nw-desc')||{}).value||'',mapX:Math.round(Math.random()*70+15),mapY:Math.round(Math.random()*60+15),reviews:[],todayJobs:[]});
+  /* Si se capturó correo y contraseña → crear cuenta de acceso */
+  if(email&&pass){
+    const newUId=USERS.length?Math.max(...USERS.map(u=>u.id))+1:0;
+    USERS.push({id:newUId,nombre,email,rol:'trabajador',tel,activo:true,accesoRevocado:false,password:pass});
+    fbSaveUsers();
+    showToast('green','✅','"'+nombre+'" registrado con acceso al sistema');
+  }else{
+    showToast('green','✅','"'+nombre+'" agregado al panel de personal');
+  }
+  nwPhotoData=null;
+  document.getElementById('nw-photo-circle').innerHTML='<div class="ph-ph">Foto</div>';
+  ['nw-nombre','nw-tel','nw-email','nw-pass','nw-desc','nw-since'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['nw-depto','nw-auto','nw-tap'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=false;});
+  fbSaveWorkers();
+  if(typeof renderUsersPanel==='function')renderUsersPanel();
+  navGo('admin','personal',document.querySelectorAll('#nav-admin .nav-btn')[1]);
+  renderStaffList('all');
+}
 function toggleWStatus(){
   workerActive=!workerActive;
   // Sync status to WORKERS array so client, supervisor & admin views reflect the change
@@ -5124,7 +5177,7 @@ function renderSVInmuebles(){
 /* ── Crear contrato ── */
 function _gv(id){return(document.getElementById(id)||{}).value?.trim()||'';}
 function clearPropForm(){
-  ['inm-cli-nombre','inm-cli-contacto','inm-cli-tel','inm-cli-email','inm-direccion','inm-colonia',
+  ['inm-cli-nombre','inm-cli-contacto','inm-cli-tel','inm-cli-email','inm-cli-pass','inm-direccion','inm-colonia',
    'inm-svc-tipo','inm-svc-desc','inm-notas','inm-fiscal-razon','inm-fiscal-rfc',
    'inm-fiscal-regimen','inm-fiscal-cfdi','inm-fiscal-dir','inm-fecha-inicio','inm-fecha-fin','inm-pago-monto'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
@@ -5180,6 +5233,28 @@ function createPropertyService(){
     parentId:null,renovadoPor:null,createdAt:today,
   });
 
+  /* ── Acceso al sistema para cliente inmuebles (opcional) ── */
+  const ciPass=_gv('inm-cli-pass');
+  const ciEmail=_gv('inm-cli-email');
+  if(ciEmail&&ciPass){
+    if(ciPass.length<6){showToast('amber','⚠️','La contraseña del cliente debe tener al menos 6 caracteres');return;}
+    if(USERS.find(u=>u.email===ciEmail)){
+      /* Correo ya registrado — solo vincular contrato */
+      const existCI=CLIENTS_INM.find(c=>c.email===ciEmail);
+      if(existCI){existCI.contratoId=newId;PROPERTY_SERVICES[PROPERTY_SERVICES.length-1].clienteInmId=existCI.id;}
+      showToast('amber','ℹ️',`Correo ya registrado — contrato vinculado a ${ciEmail}`);
+    }else{
+      const ciNewId=CLIENTS_INM.length?Math.max(...CLIENTS_INM.map(c=>c.id))+1:0;
+      const ciUId=USERS.length?Math.max(...USERS.map(u=>u.id))+1:0;
+      CLIENTS_INM.push({id:ciNewId,nombre,empresa:_gv('inm-cli-contacto')||nombre,email:ciEmail,password:ciPass,tel:_gv('inm-cli-tel'),contratoId:newId,activo:true,photo:null});
+      USERS.push({id:ciUId,nombre,email:ciEmail,rol:'cliente_inm',tel:_gv('inm-cli-tel'),activo:true,accesoRevocado:false,password:ciPass});
+      PROPERTY_SERVICES[PROPERTY_SERVICES.length-1].clienteInmId=ciNewId;
+      fbSaveClientsInm();fbSaveUsers();
+      if(typeof renderAdminClientesInm==='function')renderAdminClientesInm();
+      if(typeof renderUsersPanel==='function')renderUsersPanel();
+      showToast('green','👤','Acceso al sistema creado para '+nombre);
+    }
+  }
   pushNotif('supervisor','🏢','blue','Nuevo contrato asignado',`${folio} — ${nombre}`);
   fbSavePropertyServices();
   showToast('green','🏢',`Contrato ${folio} creado y asignado.`);
