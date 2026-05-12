@@ -886,6 +886,7 @@ function saveUser(i){
   USERS[i]={...USERS[i],nombre,email,tel,rol};
   document.getElementById('uep-'+i).classList.remove('open');
   renderUsersPanel();
+  fbSaveUsers();
   if(!tmpPass)showToast('green','✅','"'+nombre+'" actualizado');
 }
 function saveAdminProfile(i){
@@ -911,9 +912,10 @@ function saveAdminProfile(i){
     const uname=document.getElementById('header-uname');if(uname)uname.textContent=nombre;
   }
   renderUsersPanel();
+  fbSaveUsers();
   showToast('green','✅','Perfil actualizado correctamente');
 }
-function addUser(){const nombre=document.getElementById('nu-nombre').value.trim(),email=document.getElementById('nu-email').value.trim(),pass=document.getElementById('nu-pass').value.trim(),rol=document.getElementById('nu-rol').value;if(!nombre||!email||!pass){showToast('amber','⚠️','Completa todos los campos');return;}USERS.push({id:USERS.length,nombre,email,rol,tel:'',activo:true,accesoRevocado:false,password:pass});['nu-nombre','nu-email','nu-pass'].forEach(id=>document.getElementById(id).value='');renderUsersPanel();showToast('green','✅','"'+nombre+'" registrado como '+rolLabel(rol));}
+function addUser(){const nombre=document.getElementById('nu-nombre').value.trim(),email=document.getElementById('nu-email').value.trim(),pass=document.getElementById('nu-pass').value.trim(),rol=document.getElementById('nu-rol').value;if(!nombre||!email||!pass){showToast('amber','⚠️','Completa todos los campos');return;}USERS.push({id:USERS.length,nombre,email,rol,tel:'',activo:true,accesoRevocado:false,password:pass});['nu-nombre','nu-email','nu-pass'].forEach(id=>document.getElementById(id).value='');renderUsersPanel();fbSaveUsers();showToast('green','✅','"'+nombre+'" registrado como '+rolLabel(rol));}
 
 /* ── ADMIN: FACTURACIÓN ── */
 function filterFacturas(filter,btn){
@@ -1018,6 +1020,7 @@ function toggleUser(i){
   renderUsersPanel();
   if(typeof renderStaffList==='function')renderStaffList('all');
   if(typeof renderSVWorkers==='function')renderSVWorkers();
+  fbSaveUsers();fbSaveWorkers();
   showToast(USERS[i].activo?'green':'amber',USERS[i].activo?'✅':'⚠️',USERS[i].nombre+' — '+(USERS[i].activo?'Activado':'Desactivado'));
 }
 
@@ -1163,7 +1166,7 @@ function renderSvcDurationList(){
     </div>`;}).join('');
 }
 
-function toggleSvcType(i){SVC_TYPES[i].activo=!(SVC_TYPES[i].activo!==false);renderSvcDurationList();renderSvcSelect();savePricesToLanding();showToast(SVC_TYPES[i].activo!==false?'green':'blue',SVC_TYPES[i].activo!==false?'✅':'⚪','"'+SVC_TYPES[i].nombre+'" '+(SVC_TYPES[i].activo!==false?'activado':'desactivado'));}
+function toggleSvcType(i){SVC_TYPES[i].activo=!(SVC_TYPES[i].activo!==false);renderSvcDurationList();renderSvcSelect();savePricesToLanding();fbSaveConfig();showToast(SVC_TYPES[i].activo!==false?'green':'blue',SVC_TYPES[i].activo!==false?'✅':'⚪','"'+SVC_TYPES[i].nombre+'" '+(SVC_TYPES[i].activo!==false?'activado':'desactivado'));}
 function addSvcType(){const n=document.getElementById('ns-name').value.trim(),p=parseInt(document.getElementById('ns-price').value)||500,dMin=parseInt(document.getElementById('ns-dur-min').value)||30,dMax=parseInt(document.getElementById('ns-dur-max').value)||60;if(!n){showToast('amber','⚠️','Escribe el nombre');return;}SVC_TYPES.push({id:'s'+Date.now(),nombre:n,precio:p,durMin:dMin,durMax:dMax,activo:true});['ns-name','ns-price','ns-dur-min','ns-dur-max'].forEach(id=>document.getElementById(id).value='');renderSvcDurationList();renderSvcSelect();showToast('green','✅','"'+n+'" agregado');}
 function removeSvcType(i){const n=SVC_TYPES[i].nombre;SVC_TYPES.splice(i,1);renderSvcDurationList();renderSvcSelect();showToast('blue','🗑️','"'+n+'" eliminado');}
 
@@ -1174,22 +1177,23 @@ function addSvcExtra(svcId){
   if(!nombre){showToast('amber','⚠️','Escribe el nombre del extra');return;}
   SVC_EXTRAS.push({id:'ex'+Date.now(),svcId,nombre,precio,activo:true});
   renderSvcDurationList();renderSvcExtrasForClient(document.getElementById('svc')?.value||'');
-  showToast('green','✅','"'+nombre+'" agregado como extra');
+  fbSaveConfig();showToast('green','✅','"'+nombre+'" agregado como extra');
 }
 function removeSvcExtra(id){
   const x=SVC_EXTRAS.find(e=>e.id===id);
   SVC_EXTRAS=SVC_EXTRAS.filter(e=>e.id!==id);
   renderSvcDurationList();renderSvcExtrasForClient(document.getElementById('svc')?.value||'');
-  if(x)showToast('blue','🗑️','"'+x.nombre+'" eliminado');
+  fbSaveConfig();if(x)showToast('blue','🗑️','"'+x.nombre+'" eliminado');
 }
 function toggleSvcExtra(id){
   const x=SVC_EXTRAS.find(e=>e.id===id);if(!x)return;
   x.activo=!x.activo;
   renderSvcExtrasForClient(document.getElementById('svc')?.value||'');
+  fbSaveConfig();
 }
 function setSvcExtraPrice(id,val){
   const x=SVC_EXTRAS.find(e=>e.id===id);if(x)x.precio=parseInt(val)||0;
-  _safeCalcPrice();
+  _safeCalcPrice();fbSaveConfig();
 }
 
 /* CLEANING TYPES ADMIN */
@@ -1206,7 +1210,7 @@ function renderCleaningTypesAdmin(){
       <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:12px;color:#185FA5;">Factor de precio:</span><input type="number" value="${ct.factor}" min="1" step="0.1" style="width:70px;" onchange="CLEANING_TYPES[${i}].factor=parseFloat(this.value);renderCleaningTypesForClient();calcPrice();"><span style="font-size:12px;color:#185FA5;">(base × factor)</span></div>
     </div>`;}).join('');
 }
-function toggleCleaningType(i){CLEANING_TYPES[i].activo=!(CLEANING_TYPES[i].activo!==false);renderCleaningTypesAdmin();renderCleaningTypesForClient();showToast(CLEANING_TYPES[i].activo!==false?'green':'blue',CLEANING_TYPES[i].activo!==false?'✅':'⚪','"'+CLEANING_TYPES[i].nombre+'" '+(CLEANING_TYPES[i].activo!==false?'activado':'desactivado'));}
+function toggleCleaningType(i){CLEANING_TYPES[i].activo=!(CLEANING_TYPES[i].activo!==false);renderCleaningTypesAdmin();renderCleaningTypesForClient();fbSaveConfig();showToast(CLEANING_TYPES[i].activo!==false?'green':'blue',CLEANING_TYPES[i].activo!==false?'✅':'⚪','"'+CLEANING_TYPES[i].nombre+'" '+(CLEANING_TYPES[i].activo!==false?'activado':'desactivado'));}
 function addCleaningType(){const n=document.getElementById('nct-nombre').value.trim(),f=parseFloat(document.getElementById('nct-factor').value)||1.0,d=document.getElementById('nct-desc').value.trim();if(!n){showToast('amber','⚠️','Escribe el nombre');return;}CLEANING_TYPES.push({id:'ct'+Date.now(),nombre:n,descripcion:d||'Servicio de limpieza especializado',factor:f,activo:true});['nct-nombre','nct-factor','nct-desc'].forEach(id=>document.getElementById(id).value='');renderCleaningTypesAdmin();renderCleaningTypesForClient();showToast('green','✅','"'+n+'" agregado');}
 function removeCleaningType(i){if(i<3){showToast('amber','⚠️','No se pueden eliminar los tipos predeterminados');return;}const n=CLEANING_TYPES[i].nombre;CLEANING_TYPES.splice(i,1);renderCleaningTypesAdmin();renderCleaningTypesForClient();showToast('blue','🗑️','"'+n+'" eliminado');}
 
@@ -1601,7 +1605,7 @@ function renderClientUbicacion(){
 function drawMap(svgId,workers){const svg=document.getElementById(svgId);if(!svg)return;setTimeout(()=>{const W=svg.clientWidth||640,H=parseInt(svg.getAttribute('height'))||200;let h=`<rect width="${W}" height="${H}" fill="#dce8f5"/>`;for(let x=0;x<W;x+=50)h+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#B5D4F4" stroke-width=".5"/>`;for(let y=0;y<H;y+=40)h+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#B5D4F4" stroke-width=".5"/>`;workers.forEach(w=>{const cx=Math.round(w.mapX/100*W),cy=Math.round(w.mapY/100*H),col=w.status==='inactive'?'#888780':w.status==='busy'?'#BA7517':'#1A56DB';h+=`<circle cx="${cx}" cy="${cy}" r="9" fill="${col}" stroke="#fff" stroke-width="2"/>`;h+=`<text x="${cx}" y="${cy+21}" text-anchor="middle" font-size="10" fill="#042C53" font-family="sans-serif">${w.initials}</text>`;});svg.innerHTML=h;},50);}
 function renderWorkerLocList(){const el=document.getElementById('worker-loc-list');if(!el)return;el.innerHTML=WORKERS.filter(w=>w.status!=='inactive').map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid #B5D4F4;"><div style="width:9px;height:9px;border-radius:50%;background:${w.status==='busy'?'#BA7517':'#1A56DB'};flex-shrink:0;"></div><div class="av" style="width:30px;height:30px;font-size:11px;">${w.initials}</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p></div><span class="badge ${w.status==='active'?'bok':'bwarn'}">${w.status==='active'?'Disponible':'En servicio'}</span></div>`).join('');}
 function _svcTypeLabel(t){return({depto:'Depto',auto:'Autos',tapiceria:'Tapicería'}[t])||t;}
-function twSvcType(wid,svcId,checked){
+function twSvcType(wid,svcId,checked){clearTimeout(window._twsTimer);window._twsTimer=setTimeout(fbSaveWorkers,1200);
   const w=WORKERS.find(x=>x.id===wid);if(!w)return;
   if(checked&&!w.type.includes(svcId))w.type.push(svcId);
   if(!checked)w.type=w.type.filter(t=>t!==svcId);
@@ -1936,7 +1940,7 @@ function setUrgModo(i,val){URGENCIAS[i].modo=val;if(val!=='minutos')URGENCIAS[i]
 function setUrgMaxMin(i,val){const v=Math.max(1,parseInt(val)||120);if(URGENCIAS[i].maxMin===v)return;URGENCIAS[i].maxMin=v;}
 function setUrgDiasMin(i,val){const v=Math.max(0,parseInt(val)||0);if(URGENCIAS[i].diasMin===v)return;URGENCIAS[i].diasMin=v;if(URGENCIAS[i].diasMax!=null&&v>URGENCIAS[i].diasMax)URGENCIAS[i].diasMax=v;renderUrgenciaSelect();}
 function setUrgDiasMax(i,val){const raw=val.toString().trim();const v=raw===''||isNaN(parseInt(raw))?null:Math.max(0,parseInt(raw));if(URGENCIAS[i].diasMax===v)return;URGENCIAS[i].diasMax=v;renderUrgenciaSelect();}
-function toggleUrgencia(i){URGENCIAS[i].activo=!(URGENCIAS[i].activo!==false);renderUrgencias();renderUrgenciaSelect();showToast(URGENCIAS[i].activo!==false?'green':'blue',URGENCIAS[i].activo!==false?'✅':'⚪','"'+URGENCIAS[i].nombre+'" '+(URGENCIAS[i].activo!==false?'activada':'desactivada'));}
+function toggleUrgencia(i){URGENCIAS[i].activo=!(URGENCIAS[i].activo!==false);renderUrgencias();renderUrgenciaSelect();fbSaveConfig();showToast(URGENCIAS[i].activo!==false?'green':'blue',URGENCIAS[i].activo!==false?'✅':'⚪','"'+URGENCIAS[i].nombre+'" '+(URGENCIAS[i].activo!==false?'activada':'desactivada'));}
 function addUrgencia(){const n=document.getElementById('nu-name').value.trim(),p=Math.max(0,parseInt(document.getElementById('nu-pct').value)||0);if(!n){showToast('amber','⚠️','Escribe el nombre');return;}URGENCIAS.push({id:'u'+Date.now(),nombre:n,pct:p,activo:true,modo:'sin_filtro',maxMin:null});document.getElementById('nu-name').value='';document.getElementById('nu-pct').value='';renderUrgencias();renderUrgenciaSelect();showToast('green','✅','"'+n+'" agregada');}
 function removeUrgencia(i){const n=URGENCIAS[i].nombre;URGENCIAS.splice(i,1);renderUrgencias();renderUrgenciaSelect();showToast('blue','🗑️','"'+n+'" eliminada');}
 function renderZonasAdmin(){
@@ -1947,7 +1951,7 @@ function renderZonasAdmin(){
       <button class="btn-danger" onclick="removeZona(${i})">Eliminar</button>
     </div></div><input type="text" value="${z.colonias}" onchange="ZONAS[${i}].colonias=this.value;" style="font-size:12px;color:#185FA5;background:transparent;border:none;width:100%;outline:none;padding:0;"></div>`;}).join('');
 }
-function toggleZona(i){ZONAS[i].activo=!(ZONAS[i].activo!==false);renderZonasAdmin();showToast(ZONAS[i].activo!==false?'green':'blue',ZONAS[i].activo!==false?'✅':'⚪','"'+ZONAS[i].nombre+'" '+(ZONAS[i].activo!==false?'activada':'desactivada'));}
+function toggleZona(i){ZONAS[i].activo=!(ZONAS[i].activo!==false);renderZonasAdmin();fbSaveZonas();showToast(ZONAS[i].activo!==false?'green':'blue',ZONAS[i].activo!==false?'✅':'⚪','"'+ZONAS[i].nombre+'" '+(ZONAS[i].activo!==false?'activada':'desactivada'));}
 function addZona(){const n=document.getElementById('nz-nombre').value.trim(),c=document.getElementById('nz-colonias').value.trim();if(!n){showToast('amber','⚠️','Escribe el nombre');return;}ZONAS.push({id:'z'+Date.now(),nombre:n,colonias:c,activo:true});document.getElementById('nz-nombre').value='';document.getElementById('nz-colonias').value='';renderZonasAdmin();showToast('green','✅','"'+n+'" agregada');}
 function removeZona(i){const n=ZONAS[i].nombre;ZONAS.splice(i,1);renderZonasAdmin();showToast('blue','🗑️','"'+n+'" eliminada');}
 function renderQReport(){
@@ -2736,10 +2740,10 @@ function toggleQDeducs(id,btn){const el=document.getElementById(id);if(!el)retur
 function renderConvs(){const el=document.getElementById('conv-list');if(!el)return;el.innerHTML=CONVS.map((c,i)=>`<div class="conv-btn" onclick="toggleConv(${i})"><div class="av" style="width:34px;height:34px;font-size:11px;">${c.client.split(' ').map(n=>n[0]).join('').slice(0,2)}</div><div class="conv-info"><p>${c.client} ↔ ${c.worker}</p><span>${c.svc}</span></div><span style="font-size:12px;color:#185FA5;">Ver ›</span></div><div class="conv-detail" id="conv-${i}"><p style="font-size:11px;font-weight:500;color:#185FA5;margin-bottom:8px;">${c.svc}</p><div style="display:flex;flex-direction:column;gap:6px;">${c.msgs.map(m=>`<div style="display:flex;flex-direction:column;align-items:${m.from==='worker'?'flex-start':'flex-end'};"><span style="font-size:10px;color:#185FA5;margin-bottom:2px;">${m.from==='worker'?c.worker:c.client} · ${m.time}</span><div class="msg ${m.from==='worker'?'recv':'sent'}">${m.text}</div></div>`).join('')}</div></div>`).join('');}
 function toggleConv(i){const el=document.getElementById('conv-'+i);if(el)el.classList.toggle('open');}
 function toggleAssign(id){document.getElementById('assign-'+id).classList.toggle('open');}
-function twz(wid,zid,checked){const w=WORKERS.find(x=>x.id===wid);if(!w)return;if(checked&&!w.zonas.includes(zid))w.zonas.push(zid);if(!checked)w.zonas=w.zonas.filter(z=>z!==zid);}
+function twz(wid,zid,checked){const w=WORKERS.find(x=>x.id===wid);if(!w)return;if(checked&&!w.zonas.includes(zid))w.zonas.push(zid);if(!checked)w.zonas=w.zonas.filter(z=>z!==zid);clearTimeout(window._twzTimer);window._twzTimer=setTimeout(fbSaveWorkers,1200);}
 function filterStaff(type,el){document.querySelectorAll('.svc-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderStaffList(type);}
 function previewNWPhoto(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{nwPhotoData=ev.target.result;document.getElementById('nw-photo-circle').innerHTML=`<img src="${nwPhotoData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;};r.readAsDataURL(file);}
-function addNewWorker(){const nombre=document.getElementById('nw-nombre').value.trim();if(!nombre){showToast('amber','⚠️','Escribe el nombre');return;}const types=[];if(document.getElementById('nw-depto').checked)types.push('depto');if(document.getElementById('nw-auto').checked)types.push('auto');if(document.getElementById('nw-tap').checked)types.push('tapiceria');if(!types.length){showToast('amber','⚠️','Selecciona especialidad');return;}const since=parseInt(document.getElementById('nw-since').value)||2024,initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();WORKERS.push({id:WORKERS.length,name:nombre,initials,photo:nwPhotoData,type:types,zonas:[],status:'active',rating:0,services:0,since,desc:document.getElementById('nw-desc').value,mapX:Math.round(Math.random()*70+15),mapY:Math.round(Math.random()*60+15),reviews:[],todayJobs:[]});showToast('green','✅','"'+nombre+'" agregado');nwPhotoData=null;document.getElementById('nw-photo-circle').innerHTML='<div class="ph-ph">Foto</div>';['nw-nombre','nw-tel','nw-email','nw-desc'].forEach(id=>document.getElementById(id).value='');['nw-depto','nw-auto','nw-tap'].forEach(id=>document.getElementById(id).checked=false);navGo('admin','personal',document.querySelectorAll('#nav-admin .nav-btn')[1]);renderStaffList('all');}
+function addNewWorker(){const nombre=document.getElementById('nw-nombre').value.trim();if(!nombre){showToast('amber','⚠️','Escribe el nombre');return;}const types=[];if(document.getElementById('nw-depto').checked)types.push('depto');if(document.getElementById('nw-auto').checked)types.push('auto');if(document.getElementById('nw-tap').checked)types.push('tapiceria');if(!types.length){showToast('amber','⚠️','Selecciona especialidad');return;}const since=parseInt(document.getElementById('nw-since').value)||2024,initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();WORKERS.push({id:WORKERS.length,name:nombre,initials,photo:nwPhotoData,type:types,zonas:[],status:'active',rating:0,services:0,since,desc:document.getElementById('nw-desc').value,mapX:Math.round(Math.random()*70+15),mapY:Math.round(Math.random()*60+15),reviews:[],todayJobs:[]});showToast('green','✅','"'+nombre+'" agregado');nwPhotoData=null;document.getElementById('nw-photo-circle').innerHTML='<div class="ph-ph">Foto</div>';['nw-nombre','nw-tel','nw-email','nw-desc'].forEach(id=>document.getElementById(id).value='');['nw-depto','nw-auto','nw-tap'].forEach(id=>document.getElementById(id).checked=false);fbSaveWorkers();navGo('admin','personal',document.querySelectorAll('#nav-admin .nav-btn')[1]);renderStaffList('all');}
 function toggleWStatus(){
   workerActive=!workerActive;
   // Sync status to WORKERS array so client, supervisor & admin views reflect the change
@@ -3186,6 +3190,7 @@ function registrarEntrada(){
   pushNotif('supervisor','🟢','green','Entrada registrada',`${p.nombre} registró entrada a las ${hora}${svcLabel}`);
   pushNotif('admin','🟢','green','Entrada registrada',`${p.nombre} (Personal Inm.) registró entrada a las ${hora}${svcLabel}`);
   renderPIInicio();
+  fbSavePersonalInm();
   showToast('green','✅','Entrada registrada: '+hora);
 }
 
@@ -3201,6 +3206,7 @@ function registrarSalida(){
   pushNotif('supervisor','🔴','blue','Salida registrada',`${p.nombre} registró salida a las ${hora}${svcLabel}`);
   pushNotif('admin','🔴','blue','Salida registrada',`${p.nombre} (Personal Inm.) registró salida a las ${hora}${svcLabel}`);
   renderPIInicio();
+  fbSavePersonalInm();
   showToast('green','✅','Salida registrada: '+hora);
 }
 
@@ -3252,6 +3258,7 @@ function togglePersonalInm(i){
   // Sync USERS table
   const u=USERS.find(x=>x.email===PERSONAL_INM[i].email);if(u)u.activo=PERSONAL_INM[i].activo;
   renderPersonalInmAdmin();
+  fbSavePersonalInm();fbSaveUsers();
   showToast(PERSONAL_INM[i].activo!==false?'green':'blue',PERSONAL_INM[i].activo!==false?'✅':'⚪',PERSONAL_INM[i].nombre+' '+(PERSONAL_INM[i].activo!==false?'activado':'desactivado'));
 }
 
@@ -3261,6 +3268,7 @@ function removePersonalInm(i){
   const idx=USERS.findIndex(u=>u.email===PERSONAL_INM[i].email);if(idx>-1)USERS.splice(idx,1);
   PERSONAL_INM.splice(i,1);
   renderPersonalInmAdmin();
+  fbSavePersonalInm();fbSaveUsers();
   showToast('blue','🗑️',n+' eliminado');
 }
 
@@ -3280,6 +3288,7 @@ function addPersonalInm(){
   ['pi-nombre','pi-initials','pi-email','pi-tel','pi-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   togglePiForm();
   renderPersonalInmAdmin();
+  fbSavePersonalInm();fbSaveUsers();
   showToast('green','✅',nombre+' agregado');
 }
 
@@ -3313,6 +3322,7 @@ function confirmarAsignarPi(){
     const ps=PROPERTY_SERVICES.find(x=>x.id===psId);
     showToast('green','✅',p.nombre+' asignado a '+(ps?ps.folio:'servicio'));
   }
+  fbSavePersonalInm();
   closeAsignarPi();
 }
 
@@ -3320,6 +3330,7 @@ function desasignarPi(pIdx,psId){
   const p=PERSONAL_INM[pIdx];if(!p)return;
   p.serviciosAsignados=p.serviciosAsignados.filter(id=>id!==psId);
   renderPersonalInmAdmin();
+  fbSavePersonalInm();
   showToast('blue','📋','Asignación removida');
 }
 
@@ -3594,6 +3605,7 @@ function saveInmReport(){
   _openInmRows.add(savedId);
   renderPropServices(_propFilter);
   renderSVInmuebles();
+  fbSavePropertyServices();
   showToast('green','✅','Reporte de visita guardado');
 }
 function deleteReporte(psId,reporteId){
@@ -3603,6 +3615,7 @@ function deleteReporte(psId,reporteId){
   _openInmRows.add(psId);
   renderPropServices(_propFilter);
   renderSVInmuebles();
+  fbSavePropertyServices();
   showToast('amber','🗑','Reporte eliminado');
 }
 function downloadReportePDF(psId,reporteId){
@@ -4067,6 +4080,7 @@ function createPropertyService(){
   });
 
   pushNotif('supervisor','🏢','blue','Nuevo contrato asignado',`${folio} — ${nombre}`);
+  fbSavePropertyServices();
   showToast('green','🏢',`Contrato ${folio} creado y asignado.`);
   clearPropForm();
   togglePropForm();
@@ -4109,6 +4123,7 @@ function renewContract(id){
   old.status='vencido';
 
   pushNotif('supervisor','🔄','blue','Contrato renovado',`${folio} — ${old.cliente.nombre}`);
+  fbSavePropertyServices();
   showToast('green','🔄',`Contrato renovado: ${folio}`);
   renderPropServices(_propFilter);
   renderSVInmuebles();
@@ -4120,6 +4135,7 @@ function deletePropService(id){
   if(idx===-1)return;
   const nm=PROPERTY_SERVICES[idx].folio;
   PROPERTY_SERVICES.splice(idx,1);
+  fbSavePropertyServices();
   showToast('amber','🗑',`Contrato ${nm} eliminado`);
   renderPropServices(_propFilter);
 }
@@ -4128,6 +4144,7 @@ function updatePropStatus(id,status){
   const ps=PROPERTY_SERVICES.find(p=>p.id===id);
   if(!ps)return;
   ps.status=status;
+  fbSavePropertyServices();
   showToast('green','✅',`Servicio: ${statusLabel(status)}`);
   renderPropServices(_propFilter);
   renderSVInmuebles();
@@ -4137,6 +4154,7 @@ function updatePropContratoStatus(id,status){
   const ps=PROPERTY_SERVICES.find(p=>p.id===id);
   if(!ps)return;
   ps.contratoStatus=status;
+  fbSavePropertyServices();
   showToast('green','📋',`Contrato: ${contratoLabel(status)}`);
   renderPropServices(_propFilter);
   renderSVInmuebles();
@@ -4147,6 +4165,7 @@ function svUpdatePropStatus(id,status){
   if(!ps)return;
   ps.status=status;
   pushNotif('admin','🏢','blue','Servicio actualizado',`${ps.folio} — ${statusLabel(status)}`);
+  fbSavePropertyServices();
   showToast('green','✅',`Servicio: ${statusLabel(status)}`);
   renderSVInmuebles();
   renderPropServices(_propFilter);
@@ -4806,6 +4825,7 @@ function addClienteInm(){
   if(contratoId!=null){const ps=PROPERTY_SERVICES.find(p=>p.id===contratoId);if(ps)ps.clienteInmId=newId;}
   showToast('green','✅',`"${nombre}" agregado como cliente`);
   ['ci-nombre','ci-empresa','ci-email','ci-tel','ci-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  fbSaveClientsInm();fbSaveUsers();
   toggleCiForm();
   renderAdminClientesInm();
 }
@@ -4843,6 +4863,7 @@ function toggleClienteInmStatus(id){
   ci.activo=!ci.activo;
   const user=USERS.find(u=>u.email===ci.email);
   if(user){user.activo=ci.activo;user.accesoRevocado=!ci.activo;}
+  fbSaveClientsInm();fbSaveUsers();
   showToast(ci.activo?'green':'amber',ci.activo?'✅':'⚠️',`${ci.nombre}: ${ci.activo?'activado':'desactivado'}`);
   renderAdminClientesInm();
 }
@@ -4853,6 +4874,7 @@ function removeClienteInm(id){
   CLIENTS_INM=CLIENTS_INM.filter(c=>c.id!==id);
   const userIdx=USERS.findIndex(u=>u.email===ci.email&&u.rol==='cliente_inm');
   if(userIdx>-1)USERS.splice(userIdx,1);
+  fbSaveClientsInm();fbSaveUsers();
   showToast('green','✅',`"${ci.nombre}" eliminado`);
   renderAdminClientesInm();
 }
@@ -5071,6 +5093,7 @@ function savePromosToLanding() {
   try {
     const activas = PROMOTIONS.filter(p => p.activo);
     localStorage.setItem('ayalym-promos', JSON.stringify(activas));
+    fbSavePromotions();
   } catch(e) {}
 }
 
@@ -5120,6 +5143,7 @@ function savePricesToLanding() {
       timestamp: Date.now()
     };
     localStorage.setItem('ayalym-prices', JSON.stringify(data));
+    fbSaveConfig();
   } catch(e) {}
 }
 
@@ -5133,3 +5157,16 @@ document.addEventListener('input', function(e) {
     }, 800);
   }
 });
+/* ══════════════════════════════════════════════════
+   INICIO CON FIREBASE — carga datos al arrancar
+   ══════════════════════════════════════════════════ */
+(async function initFirebase() {
+  var overlay = document.getElementById('fb-loading');
+  try {
+    await loadAllData();
+  } catch(e) {
+    console.warn('Firebase: usando datos locales.', e);
+  } finally {
+    if (overlay) overlay.style.display = 'none';
+  }
+})();

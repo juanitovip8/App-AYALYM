@@ -15,6 +15,16 @@
 </head>
 <body>
 
+<!-- Overlay de carga Firebase -->
+<div id="fb-loading" style="position:fixed;inset:0;z-index:9999;background:#0b1e35;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <img src="img/logo.png" alt="AYA" style="width:64px;height:64px;border-radius:14px;">
+  <p style="color:#fff;font-size:14px;font-weight:500;font-family:Inter,sans-serif;margin:0;">Cargando AYALYM…</p>
+  <div style="width:200px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;">
+    <div id="fb-bar" style="height:100%;width:30%;background:#1A56DB;border-radius:2px;animation:fbbar 1.4s ease-in-out infinite alternate;"></div>
+  </div>
+</div>
+<style>@keyframes fbbar{from{transform:translateX(-60px)}to{transform:translateX(230px)}}</style>
+
 <div class="app">
 <div id="toast" class="toast"></div>
 
@@ -1288,7 +1298,11 @@
 </div>
 
 <script src="js/data.js?v=18"></script>
-<script src="js/app.js?v=55"></script>
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-db.js?v=1"></script>
+<script src="js/app.js?v=56"></script>
 <script src="js/theme.js?v=1"></script>
 </body>
 </html>
