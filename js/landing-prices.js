@@ -118,10 +118,22 @@
 
     /* ── Visibilidad de tarjetas según configuración del admin ── */
     var activo = p.svcActivo || SVC_ACTIVO_DEFAULTS;
-    ['depto', 'auto', 'tapiceria'].forEach(function(key) {
+    var keys = ['depto', 'auto', 'tapiceria'];
+    var allOff = true;
+    keys.forEach(function(key) {
       var card = document.getElementById('lp-card-' + key);
-      if (card) card.style.display = activo[key] !== false ? '' : 'none';
+      var visible = activo[key] !== false;
+      if (visible) allOff = false;
+      if (card) card.style.display = visible ? '' : 'none';
+      /* Limpiar el <style> de flash-prevention si existe */
+      var flashStyle = document.getElementById('lp-hide-' + key);
+      if (flashStyle) flashStyle.parentNode.removeChild(flashStyle);
     });
+    /* Mostrar / ocultar la sección completa */
+    var section = document.getElementById('servicios');
+    if (section) section.style.display = allOff ? 'none' : '';
+    var hideAll = document.getElementById('lp-hide-servicios');
+    if (hideAll) hideAll.parentNode.removeChild(hideAll);
   }
 
   /* Ejecutar cuando el DOM esté listo */

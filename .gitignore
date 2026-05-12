@@ -1,0 +1,13 @@
+# Carpeta anidada con su propio .git (no es submodule)
+App AYALYM/
+
+# Archivos de configuración local de Claude Code
+.claude/
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

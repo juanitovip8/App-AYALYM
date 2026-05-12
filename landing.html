@@ -513,7 +513,7 @@
       max-width: 1200px;
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
     }
     /* Premium dark service cards */
@@ -1251,6 +1251,35 @@
     </div>
     <div class="promo-heading-line"></div>
   </div>
+  <!-- Script síncrono: oculta tarjetas inactivas ANTES de pintar (evita flash) -->
+  <script>
+  (function(){
+    try{
+      var raw=localStorage.getItem('ayalym-prices');
+      if(raw){
+        var a=(JSON.parse(raw).svcActivo)||{};
+        ['depto','auto','tapiceria'].forEach(function(k){
+          if(a[k]===false){
+            /* Inyectar estilo en <head> para que aplique antes del paint */
+            var s=document.createElement('style');
+            s.id='lp-hide-'+k;
+            s.textContent='#lp-card-'+k+'{display:none!important}';
+            document.head.appendChild(s);
+          }
+        });
+        /* Ocultar sección completa si no hay ningún servicio activo */
+        var alOff=['depto','auto','tapiceria'].every(function(k){return a[k]===false;});
+        if(alOff){
+          var s2=document.createElement('style');
+          s2.id='lp-hide-servicios';
+          s2.textContent='#servicios{display:none!important}';
+          document.head.appendChild(s2);
+        }
+      }
+    }catch(e){}
+  })();
+  </script>
+
   <div class="promo-grid">
 
     <!-- LIMPIEZA DE DEPARTAMENTO -->
@@ -1552,7 +1581,7 @@
 </footer>
 
 <script src="js/theme.js"></script>
-<script src="js/landing-prices.js?v=3"></script>
+<script src="js/landing-prices.js?v=4"></script>
 <script src="js/landing-promos.js?v=3"></script>
 </body>
 </html>

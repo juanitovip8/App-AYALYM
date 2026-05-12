@@ -1,0 +1,11 @@
+{
+  "name": "ayalym-app",
+  "version": "1.0.0",
+  "description": "AYALYM — Portal de reservas de limpieza",
+  "scripts": {
+    "start": "npx serve . --listen $PORT --no-clipboard"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
