@@ -818,6 +818,8 @@ function navGo(role,sec,btn){
   if(role==='admin'&&sec==='resumen'){renderTopCards();renderAdminKPIs();}
   if(role==='admin'&&sec==='inmuebles'){renderPropServices('activo');switchInmMainTab('contratos',document.getElementById('inm-main-tab-contratos'));}
   if(role==='admin'&&sec==='personal-inm')renderPersonalInmAdmin();
+  if(role==='admin'&&sec==='usuarios'){renderUsersPanel();renderSupervisorsPanel();}
+  if(role==='admin'&&sec==='supervisores')renderSupervisorsPanel();
   if(role==='admin'&&sec==='facturacion')renderFacturacionAdmin();
   if(role==='supervisor'&&sec==='inmuebles-sv')renderSVInmuebles();
   // Personal Inmuebles
@@ -1562,6 +1564,28 @@ function addUser(){
   fbSaveUsers();showToast('green','✅','"'+nombre+'" registrado como '+rolLabel(rol));
 }
 
+/* Registro de supervisor desde el panel de supervisores */
+function addSupervisorForm(){
+  const nombre=(document.getElementById('nsv-nombre')||{}).value?.trim()||'';
+  const email=(document.getElementById('nsv-email')||{}).value?.trim()||'';
+  const tel=(document.getElementById('nsv-tel')||{}).value?.trim()||'';
+  const pass=(document.getElementById('nsv-pass')||{}).value?.trim()||'';
+  if(!nombre||!email||!pass){showToast('amber','⚠️','Nombre, correo y contraseña son obligatorios');return;}
+  if(pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
+  if(USERS.find(u=>u.email===email)){showToast('red','❌','Este correo ya está registrado');return;}
+  /* Crear entrada en SUPERVISORS */
+  const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  const svNewId=SUPERVISORS.length?Math.max(...SUPERVISORS.map(s=>s.id))+1:0;
+  SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[],photo:null});
+  /* Crear cuenta de acceso en USERS */
+  const uNewId=USERS.length?Math.max(...USERS.map(u=>u.id))+1:0;
+  USERS.push({id:uNewId,nombre,email,rol:'supervisor',tel,activo:true,accesoRevocado:false,password:pass});
+  fbSaveSupervisors();fbSaveUsers();
+  _closeModal();
+  renderSupervisorsPanel();renderUsersPanel();
+  showToast('green','✅','"'+nombre+'" registrado como supervisor');
+}
+
 /* ── ADMIN: FACTURACIÓN ── */
 function filterFacturas(filter,btn){
   facturaFilter=filter;
@@ -1791,7 +1815,8 @@ function openAdminModal(type){
     limpieza:'➕ Agregar tipo de limpieza',
     urgencia:'➕ Agregar nivel de urgencia',
     zona:'➕ Agregar zona de cobertura',
-    usuario:'➕ Registrar nuevo usuario',
+    usuario:'➕ Registrar usuario (Admin / Cliente)',
+    supervisor:'➕ Registrar nuevo supervisor',
   };
   const bodies={
     servicio:`
@@ -1834,6 +1859,12 @@ function openAdminModal(type){
         <button class="btn-sec" onclick="closeAdminModal()">Cancelar</button>
       </div>`,
     usuario:`
+      <div style="background:rgba(26,86,219,.08);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#185FA5;line-height:1.5;">
+        💡 Este formulario es para <strong>Administradores</strong> y <strong>Clientes regulares</strong>.<br>
+        Para otros roles usa sus paneles dedicados:<br>
+        <span style="color:#042C53;">• Trabajadores → Personal &nbsp;• Supervisores → Supervisores</span><br>
+        <span style="color:#042C53;">• Personal Inm → Personal Inm &nbsp;• Clientes Inm → Inmuebles</span>
+      </div>
       <div class="frow">
         <div><label>Nombre completo</label><input type="text" id="nu-nombre" placeholder="María López"></div>
         <div><label>Correo electrónico</label><input type="email" id="nu-email" placeholder="maria@email.com"></div>
@@ -1842,15 +1873,24 @@ function openAdminModal(type){
         <div><label>Contraseña temporal</label><input type="password" id="nu-pass" placeholder="Mínimo 8 caracteres"></div>
         <div><label>Rol</label><select id="nu-rol">
           <option value="admin">Administrador</option>
-          <option value="supervisor">Supervisor</option>
-          <option value="trabajador">Trabajador</option>
-          <option value="cliente">Cliente</option>
-          <option value="personal_inm">Personal Inmuebles</option>
-          <option value="cliente_inm">Cliente Inmuebles</option>
+          <option value="cliente">Cliente regular</option>
         </select></div>
       </div>
       <div class="admin-modal-btns">
         <button class="btn-sm" onclick="addUser()">Registrar usuario</button>
+        <button class="btn-sec" onclick="closeAdminModal()">Cancelar</button>
+      </div>`,
+    supervisor:`
+      <div class="frow">
+        <div><label>Nombre completo</label><input type="text" id="nsv-nombre" placeholder="Luis Torres"></div>
+        <div><label>Correo electrónico</label><input type="email" id="nsv-email" placeholder="luis@ayalym.com"></div>
+      </div>
+      <div class="frow">
+        <div><label>Teléfono</label><input type="text" id="nsv-tel" placeholder="+52 55 0000 0000"></div>
+        <div><label>Contraseña</label><input type="password" id="nsv-pass" placeholder="Mínimo 8 caracteres"></div>
+      </div>
+      <div class="admin-modal-btns">
+        <button class="btn-sm" onclick="addSupervisorForm()">Registrar supervisor</button>
         <button class="btn-sec" onclick="closeAdminModal()">Cancelar</button>
       </div>`,
   };
@@ -4346,6 +4386,7 @@ function addPersonalInm(){
   ['pi-nombre','pi-initials','pi-email','pi-tel','pi-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   togglePiForm();
   renderPersonalInmAdmin();
+  if(typeof renderUsersPanel==='function')renderUsersPanel();
   fbSavePersonalInm();fbSaveUsers();
   showToast('green','✅',nombre+' agregado');
 }
@@ -6032,6 +6073,7 @@ function addClienteInm(){
   fbSaveClientsInm();fbSaveUsers();
   toggleCiForm();
   renderAdminClientesInm();
+  if(typeof renderUsersPanel==='function')renderUsersPanel();
 }
 
 function renderAdminClientesInm(){
