@@ -928,6 +928,7 @@ function renderChatBoxSide(convKey,asRole,boxId){renderChatBox(convKey,asRole,bo
 let chatUnread={};  /* {convKey: count} mensajes no leídos */
 let chatFloatOpen={}; /* {convKey: true} ventanas abiertas */
 let chatContactsOpen=false;
+let svcCardCollapsed={}; /* {svcId: true} cards colapsadas */
 
 /* ── Definición de contactos por rol ── */
 function getChatContacts(){
@@ -1453,7 +1454,7 @@ function addUser(){
       SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[]});
     }
   }
-  ['nu-nombre','nu-email','nu-pass'].forEach(id=>document.getElementById(id).value='');
+  _closeModal();
   renderUsersPanel();fbSaveUsers();showToast('green','✅','"'+nombre+'" registrado como '+rolLabel(rol));
 }
 
@@ -1677,39 +1678,136 @@ function _svcExtrasHtml(svcId){
   </div>`;
 }
 
+/* ══════════════════════════════════════════════════════
+   ADMIN MODAL FLOTANTE
+   ══════════════════════════════════════════════════════ */
+function openAdminModal(type){
+  const titles={
+    servicio:'➕ Agregar tipo de servicio',
+    limpieza:'➕ Agregar tipo de limpieza',
+    urgencia:'➕ Agregar nivel de urgencia',
+    zona:'➕ Agregar zona de cobertura',
+    usuario:'➕ Registrar nuevo usuario',
+  };
+  const bodies={
+    servicio:`
+      <div class="frow">
+        <div><label>Nombre del servicio</label><input type="text" id="ns-name" placeholder="Ej: Limpieza de oficina"></div>
+        <div><label>Precio base ($)</label><input type="number" id="ns-price" placeholder="500"></div>
+      </div>
+      <div class="frow">
+        <div><label>Duración mín. (min)</label><input type="number" id="ns-dur-min" placeholder="30"></div>
+        <div><label>Duración máx. (min)</label><input type="number" id="ns-dur-max" placeholder="60"></div>
+      </div>
+      <div class="admin-modal-btns">
+        <button class="btn-sm" onclick="addSvcType()">Agregar servicio</button>
+        <button class="btn-sec" onclick="closeAdminModal()">Cancelar</button>
+      </div>`,
+    limpieza:`
+      <div class="frow">
+        <div><label>Nombre</label><input type="text" id="nct-nombre" placeholder="Ej: Limpieza ecológica"></div>
+        <div><label>Factor de precio (1.0 = base)</label><input type="number" id="nct-factor" placeholder="1.2" step="0.1" min="1"></div>
+      </div>
+      <div class="frow full"><label>Descripción</label><input type="text" id="nct-desc" placeholder="Breve descripción del tipo de limpieza"></div>
+      <div class="admin-modal-btns">
+        <button class="btn-sm" onclick="addCleaningType()">Agregar tipo</button>
+        <button class="btn-sec" onclick="closeAdminModal()">Cancelar</button>
+      </div>`,
+    urgencia:`
+      <div class="frow">
+        <div><label>Nombre</label><input type="text" id="nu-name" placeholder="Ej: Express"></div>
+        <div><label>Incremento sobre precio (%)</label><input type="number" id="nu-pct" placeholder="50"></div>
+      </div>
+      <div class="admin-modal-btns">
+        <button class="btn-sm" onclick="addUrgencia()">Agregar urgencia</button>
+        <button class="btn-sec" onclick="closeAdminModal()">Cancelar</button>
+      </div>`,
+    zona:`
+      <div class="frow full"><label>Nombre de la zona</label><input type="text" id="nz-nombre" placeholder="Ej: Xochimilco / Tláhuac"></div>
+      <div class="frow full"><label>Colonias que cubre</label><input type="text" id="nz-colonias" placeholder="Ej: Xochimilco, Santa Cecilia, La Nopalera"></div>
+      <div class="admin-modal-btns">
+        <button class="btn-sm" onclick="addZona()">Agregar zona</button>
+        <button class="btn-sec" onclick="closeAdminModal()">Cancelar</button>
+      </div>`,
+    usuario:`
+      <div class="frow">
+        <div><label>Nombre completo</label><input type="text" id="nu-nombre" placeholder="María López"></div>
+        <div><label>Correo electrónico</label><input type="email" id="nu-email" placeholder="maria@email.com"></div>
+      </div>
+      <div class="frow">
+        <div><label>Contraseña temporal</label><input type="password" id="nu-pass" placeholder="Mínimo 8 caracteres"></div>
+        <div><label>Rol</label><select id="nu-rol">
+          <option value="admin">Administrador</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="trabajador">Trabajador</option>
+          <option value="cliente">Cliente</option>
+          <option value="personal_inm">Personal Inmuebles</option>
+          <option value="cliente_inm">Cliente Inmuebles</option>
+        </select></div>
+      </div>
+      <div class="admin-modal-btns">
+        <button class="btn-sm" onclick="addUser()">Registrar usuario</button>
+        <button class="btn-sec" onclick="closeAdminModal()">Cancelar</button>
+      </div>`,
+  };
+  document.getElementById('admin-modal-title').textContent=titles[type]||'Agregar';
+  document.getElementById('admin-modal-body').innerHTML=bodies[type]||'';
+  document.getElementById('admin-modal-ov').classList.add('open');
+  setTimeout(()=>{const f=document.querySelector('#admin-modal-body input');if(f)f.focus();},120);
+}
+function closeAdminModal(e){
+  if(e&&e.target!==document.getElementById('admin-modal-ov'))return;
+  document.getElementById('admin-modal-ov').classList.remove('open');
+}
+function _closeModal(){document.getElementById('admin-modal-ov').classList.remove('open');}
+
+/* Colapsado de service cards */
+function toggleSvcCard(svcId){
+  svcCardCollapsed[svcId]=!svcCardCollapsed[svcId];
+  const body=document.getElementById('stc-body-'+svcId);
+  const chev=document.getElementById('stc-chev-'+svcId);
+  if(body)body.classList.toggle('collapsed',!!svcCardCollapsed[svcId]);
+  if(chev)chev.classList.toggle('open',!svcCardCollapsed[svcId]);
+}
+
 function renderSvcDurationList(){
   const el=document.getElementById('svc-duration-list');if(!el)return;
   el.innerHTML=SVC_TYPES.map((s,i)=>{
     const isOn=s.activo!==false;
+    const collapsed=!!svcCardCollapsed[s.id];
     return`<div class="svc-type-card${isOn?'':' inactive'}">
-      <div class="stc-hdr">
-        <div style="display:flex;align-items:center;gap:8px;">
+      <div class="stc-hdr" onclick="toggleSvcCard('${s.id}')" style="padding:10px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;">
           <div class="stc-status-dot${isOn?' stc-status-dot--on':''}"></div>
-          <p style="font-size:13px;font-weight:600;color:#042C53;">${s.nombre}</p>
+          <p style="font-size:13px;font-weight:600;color:#042C53;margin:0;">${s.nombre}</p>
+          <span style="font-size:11px;color:#5C7A9A;">${isOn?'Activo':'Inactivo'}</span>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
           <button class="toggle-btn${isOn?' on':''}" onclick="toggleSvcType(${i})">${isOn?'Activo':'Inactivo'}</button>
           <button class="btn-danger" onclick="removeSvcType(${i})">✕</button>
+          <span id="stc-chev-${s.id}" class="stc-chevron${collapsed?'':' open'}">▼</span>
         </div>
       </div>
-      ${_secHdr('⏱','Duración','dur-'+s.id)}
-      <div class="stc-sec-body stc-sec-open">
-        <div class="svc-dur-row">
-          <span>Mínima</span>
-          <label class="svc-price-inp"><input type="number" value="${s.durMin}" min="15" step="15" onchange="SVC_TYPES[${i}].durMin=parseInt(this.value);updateDurationBanner();renderTimeSlots();" style="width:60px;text-align:center;"></label>
-          <span>—</span>
-          <span>Máxima</span>
-          <label class="svc-price-inp"><input type="number" value="${s.durMax}" min="15" step="15" onchange="SVC_TYPES[${i}].durMax=parseInt(this.value);updateDurationBanner();renderTimeSlots();" style="width:60px;text-align:center;"></label>
-          <span style="color:#5C7A9A;">min</span>
+      <div id="stc-body-${s.id}" class="stc-body${collapsed?' collapsed':''}" style="max-height:${collapsed?'0':'600px'};">
+        ${_secHdr('⏱','Duración','dur-'+s.id)}
+        <div class="stc-sec-body stc-sec-open">
+          <div class="svc-dur-row">
+            <span>Mínima</span>
+            <label class="svc-price-inp"><input type="number" value="${s.durMin}" min="15" step="15" onchange="SVC_TYPES[${i}].durMin=parseInt(this.value);updateDurationBanner();renderTimeSlots();" style="width:60px;text-align:center;"></label>
+            <span>—</span>
+            <span>Máxima</span>
+            <label class="svc-price-inp"><input type="number" value="${s.durMax}" min="15" step="15" onchange="SVC_TYPES[${i}].durMax=parseInt(this.value);updateDurationBanner();renderTimeSlots();" style="width:60px;text-align:center;"></label>
+            <span style="color:#5C7A9A;">min</span>
+          </div>
         </div>
+        ${_svcPriceFieldsHtml(s.id,i)}
+        ${_svcExtrasHtml(s.id)}
       </div>
-      ${_svcPriceFieldsHtml(s.id,i)}
-      ${_svcExtrasHtml(s.id)}
     </div>`;}).join('');
 }
 
 function toggleSvcType(i){SVC_TYPES[i].activo=!(SVC_TYPES[i].activo!==false);renderSvcDurationList();renderSvcSelect();savePricesToLanding();fbSaveConfig();showToast(SVC_TYPES[i].activo!==false?'green':'blue',SVC_TYPES[i].activo!==false?'✅':'⚪','"'+SVC_TYPES[i].nombre+'" '+(SVC_TYPES[i].activo!==false?'activado':'desactivado'));}
-function addSvcType(){const n=document.getElementById('ns-name').value.trim(),p=parseInt(document.getElementById('ns-price').value)||500,dMin=parseInt(document.getElementById('ns-dur-min').value)||30,dMax=parseInt(document.getElementById('ns-dur-max').value)||60;if(!n){showToast('amber','⚠️','Escribe el nombre');return;}SVC_TYPES.push({id:'s'+Date.now(),nombre:n,precio:p,durMin:dMin,durMax:dMax,activo:true});['ns-name','ns-price','ns-dur-min','ns-dur-max'].forEach(id=>document.getElementById(id).value='');renderSvcDurationList();renderSvcSelect();showToast('green','✅','"'+n+'" agregado');}
+function addSvcType(){const n=document.getElementById('ns-name').value.trim(),p=parseInt(document.getElementById('ns-price').value)||500,dMin=parseInt(document.getElementById('ns-dur-min').value)||30,dMax=parseInt(document.getElementById('ns-dur-max').value)||60;if(!n){showToast('amber','⚠️','Escribe el nombre');return;}SVC_TYPES.push({id:'s'+Date.now(),nombre:n,precio:p,durMin:dMin,durMax:dMax,activo:true});_closeModal();renderSvcDurationList();renderSvcSelect();savePricesToLanding();fbSaveConfig();showToast('green','✅','"'+n+'" agregado');}
 function removeSvcType(i){const n=SVC_TYPES[i].nombre;SVC_TYPES.splice(i,1);renderSvcDurationList();renderSvcSelect();showToast('blue','🗑️','"'+n+'" eliminado');}
 
 /* extras CRUD */
@@ -1743,17 +1841,32 @@ function renderCleaningTypesAdmin(){
   const el=document.getElementById('cleaning-types-admin-list');if(!el)return;
   el.innerHTML=CLEANING_TYPES.map((ct,i)=>{
     const isOn=ct.activo!==false;
+    const cid='ct-'+ct.id;
+    const collapsed=!!svcCardCollapsed[cid];
     return`<div class="svc-type-card${isOn?'':' inactive'}">
-      <div class="stc-hdr"><p>${ct.nombre}</p><div style="display:flex;gap:6px;align-items:center;">
-        <button class="toggle-btn${isOn?' on':''}" onclick="toggleCleaningType(${i})">${isOn?'Activo':'Inactivo'}</button>
-        <button class="btn-danger" onclick="${i<3?'showToast(\'amber\',\'⚠️\',\'No se puede eliminar un tipo predeterminado\')':'removeCleaningType('+i+')'}">Eliminar</button>
-      </div></div>
-      <p style="font-size:12px;color:#185FA5;">${ct.descripcion}</p>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:12px;color:#185FA5;">Factor de precio:</span><input type="number" value="${ct.factor}" min="1" step="0.1" style="width:70px;" onchange="CLEANING_TYPES[${i}].factor=parseFloat(this.value);renderCleaningTypesForClient();calcPrice();"><span style="font-size:12px;color:#185FA5;">(base × factor)</span></div>
+      <div class="stc-hdr" onclick="toggleSvcCard('${cid}')" style="padding:10px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;">
+          <div class="stc-status-dot${isOn?' stc-status-dot--on':''}"></div>
+          <p style="font-size:13px;font-weight:600;color:#042C53;margin:0;">${ct.nombre}</p>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
+          <button class="toggle-btn${isOn?' on':''}" onclick="toggleCleaningType(${i})">${isOn?'Activo':'Inactivo'}</button>
+          <button class="btn-danger" onclick="${i<3?`showToast('amber','⚠️','No se puede eliminar un tipo predeterminado')`:`removeCleaningType(${i})`}">✕</button>
+          <span id="stc-chev-${cid}" class="stc-chevron${collapsed?'':' open'}">▼</span>
+        </div>
+      </div>
+      <div id="stc-body-${cid}" class="stc-body${collapsed?' collapsed':''}" style="max-height:${collapsed?'0':'200px'};padding:${collapsed?'0':'0 12px 12px'};">
+        <p style="font-size:12px;color:#185FA5;margin:8px 0 6px;">${ct.descripcion}</p>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:12px;color:#185FA5;">Factor de precio:</span>
+          <input type="number" value="${ct.factor}" min="1" step="0.1" style="width:70px;" onchange="CLEANING_TYPES[${i}].factor=parseFloat(this.value);renderCleaningTypesForClient();calcPrice();">
+          <span style="font-size:12px;color:#185FA5;">(base × factor)</span>
+        </div>
+      </div>
     </div>`;}).join('');
 }
 function toggleCleaningType(i){CLEANING_TYPES[i].activo=!(CLEANING_TYPES[i].activo!==false);renderCleaningTypesAdmin();renderCleaningTypesForClient();fbSaveConfig();showToast(CLEANING_TYPES[i].activo!==false?'green':'blue',CLEANING_TYPES[i].activo!==false?'✅':'⚪','"'+CLEANING_TYPES[i].nombre+'" '+(CLEANING_TYPES[i].activo!==false?'activado':'desactivado'));}
-function addCleaningType(){const n=document.getElementById('nct-nombre').value.trim(),f=parseFloat(document.getElementById('nct-factor').value)||1.0,d=document.getElementById('nct-desc').value.trim();if(!n){showToast('amber','⚠️','Escribe el nombre');return;}CLEANING_TYPES.push({id:'ct'+Date.now(),nombre:n,descripcion:d||'Servicio de limpieza especializado',factor:f,activo:true});['nct-nombre','nct-factor','nct-desc'].forEach(id=>document.getElementById(id).value='');renderCleaningTypesAdmin();renderCleaningTypesForClient();showToast('green','✅','"'+n+'" agregado');}
+function addCleaningType(){const n=document.getElementById('nct-nombre').value.trim(),f=parseFloat(document.getElementById('nct-factor').value)||1.0,d=document.getElementById('nct-desc').value.trim();if(!n){showToast('amber','⚠️','Escribe el nombre');return;}CLEANING_TYPES.push({id:'ct'+Date.now(),nombre:n,descripcion:d||'Servicio de limpieza especializado',factor:f,activo:true});_closeModal();renderCleaningTypesAdmin();renderCleaningTypesForClient();fbSaveConfig();showToast('green','✅','"'+n+'" agregado');}
 function removeCleaningType(i){if(i<3){showToast('amber','⚠️','No se pueden eliminar los tipos predeterminados');return;}const n=CLEANING_TYPES[i].nombre;CLEANING_TYPES.splice(i,1);renderCleaningTypesAdmin();renderCleaningTypesForClient();showToast('blue','🗑️','"'+n+'" eliminado');}
 
 /* WORKER QUINCENA */
@@ -2483,7 +2596,7 @@ function setUrgMaxMin(i,val){const v=Math.max(1,parseInt(val)||120);if(URGENCIAS
 function setUrgDiasMin(i,val){const v=Math.max(0,parseInt(val)||0);if(URGENCIAS[i].diasMin===v)return;URGENCIAS[i].diasMin=v;if(URGENCIAS[i].diasMax!=null&&v>URGENCIAS[i].diasMax)URGENCIAS[i].diasMax=v;renderUrgenciaSelect();}
 function setUrgDiasMax(i,val){const raw=val.toString().trim();const v=raw===''||isNaN(parseInt(raw))?null:Math.max(0,parseInt(raw));if(URGENCIAS[i].diasMax===v)return;URGENCIAS[i].diasMax=v;renderUrgenciaSelect();}
 function toggleUrgencia(i){URGENCIAS[i].activo=!(URGENCIAS[i].activo!==false);renderUrgencias();renderUrgenciaSelect();fbSaveConfig();showToast(URGENCIAS[i].activo!==false?'green':'blue',URGENCIAS[i].activo!==false?'✅':'⚪','"'+URGENCIAS[i].nombre+'" '+(URGENCIAS[i].activo!==false?'activada':'desactivada'));}
-function addUrgencia(){const n=document.getElementById('nu-name').value.trim(),p=Math.max(0,parseInt(document.getElementById('nu-pct').value)||0);if(!n){showToast('amber','⚠️','Escribe el nombre');return;}URGENCIAS.push({id:'u'+Date.now(),nombre:n,pct:p,activo:true,modo:'sin_filtro',maxMin:null});document.getElementById('nu-name').value='';document.getElementById('nu-pct').value='';renderUrgencias();renderUrgenciaSelect();showToast('green','✅','"'+n+'" agregada');}
+function addUrgencia(){const n=document.getElementById('nu-name').value.trim(),p=Math.max(0,parseInt(document.getElementById('nu-pct').value)||0);if(!n){showToast('amber','⚠️','Escribe el nombre');return;}URGENCIAS.push({id:'u'+Date.now(),nombre:n,pct:p,activo:true,modo:'sin_filtro',maxMin:null});_closeModal();renderUrgencias();renderUrgenciaSelect();fbSaveConfig();showToast('green','✅','"'+n+'" agregada');}
 function removeUrgencia(i){const n=URGENCIAS[i].nombre;URGENCIAS.splice(i,1);renderUrgencias();renderUrgenciaSelect();showToast('blue','🗑️','"'+n+'" eliminada');}
 function renderZonasAdmin(){
   document.getElementById('zonas-list').innerHTML=ZONAS.map((z,i)=>{
@@ -2494,7 +2607,7 @@ function renderZonasAdmin(){
     </div></div><input type="text" value="${z.colonias}" onchange="ZONAS[${i}].colonias=this.value;" style="font-size:12px;color:#185FA5;background:transparent;border:none;width:100%;outline:none;padding:0;"></div>`;}).join('');
 }
 function toggleZona(i){ZONAS[i].activo=!(ZONAS[i].activo!==false);renderZonasAdmin();fbSaveZonas();showToast(ZONAS[i].activo!==false?'green':'blue',ZONAS[i].activo!==false?'✅':'⚪','"'+ZONAS[i].nombre+'" '+(ZONAS[i].activo!==false?'activada':'desactivada'));}
-function addZona(){const n=document.getElementById('nz-nombre').value.trim(),c=document.getElementById('nz-colonias').value.trim();if(!n){showToast('amber','⚠️','Escribe el nombre');return;}ZONAS.push({id:'z'+Date.now(),nombre:n,colonias:c,activo:true});document.getElementById('nz-nombre').value='';document.getElementById('nz-colonias').value='';renderZonasAdmin();showToast('green','✅','"'+n+'" agregada');}
+function addZona(){const n=document.getElementById('nz-nombre').value.trim(),c=document.getElementById('nz-colonias').value.trim();if(!n){showToast('amber','⚠️','Escribe el nombre');return;}ZONAS.push({id:'z'+Date.now(),nombre:n,colonias:c,activo:true});_closeModal();renderZonasAdmin();fbSaveZonas();showToast('green','✅','"'+n+'" agregada');}
 function removeZona(i){const n=ZONAS[i].nombre;ZONAS.splice(i,1);renderZonasAdmin();showToast('blue','🗑️','"'+n+'" eliminada');}
 function renderQReport(){
   const idx=parseInt(document.getElementById('q-period').value)||0;

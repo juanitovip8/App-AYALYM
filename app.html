@@ -854,7 +854,7 @@
     <div id="a-personal" class="sec"><div class="card"><p class="ctitle">Trabajadores</p><div class="svc-tabs"><div class="svc-tab active" onclick="filterStaff('all',this)">Todos</div><div class="svc-tab" onclick="filterStaff('auto',this)">Autos</div><div class="svc-tab" onclick="filterStaff('depto',this)">Depto</div><div class="svc-tab" onclick="filterStaff('tapiceria',this)">Tapicería</div></div><div id="staff-list"></div><div class="div"></div><button class="btn-sm" onclick="navGo('admin','agregar',null)">+ Agregar trabajador</button></div></div>
     <div id="a-agregar" class="sec"><div class="card"><p class="ctitle">Nuevo trabajador</p><div class="ph-circle" id="nw-photo-circle" onclick="document.getElementById('nw-pi').click()"><div class="ph-ph">Foto</div></div><input type="file" id="nw-pi" accept="image/*" style="display:none" onchange="previewNWPhoto(event)"><div class="frow"><div><label>Nombre</label><input type="text" id="nw-nombre" placeholder="Juan Pérez"></div><div><label>Teléfono</label><input type="text" id="nw-tel"></div></div><div class="frow"><div><label>Correo</label><input type="email" id="nw-email"></div><div><label>Año ingreso</label><input type="number" id="nw-since" placeholder="2024"></div></div><div class="frow full"><label>Especialidades</label><div style="display:flex;gap:12px;padding:6px 0;"><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-depto"><label for="nw-depto">Depto</label></div><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-auto"><label for="nw-auto">Autos</label></div><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-tap"><label for="nw-tap">Tapicería</label></div></div></div><div class="frow full"><label>Descripción</label><textarea id="nw-desc"></textarea></div><div style="display:flex;gap:8px;margin-top:8px;"><button class="btn-royal" style="flex:1;" onclick="addNewWorker()">Guardar</button><button class="btn-sec" onclick="navGo('admin','personal',null)">Cancelar</button></div></div></div>
     <div id="a-supervisores" class="sec"><div id="supervisors-list"></div></div>
-    <div id="a-usuarios" class="sec"><div class="card"><p class="ctitle">Gestión de usuarios</p><div class="user-role-filter"><button class="urf-btn active" onclick="filterUsers('all',this)">Todos</button><button class="urf-btn" onclick="filterUsers('admin',this)">Admins</button><button class="urf-btn" onclick="filterUsers('supervisor',this)">Supervisores</button><button class="urf-btn" onclick="filterUsers('trabajador',this)">Trabajadores</button><button class="urf-btn" onclick="filterUsers('cliente',this)">Clientes</button></div><p class="csub">🔒 Revocar acceso bloquea el inicio de sesión sin eliminar la cuenta.</p><div id="users-list"></div><div class="div"></div><p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Registrar nuevo usuario</p><div class="frow"><div><label>Nombre</label><input type="text" id="nu-nombre" placeholder="María López"></div><div><label>Correo</label><input type="email" id="nu-email" placeholder="maria@email.com"></div></div><div class="frow"><div><label>Contraseña temporal</label><input type="password" id="nu-pass" placeholder="••••••••"></div><div><label>Rol</label><select id="nu-rol"><option value="admin">Administrador</option><option value="supervisor">Supervisor</option><option value="trabajador">Trabajador</option><option value="cliente">Cliente</option></select></div></div><button class="btn-sm" onclick="addUser()">Registrar usuario</button></div></div>
+    <div id="a-usuarios" class="sec"><div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><p class="ctitle" style="margin:0;">Gestión de usuarios</p><button class="btn-sm" onclick="openAdminModal('usuario')">+ Registrar usuario</button></div><div class="user-role-filter"><button class="urf-btn active" onclick="filterUsers('all',this)">Todos</button><button class="urf-btn" onclick="filterUsers('admin',this)">Admins</button><button class="urf-btn" onclick="filterUsers('supervisor',this)">Supervisores</button><button class="urf-btn" onclick="filterUsers('trabajador',this)">Trabajadores</button><button class="urf-btn" onclick="filterUsers('cliente',this)">Clientes</button></div><p class="csub">🔒 Revocar acceso bloquea el inicio de sesión sin eliminar la cuenta.</p><div id="users-list"></div></div></div>
     <div id="a-reportes" class="sec"></div>
     <div id="a-quincenas" class="sec"><div class="card"><p class="ctitle">Reporte quincenas</p><div class="frow full" style="margin-bottom:12px;"><label>Período</label><select id="q-period" onchange="renderQReport()"><option value="0">16–30 abr 2026</option><option value="1">1–15 abr 2026</option><option value="2">16–31 mar 2026</option></select></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem;" id="q-summary"></div><div id="q-worker-list"></div></div></div>
     <div id="a-servicios" class="sec">
@@ -869,45 +869,38 @@
 
         <!-- Servicios / Duraciones -->
         <div id="svcp-servicios" class="svc-adm-panel">
-          <p class="csub">Define el precio base y la duración estimada de cada tipo de servicio.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <p class="csub" style="margin:0;">Define el precio base y la duración estimada de cada tipo de servicio.</p>
+            <button class="btn-sm" style="flex-shrink:0;margin-left:10px;" onclick="openAdminModal('servicio')">+ Agregar</button>
+          </div>
           <div id="svc-duration-list"></div>
-          <div class="div"></div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Agregar nuevo tipo</p>
-          <div class="frow"><div><label>Nombre</label><input type="text" id="ns-name" placeholder="Nuevo servicio"></div><div><label>Precio base ($)</label><input type="number" id="ns-price" placeholder="500"></div></div>
-          <div class="frow"><div><label>Duración mín. (min)</label><input type="number" id="ns-dur-min" placeholder="30"></div><div><label>Duración máx. (min)</label><input type="number" id="ns-dur-max" placeholder="60"></div></div>
-          <button class="btn-sm" onclick="addSvcType()">+ Agregar servicio</button>
         </div>
 
         <!-- Tipos de limpieza -->
         <div id="svcp-limpieza" class="svc-adm-panel" style="display:none">
-          <p class="csub">El cliente elige el tipo al reservar limpieza de departamento. El factor multiplica el precio base.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <p class="csub" style="margin:0;">El cliente elige el tipo al reservar limpieza de departamento. El factor multiplica el precio base.</p>
+            <button class="btn-sm" style="flex-shrink:0;margin-left:10px;" onclick="openAdminModal('limpieza')">+ Agregar</button>
+          </div>
           <div id="cleaning-types-admin-list"></div>
-          <div class="div"></div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Agregar nuevo tipo</p>
-          <div class="frow"><div><label>Nombre</label><input type="text" id="nct-nombre" placeholder="Ej: Limpieza ecológica"></div><div><label>Factor (1.0 = base)</label><input type="number" id="nct-factor" placeholder="1.2" step="0.1" min="1"></div></div>
-          <div class="frow full"><label>Descripción</label><input type="text" id="nct-desc" placeholder="Breve descripción del tipo de limpieza"></div>
-          <button class="btn-sm" onclick="addCleaningType()">+ Agregar tipo</button>
         </div>
 
         <!-- Urgencias -->
         <div id="svcp-urgencias" class="svc-adm-panel" style="display:none">
-          <p class="csub">Cada nivel aplica un porcentaje adicional sobre el precio base al momento de reservar.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <p class="csub" style="margin:0;">Cada nivel aplica un porcentaje adicional sobre el precio base al momento de reservar.</p>
+            <button class="btn-sm" style="flex-shrink:0;margin-left:10px;" onclick="openAdminModal('urgencia')">+ Agregar</button>
+          </div>
           <div id="urgencias-list"></div>
-          <div class="div"></div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Agregar nivel de urgencia</p>
-          <div class="frow"><div><label>Nombre</label><input type="text" id="nu-name" placeholder="Express"></div><div><label>Incremento (%)</label><input type="number" id="nu-pct" placeholder="50"></div></div>
-          <button class="btn-sm" onclick="addUrgencia()">+ Agregar urgencia</button>
         </div>
 
         <!-- Zonas -->
         <div id="svcp-zonas" class="svc-adm-panel" style="display:none">
-          <p class="csub">Las zonas definen la cobertura geográfica de cada trabajador y del cliente al reservar.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <p class="csub" style="margin:0;">Las zonas definen la cobertura geográfica de cada trabajador y del cliente al reservar.</p>
+            <button class="btn-sm" style="flex-shrink:0;margin-left:10px;" onclick="openAdminModal('zona')">+ Agregar</button>
+          </div>
           <div id="zonas-list"></div>
-          <div class="div"></div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Agregar nueva zona</p>
-          <div class="frow full"><label>Nombre de la zona</label><input type="text" id="nz-nombre" placeholder="Ej: Xochimilco / Tláhuac"></div>
-          <div class="frow full"><label>Colonias que cubre</label><input type="text" id="nz-colonias" placeholder="Ej: Xochimilco, Santa Cecilia, La Nopalera"></div>
-          <button class="btn-sm" onclick="addZona()">+ Agregar zona</button>
         </div>
       </div>
     </div>
@@ -1286,7 +1279,18 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=1"></script>
-<script src="js/app.js?v=63"></script>
+<script src="js/app.js?v=64"></script>
 <script src="js/theme.js?v=1"></script>
+
+<!-- ── Modal flotante de administración ── -->
+<div id="admin-modal-ov" class="admin-modal-ov" onclick="closeAdminModal(event)">
+  <div class="admin-modal">
+    <div class="admin-modal-hdr">
+      <p id="admin-modal-title">Agregar</p>
+      <button class="admin-modal-close" onclick="closeAdminModal()">✕</button>
+    </div>
+    <div id="admin-modal-body" class="admin-modal-body"></div>
+  </div>
+</div>
 </body>
 </html>

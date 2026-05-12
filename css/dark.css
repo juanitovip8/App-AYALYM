@@ -969,3 +969,15 @@ select option {
 [style*="border:.5px solid #B5D4F4"] {
   border-color: var(--dk-border) !important;
 }
+
+/* ── Admin modal dark ── */
+.admin-modal { background: var(--dk-panel) !important; }
+.admin-modal-hdr { background: var(--dk-panel) !important; border-bottom-color: var(--dk-border) !important; border-radius: 16px 16px 0 0; }
+.admin-modal-hdr p { color: var(--dk-text) !important; }
+.admin-modal-close { color: var(--dk-sub) !important; }
+.admin-modal-close:hover { background: var(--dk-mid) !important; color: var(--dk-text) !important; }
+.admin-modal-body label { color: var(--dk-sub) !important; }
+.admin-modal-body input,
+.admin-modal-body select,
+.admin-modal-body textarea { background: var(--dk-mid) !important; border-color: var(--dk-border) !important; color: var(--dk-text) !important; }
+.stc-hdr:hover { background: rgba(255,255,255,.04) !important; }
