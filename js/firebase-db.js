@@ -96,6 +96,13 @@ async function loadAllData() {
     if (!w.todayJobs || !w.todayJobs.length) w.todayJobs = savedJobs[w.id] || [];
   });
 
+  /* 3b. SUPERVISORS — datos operativos, nunca purgar */
+  var svSnap = await _col('supervisores').get();
+  if (!svSnap.empty) {
+    SUPERVISORS.length = 0;
+    svSnap.docs.forEach(function(d){ SUPERVISORS.push(d.data()); });
+  }
+
   /* 4. CONFIG */
   var cfgSnap = await _col('config').doc('main').get();
   if (cfgSnap.exists) {
@@ -231,6 +238,16 @@ function fbSavePropertyServices() {
     PROPERTY_SERVICES.forEach(function(ps){ b.set(_col('servicios_prop').doc(String(ps.id)), _clone(ps)); });
     b.commit().catch(function(e){ console.warn('fbSavePropertyServices', e); });
   } catch(e) { console.warn('fbSavePropertyServices', e); }
+}
+
+function fbSaveSupervisors() {
+  try {
+    var b = _db.batch();
+    SUPERVISORS.forEach(function(sv) {
+      b.set(_col('supervisores').doc(String(sv.id)), _clone(sv));
+    });
+    b.commit().catch(function(e){ console.warn('fbSaveSupervisors', e); });
+  } catch(e) { console.warn('fbSaveSupervisors', e); }
 }
 
 function fbSaveSupervisorAsistencias() {

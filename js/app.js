@@ -491,6 +491,70 @@ function handleAdminWorkerPhotoFile(input,wid){
   reader.readAsDataURL(file);
 }
 
+/* Admin sube foto de un supervisor */
+function adminUploadSupervisorPhoto(svId){
+  let inp=document.getElementById('admin-sv-photo-input-'+svId);
+  if(!inp){inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.id='admin-sv-photo-input-'+svId;inp.style.display='none';inp.onchange=function(){handleAdminSupervisorPhotoFile(inp,svId);};document.body.appendChild(inp);}
+  inp.click();
+}
+function handleAdminSupervisorPhotoFile(input,svId){
+  const file=input.files[0];if(!file)return;
+  if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const b64=e.target.result;
+    const sv=SUPERVISORS.find(x=>x.id===svId);if(sv)sv.photo=b64;
+    if(typeof fbSaveSupervisors==='function')fbSaveSupervisors();
+    renderUsersPanel();renderSupervisorsPanel();
+    showToast('green','📷',`Foto actualizada para ${sv?sv.name:'supervisor'}`);
+    input.value='';
+  };
+  reader.readAsDataURL(file);
+}
+/* Admin sube foto de personal inmuebles */
+function adminUploadPersonalInmPhoto(pid){
+  let inp=document.getElementById('admin-pi-photo-input-'+pid);
+  if(!inp){inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.id='admin-pi-photo-input-'+pid;inp.style.display='none';inp.onchange=function(){handleAdminPersonalInmPhotoFile(inp,pid);};document.body.appendChild(inp);}
+  inp.click();
+}
+function handleAdminPersonalInmPhotoFile(input,pid){
+  const file=input.files[0];if(!file)return;
+  if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const b64=e.target.result;
+    const p=PERSONAL_INM.find(x=>x.id===pid);if(p)p.photo=b64;
+    if(typeof fbSavePersonalInm==='function')fbSavePersonalInm();
+    renderUsersPanel();
+    showToast('green','📷',`Foto actualizada para ${p?p.nombre:'personal'}`);
+    input.value='';
+  };
+  reader.readAsDataURL(file);
+}
+/* Cliente inmuebles sube su propia foto */
+function uploadCinmPhoto(){
+  let inp=document.getElementById('cinm-photo-input');
+  if(!inp){inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.id='cinm-photo-input';inp.style.display='none';inp.onchange=function(){handleCinmPhotoFile(inp);};document.body.appendChild(inp);}
+  inp.click();
+}
+function handleCinmPhotoFile(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const b64=e.target.result;
+    const ci=CLIENTS_INM[currentClientInmId];if(ci)ci.photo=b64;
+    // Actualizar header
+    const hav=document.getElementById('header-av');
+    if(hav){hav.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;hav.style.fontSize='0';}
+    if(typeof fbSaveClientsInm==='function')fbSaveClientsInm();
+    renderClienteInmPerfil();
+    showToast('green','📷','¡Foto de perfil actualizada!');
+    input.value='';
+  };
+  reader.readAsDataURL(file);
+}
+
 /* ── RESERVA WIZARD ── */
 var promoAplicada = null; /* promo seleccionada en el paso 4 */
 
@@ -661,18 +725,22 @@ function launchApp(role,nombre,zona){
     if(!currentSupervisorRef){
       const svInit0=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
       const newSvId=SUPERVISORS.length?Math.max(...SUPERVISORS.map(s=>s.id))+1:0;
-      currentSupervisorRef={id:newSvId,name:nombre,initials:svInit0,zonas:[],assignedWorkers:[]};
+      currentSupervisorRef={id:newSvId,name:nombre,initials:svInit0,zonas:[],assignedWorkers:[],photo:null};
       SUPERVISORS.push(currentSupervisorRef);
+      fbSaveSupervisors();
     }
     if(currentSupervisorRef){SUPERVISOR_ASSIGNED=currentSupervisorRef.assignedWorkers.slice();}
     // ── Actualizar tarjeta de perfil del supervisor ──
     const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
-    const svAvEl=document.getElementById('sv-av-disp');if(svAvEl)svAvEl.textContent=svInit;
+    const svAvEl=document.getElementById('sv-av-disp');if(svAvEl){if(currentSupervisorRef&&currentSupervisorRef.photo){svAvEl.innerHTML=`<img src="${currentSupervisorRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;svAvEl.style.fontSize='0';}else{svAvEl.textContent=svInit;svAvEl.style.fontSize='15px';}}
     const svNmEl=document.getElementById('sv-name-disp');if(svNmEl)svNmEl.textContent=nombre;
     const svZnEl=document.getElementById('sv-zona-disp');
     if(svZnEl&&currentSupervisorRef)svZnEl.textContent='Zona '+(currentSupervisorRef.zonas||[]).join(' / ');
     const svJbEl=document.getElementById('sv-jobs-disp');
     if(svJbEl&&currentSupervisorRef){const _svW=WORKERS.filter(w=>currentSupervisorRef.assignedWorkers.includes(w.id));svJbEl.textContent=_svW.reduce((a,w)=>a+w.todayJobs.length,0);}
+    // ── Mostrar foto del supervisor en header si existe ──
+    const svHeaderAv=document.getElementById('header-av');
+    if(svHeaderAv&&currentSupervisorRef&&currentSupervisorRef.photo){svHeaderAv.innerHTML=`<img src="${currentSupervisorRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;svHeaderAv.style.fontSize='0';}
     renderSVWorkers();renderSVMap();renderSVChatSelector();renderSVNotes();renderSupervisorResumen();
     renderChatBox('sv-a','sv','chat-sv-a');
     renderChatBox('c-t','sv','chat-sv-ct');
@@ -687,8 +755,16 @@ function launchApp(role,nombre,zona){
     renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');
     populatePropSupervisorSelect();
   }
-  if(role==='personal_inm'){renderPersonalInmPanel();}
-  if(role==='cliente_inm'){renderClienteInmInicio();}
+  if(role==='personal_inm'){
+    const pi=PERSONAL_INM.find(p=>p.email===currentUserEmail||p.nombre===nombre);
+    if(pi&&pi.photo){const hav=document.getElementById('header-av');if(hav){hav.innerHTML=`<img src="${pi.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;hav.style.fontSize='0';}}
+    renderPersonalInmPanel();
+  }
+  if(role==='cliente_inm'){
+    const ci=CLIENTS_INM[currentClientInmId];
+    if(ci&&ci.photo){const hav=document.getElementById('header-av');if(hav){hav.innerHTML=`<img src="${ci.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;hav.style.fontSize='0';}}
+    renderClienteInmInicio();
+  }
   /* ── Inicializar chat flotante ── */
   setTimeout(initChatFab, 200);
 }
@@ -1288,9 +1364,12 @@ function renderSupervisorsPanel(){
       </div>`;
     }).join('');
     const pills=assignedW.map(w=>`<div class="sv-worker-pill"><div style="width:22px;height:22px;border-radius:50%;background:#042C53;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#fff;">${w.initials}</div><span>${w.name.split(' ')[0]}</span><button onclick="removeWorkerFromSV(${si},${w.id})">×</button></div>`).join('');
+    const svAvHtml=sv.photo
+      ?`<div class="av-photo-wrap" style="position:relative;cursor:pointer;flex-shrink:0;" onclick="adminUploadSupervisorPhoto(${sv.id})" title="Cambiar foto"><div class="av" style="width:44px;height:44px;font-size:0;background:#085041;overflow:hidden;"><img src="${sv.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div><div class="av-photo-badge" style="font-size:10px;width:18px;height:18px;">📷</div></div>`
+      :`<div class="av-photo-wrap" style="position:relative;cursor:pointer;flex-shrink:0;" onclick="adminUploadSupervisorPhoto(${sv.id})" title="Subir foto"><div class="av" style="width:44px;height:44px;font-size:14px;background:#085041;">${sv.initials}</div><div class="av-photo-badge" style="font-size:10px;width:18px;height:18px;">📷</div></div>`;
     return`<div class="supervisor-card">
       <div class="sv-card-header">
-        <div class="av" style="width:44px;height:44px;font-size:14px;background:#085041;">${sv.initials}</div>
+        ${svAvHtml}
         <div class="sv-card-info"><p>${sv.name}</p><span>Zonas: ${sv.zonas.join(', ')}</span></div>
         <div style="text-align:right;">
           <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">${s$(avg||0,13)}<span style="font-size:15px;font-weight:500;color:#042C53;">${avgTxt}</span></div>
@@ -1319,14 +1398,18 @@ function renderUsersPanel(filter){
   document.getElementById('users-list').innerHTML=filtered.map((u)=>{
     const i=USERS.indexOf(u);
     const isProtected=u.rolProtegido===true;
-    // Para trabajadores mostrar su foto si existe
+    // Para trabajadores/supervisores/personal_inm/clientes_inm mostrar foto si existe
     const wRef=u.rol==='trabajador'?WORKERS.find(w=>w.name===u.nombre):null;
-    const avContent=wRef&&wRef.photo
-      ?`<img src="${wRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    const svRef=u.rol==='supervisor'?SUPERVISORS.find(s=>s.name===u.nombre):null;
+    const piRef=u.rol==='personal_inm'?PERSONAL_INM.find(p=>p.email===u.email||p.nombre===u.nombre):null;
+    const ciRef=u.rol==='cliente_inm'?CLIENTS_INM.find(c=>c.email===u.email):null;
+    const photoSrc=(wRef&&wRef.photo)||(svRef&&svRef.photo)||(piRef&&piRef.photo)||(ciRef&&ciRef.photo)||null;
+    const avContent=photoSrc
+      ?`<img src="${photoSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
       :u.nombre.split(' ').map(n=>n[0]).join('').slice(0,2);
     return`<div class="user-card">
       <div class="user-card-top">
-        <div class="user-av" style="background:${avBgs[u.rol]||'#E6F1FB'};color:${avCols[u.rol]||'#042C53'};overflow:hidden;font-size:${wRef&&wRef.photo?'0':'13px'};">${avContent}</div>
+        <div class="user-av" style="background:${avBgs[u.rol]||'#E6F1FB'};color:${avCols[u.rol]||'#042C53'};overflow:hidden;font-size:${photoSrc?'0':'13px'};">${avContent}</div>
         <div class="user-info">
           <p>${u.nombre} <span class="role-badge ${rolColor(u.rol)}">${rolLabel(u.rol)}</span> ${u.accesoRevocado?'<span class="badge b-revoked">Acceso revocado</span>':''}</p>
           <span>${u.email}</span>
@@ -1337,7 +1420,7 @@ function renderUsersPanel(filter){
             ?`<div style="display:flex;gap:4px;"><button class="btn-edit" onclick="toggleEditUser(${i})">Editar perfil</button></div><span style="font-size:11px;color:#185FA5;">Rol protegido</span>`
             :`<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
               <button class="btn-edit" onclick="toggleEditUser(${i})">Editar</button>
-              ${wRef?`<button class="btn-light" onclick="adminUploadWorkerPhoto(${wRef.id})" title="Subir foto">📷</button>`:''}
+              ${wRef?`<button class="btn-light" onclick="adminUploadWorkerPhoto(${wRef.id})" title="Subir foto">📷</button>`:''}${svRef?`<button class="btn-light" onclick="adminUploadSupervisorPhoto(${svRef.id})" title="Subir foto">📷</button>`:''}${piRef?`<button class="btn-light" onclick="adminUploadPersonalInmPhoto(${piRef.id})" title="Subir foto">📷</button>`:''}
               ${(u.rol!=='cliente'&&u.rol!=='cliente_inm')?`<button class="btn-danger" onclick="toggleUser(${i})">${u.activo?'Desactivar':'Activar'}</button>`:''}
               <button class="${u.accesoRevocado?'btn-restore':'btn-revoke'}" onclick="revokeAccess(${i})">${u.accesoRevocado?'Restaurar acceso':'Revocar acceso'}</button>
             </div>`}
@@ -1401,8 +1484,9 @@ function saveUser(i){
     if(!svExists){
       const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
       const svNewId=SUPERVISORS.length?Math.max(...SUPERVISORS.map(s=>s.id))+1:0;
-      SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[]});
+      SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[],photo:null});
     } else if(svExists.name!==nombre){svExists.name=nombre;svExists.initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();}
+    fbSaveSupervisors();
   }
   document.getElementById('uep-'+i).classList.remove('open');
   renderUsersPanel();
@@ -1451,7 +1535,8 @@ function addUser(){
     if(!SUPERVISORS.find(s=>s.name===nombre)){
       const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
       const svNewId=SUPERVISORS.length?Math.max(...SUPERVISORS.map(s=>s.id))+1:0;
-      SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[]});
+      SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[],photo:null});
+      fbSaveSupervisors();
     }
   }
   _closeModal();
@@ -5518,10 +5603,13 @@ function renderClienteInmPerfil(){
   const el=document.getElementById('cinm-perfil-content');
   if(!el||!ci)return;
   const init=ci.nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  const cinmPhotoHtml=ci.photo
+    ?`<div class="av-photo-wrap" style="position:relative;cursor:pointer;flex-shrink:0;" onclick="uploadCinmPhoto()" title="Cambiar foto"><div class="av" style="width:56px;height:56px;font-size:0;background:#065535;color:#fff;overflow:hidden;"><img src="${ci.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div><div class="av-photo-badge">📷</div></div>`
+    :`<div class="av-photo-wrap" style="position:relative;cursor:pointer;flex-shrink:0;" onclick="uploadCinmPhoto()" title="Subir foto de perfil"><div class="av" style="width:56px;height:56px;font-size:18px;background:#065535;color:#fff;">${init}</div><div class="av-photo-badge">📷</div></div>`;
   el.innerHTML=`<div class="card">
     <p class="ctitle">👤 Mi perfil</p>
     <div class="cinm-profile-hdr">
-      <div class="av" style="width:56px;height:56px;font-size:18px;background:#065535;color:#fff;flex-shrink:0;">${init}</div>
+      ${cinmPhotoHtml}
       <div><p style="font-size:15px;font-weight:600;color:#042C53;">${ci.nombre}</p><p style="font-size:12px;color:#185FA5;">${ci.empresa}</p></div>
     </div>
     <div class="cinm-detail-grid" style="margin-top:14px;">
