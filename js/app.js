@@ -621,7 +621,14 @@ function launchApp(role,nombre,zona){
     // Inicializar estado activo/inactivo desde USERS
     const uW=USERS.find(u=>u.nombre===nombre&&u.rol==='trabajador');
     workerActive=uW?uW.activo!==false:true;
-    const wRef=WORKERS.find(x=>x.name===nombre)||WORKERS[0];
+    let wRef=WORKERS.find(x=>x.name===nombre);
+    if(!wRef){
+      const init2=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const newWId=WORKERS.length?Math.max(...WORKERS.map(w=>w.id))+1:0;
+      wRef={id:newWId,name:nombre,initials:init2,photo:null,type:[],zonas:[],status:'active',rating:0,services:0,since:new Date().getFullYear(),desc:'',mapX:50,mapY:50,tiempoLlegada:30,reviews:[],todayJobs:[]};
+      WORKERS.push(wRef);
+      fbSaveWorkers();
+    }
     currentWorkerRef=wRef; /* fijar referencia global al trabajador logueado */
     if(wRef)wRef.status=workerActive?'active':'inactive';
     // ── Actualizar tarjeta de perfil del trabajador ──
@@ -650,7 +657,13 @@ function launchApp(role,nombre,zona){
     renderChatBox('c-t','t','chat-t-c');renderChatBox('t-sv','t','chat-t-sv');renderChatBox('t-a','t','chat-t-a');
   }
   if(role==='supervisor'){
-    currentSupervisorRef=SUPERVISORS.find(sv=>sv.name===nombre)||SUPERVISORS[0];
+    currentSupervisorRef=SUPERVISORS.find(sv=>sv.name===nombre);
+    if(!currentSupervisorRef){
+      const svInit0=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const newSvId=SUPERVISORS.length?Math.max(...SUPERVISORS.map(s=>s.id))+1:0;
+      currentSupervisorRef={id:newSvId,name:nombre,initials:svInit0,zonas:[],assignedWorkers:[]};
+      SUPERVISORS.push(currentSupervisorRef);
+    }
     if(currentSupervisorRef){SUPERVISOR_ASSIGNED=currentSupervisorRef.assignedWorkers.slice();}
     // ── Actualizar tarjeta de perfil del supervisor ──
     const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
@@ -1370,7 +1383,26 @@ function saveUser(i){
     USERS[i].password=tmpPass;
     showToast('green','🔑','Contraseña temporal asignada a '+nombre);
   }
+  const oldRol=USERS[i].rol, oldNombre=USERS[i].nombre;
   USERS[i]={...USERS[i],nombre,email,tel,rol};
+  /* ── Manejar cambio de rol: crear entrada en WORKERS / SUPERVISORS si no existe ── */
+  if(rol==='trabajador'){
+    const wExists=WORKERS.find(w=>w.name===nombre||w.name===oldNombre);
+    if(!wExists){
+      const wInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const wNewId=WORKERS.length?Math.max(...WORKERS.map(w=>w.id))+1:0;
+      WORKERS.push({id:wNewId,name:nombre,initials:wInit,photo:null,type:[],zonas:[],status:'active',rating:0,services:0,since:new Date().getFullYear(),desc:'',mapX:50,mapY:50,tiempoLlegada:30,reviews:[],todayJobs:[]});
+      fbSaveWorkers();
+    } else if(wExists.name!==nombre){wExists.name=nombre;wExists.initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();fbSaveWorkers();}
+  }
+  if(rol==='supervisor'){
+    const svExists=SUPERVISORS.find(s=>s.name===nombre||s.name===oldNombre);
+    if(!svExists){
+      const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const svNewId=SUPERVISORS.length?Math.max(...SUPERVISORS.map(s=>s.id))+1:0;
+      SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[]});
+    } else if(svExists.name!==nombre){svExists.name=nombre;svExists.initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();}
+  }
   document.getElementById('uep-'+i).classList.remove('open');
   renderUsersPanel();
   fbSaveUsers();
@@ -1402,7 +1434,28 @@ function saveAdminProfile(i){
   fbSaveUsers();
   showToast('green','✅','Perfil actualizado correctamente');
 }
-function addUser(){const nombre=document.getElementById('nu-nombre').value.trim(),email=document.getElementById('nu-email').value.trim(),pass=document.getElementById('nu-pass').value.trim(),rol=document.getElementById('nu-rol').value;if(!nombre||!email||!pass){showToast('amber','⚠️','Completa todos los campos');return;}USERS.push({id:USERS.length,nombre,email,rol,tel:'',activo:true,accesoRevocado:false,password:pass});['nu-nombre','nu-email','nu-pass'].forEach(id=>document.getElementById(id).value='');renderUsersPanel();fbSaveUsers();showToast('green','✅','"'+nombre+'" registrado como '+rolLabel(rol));}
+function addUser(){
+  const nombre=document.getElementById('nu-nombre').value.trim(),email=document.getElementById('nu-email').value.trim(),pass=document.getElementById('nu-pass').value.trim(),rol=document.getElementById('nu-rol').value;
+  if(!nombre||!email||!pass){showToast('amber','⚠️','Completa todos los campos');return;}
+  USERS.push({id:USERS.length,nombre,email,rol,tel:'',activo:true,accesoRevocado:false,password:pass});
+  /* ── Auto-crear entrada en WORKERS o SUPERVISORS según el rol ── */
+  if(rol==='trabajador'){
+    if(!WORKERS.find(w=>w.name===nombre)){
+      const wInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const wNewId=WORKERS.length?Math.max(...WORKERS.map(w=>w.id))+1:0;
+      WORKERS.push({id:wNewId,name:nombre,initials:wInit,photo:null,type:[],zonas:[],status:'active',rating:0,services:0,since:new Date().getFullYear(),desc:'',mapX:50,mapY:50,tiempoLlegada:30,reviews:[],todayJobs:[]});
+      fbSaveWorkers();
+    }
+  } else if(rol==='supervisor'){
+    if(!SUPERVISORS.find(s=>s.name===nombre)){
+      const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+      const svNewId=SUPERVISORS.length?Math.max(...SUPERVISORS.map(s=>s.id))+1:0;
+      SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[]});
+    }
+  }
+  ['nu-nombre','nu-email','nu-pass'].forEach(id=>document.getElementById(id).value='');
+  renderUsersPanel();fbSaveUsers();showToast('green','✅','"'+nombre+'" registrado como '+rolLabel(rol));
+}
 
 /* ── ADMIN: FACTURACIÓN ── */
 function filterFacturas(filter,btn){
