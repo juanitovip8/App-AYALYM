@@ -1058,8 +1058,8 @@ textarea{resize:vertical;min-height:60px;}
    ══════════════════════════════════ */
 .qa-cliente-inm{border-left:3px solid #0B6B3A;}
 .qa-av-cliente-inm{background:#0B6B3A;color:#fff;}
-.qa-btn-cliente-inm{background:#D4EDDA;color:#0B6B3A;}
-.qa-btn-cliente-inm:hover{background:#0B6B3A;color:#fff;}
+.qa-btn-cliente-inm{background:#0B6B3A;color:#fff;}
+.qa-btn-cliente-inm:hover{background:#085030;color:#fff;}
 
 /* ══════════════════════════════════
    PANEL CLIENTE INMUEBLES
