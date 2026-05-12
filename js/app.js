@@ -1894,7 +1894,7 @@ function renderSvcDurationList(){
           <span id="stc-chev-${s.id}" class="stc-chevron${collapsed?'':' open'}">▼</span>
         </div>
       </div>
-      <div id="stc-body-${s.id}" class="stc-body${collapsed?' collapsed':''}" style="max-height:${collapsed?'0':'600px'};">
+      <div id="stc-body-${s.id}" class="stc-body${collapsed?' collapsed':''}">
         ${_secHdr('⏱','Duración','dur-'+s.id)}
         <div class="stc-sec-body stc-sec-open">
           <div class="svc-dur-row">
@@ -1961,7 +1961,7 @@ function renderCleaningTypesAdmin(){
           <span id="stc-chev-${cid}" class="stc-chevron${collapsed?'':' open'}">▼</span>
         </div>
       </div>
-      <div id="stc-body-${cid}" class="stc-body${collapsed?' collapsed':''}" style="max-height:${collapsed?'0':'200px'};padding:${collapsed?'0':'0 12px 12px'};">
+      <div id="stc-body-${cid}" class="stc-body${collapsed?' collapsed':''}" style="padding:0 12px 12px;">
         <p style="font-size:12px;color:#185FA5;margin:8px 0 6px;">${ct.descripcion}</p>
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:12px;color:#185FA5;">Factor de precio:</span>
