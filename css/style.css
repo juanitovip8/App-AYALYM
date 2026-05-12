@@ -24,14 +24,30 @@ body{font-family:var(--font-sans);background:#F4F8FD;-webkit-font-smoothing:anti
 .app{max-width:100%;padding:0;min-height:100vh;display:flex;flex-direction:column;}
 .screen{display:none;}.screen.active{display:block;}
 
-/* ── LOGIN — centrado estrecho ── */
-#screen-login{max-width:480px;margin:0 auto;width:100%;padding:2rem 1rem 3rem;}
+/* ── LOGIN — pantalla completa centrada ── */
+#screen-login{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:2rem 1rem 3rem;
+  background:linear-gradient(160deg,#042C53 0%,#0b1e35 60%,#111 100%);
+}
+#screen-login .login-wrap{width:100%;max-width:640px;}
+#screen-login .brand{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.1)!important;border-radius:12px 12px 0 0;border-bottom:none!important;}
+#screen-login .client-panel{border-radius:0 0 12px 12px;}
+#screen-login .staff-panel{border-radius:12px;}
+#screen-login .staff-access-link{color:rgba(255,255,255,.55);border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.05);}
+#screen-login .staff-access-link:hover{color:#fff;background:rgba(255,255,255,.10);}
+#screen-login .quick-access{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:1rem 1.25rem;}
+#screen-login .qa-group-label{color:rgba(255,255,255,.5);}
 
 /* ── APP SCREEN — sin padding extra ── */
 #screen-app{flex:1;display:flex;flex-direction:column;}
 
-/* ── ROLE SECTIONS — centradas con max-width ── */
-.role-section{max-width:1200px;margin:0 auto;padding:1rem 1.5rem 2rem;width:100%;}
+/* ── ROLE SECTIONS — full width con padding lateral ── */
+.role-section{width:100%;padding:1.25rem 2rem 5rem;}
 
 /* ── LOGIN ── */
 .login-wrap{display:flex;flex-direction:column;gap:10px;}
@@ -721,7 +737,7 @@ textarea{resize:vertical;min-height:60px;}
    RESPONSIVE — TABLET  (601px – 900px)
    ══════════════════════════════════════════════ */
 @media (min-width:601px) and (max-width:900px){
-  .role-section{padding:1rem;}
+  .role-section{padding:1rem 1.25rem 4rem;}
   .admin-kpi-bar{grid-template-columns:repeat(4,1fr);}
   .dash-kpi-grid{grid-template-columns:repeat(3,1fr);}
   .header{padding:.75rem 1.5rem;}
@@ -748,8 +764,9 @@ textarea{resize:vertical;min-height:60px;}
 @media (max-width:600px){
   /* App wrapper */
   .app{padding:0;}
-  #screen-login{padding:1.25rem .75rem 2rem;}
-  .role-section{padding:.75rem .875rem 4.5rem;} /* padding-bottom para que el bottom-nav no tape contenido */
+  #screen-login{padding:1rem .75rem 2rem;min-height:100vh;}
+  #screen-login .login-wrap{max-width:100%;}
+  .role-section{padding:.75rem .875rem 5rem;} /* padding-bottom para que el bottom-nav sticky no tape contenido */
 
   /* Login */
   .client-panel{padding:1rem 1rem 1.25rem;}

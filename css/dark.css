@@ -26,7 +26,7 @@ body {
   color: var(--dk-text) !important;
   font-family: 'Source Sans 3', 'Inter', sans-serif !important;
 }
-.app { padding: 1rem; }
+.app { padding: 0; }
 
 /* Fjalla One en títulos de la app */
 .header-brand-name,
@@ -148,8 +148,8 @@ select option {
 /* ─── HEADER ─── */
 .header {
   background: #0d0d0d !important;
-  border: 1px solid var(--dk-border) !important;
-  border-radius: 12px;
+  border-bottom: 1px solid var(--dk-border) !important;
+  border-radius: 0 !important;
 }
 .header-brand-name { color: #ffffff !important; font-size: 17px !important; }
 .ubadge { color: var(--dk-sub) !important; background: rgba(255,255,255,.08) !important; }
