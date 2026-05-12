@@ -45,28 +45,6 @@ body {
   border-color: var(--dk-border) !important;
 }
 
-/* Login box — siempre fondo claro para buena legibilidad */
-.login-box {
-  background: #ffffff !important;
-  border-color: rgba(0,0,0,.1) !important;
-}
-.login-box .lb-title { color: #042C53 !important; }
-.login-box label, .login-box .fld label { color: #185FA5 !important; }
-.login-box input, .login-box select {
-  background: #f5f8ff !important;
-  color: #042C53 !important;
-  border-color: #B5D4F4 !important;
-}
-.login-box input::placeholder { color: rgba(4,44,83,.35) !important; }
-.login-box .lb-link-sm { color: #1A56DB !important; }
-.login-box .lb-divider span { color: #185FA5 !important; }
-.login-box .lb-divider::before,
-.login-box .lb-divider::after { background: #B5D4F4 !important; }
-.login-box .lb-btn-reg { background: #fff !important; color: #1A56DB !important; border-color: #1A56DB !important; }
-.login-box .lb-back-row p { color: #042C53 !important; }
-.login-box .step-dot { background: #E6F1FB !important; }
-.login-box .step-dot.done { background: #1A56DB !important; }
-.login-box .lb-eye { color: #185FA5; }
 .brand-logo-text { color: rgba(255,255,255,.92) !important; }
 .brand-logo-text span { color: #7ec8f5 !important; }
 .brand-tag { color: var(--dk-sub) !important; }
@@ -854,3 +832,39 @@ select option {
 .support-start-sub                 { color: var(--dk-sub) !important; }
 .chat-sys-msg                      { background: var(--dk-mid) !important; color: var(--dk-muted) !important; }
 .support-reopen-row                { border-top-color: var(--dk-border) !important; }
+
+/* ─── LOGIN BOX — siempre fondo claro (debe ir AL FINAL para ganar especificidad) ─── */
+.login-box {
+  background: #ffffff !important;
+  border-color: rgba(0,0,0,.08) !important;
+}
+.login-box .lb-title { color: #042C53 !important; }
+.login-box label,
+.login-box .fld label { color: #185FA5 !important; }
+.login-box input,
+.login-box input[type=text],
+.login-box input[type=email],
+.login-box input[type=password],
+.login-box input[type=number],
+.login-box select {
+  background: #f5f8ff !important;
+  color: #042C53 !important;
+  border-color: #B5D4F4 !important;
+}
+.login-box input::placeholder { color: rgba(4,44,83,.35) !important; }
+.login-box .lb-link-sm { color: #1A56DB !important; }
+.login-box .lb-divider span { color: #185FA5 !important; }
+.login-box .lb-divider::before,
+.login-box .lb-divider::after { background: #B5D4F4 !important; }
+.login-box .lb-btn-reg {
+  background: #fff !important;
+  color: #1A56DB !important;
+  border-color: #1A56DB !important;
+}
+.login-box .lb-back-row p { color: #042C53 !important; }
+.login-box .lb-back-row .btn-sec { background: #E6F1FB !important; color: #042C53 !important; border-color: #B5D4F4 !important; }
+.login-box .step-dot { background: #E6F1FB !important; }
+.login-box .step-dot.done { background: #1A56DB !important; }
+.login-box .lb-eye { color: #185FA5 !important; opacity: .7; }
+.login-box .recover-step p,
+.login-box .recover-step span { color: #042C53 !important; }
