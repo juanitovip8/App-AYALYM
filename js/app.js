@@ -454,6 +454,7 @@ function goBackToWorkerSelect(){
 
 function launchApp(role,nombre,zona){
   document.getElementById('screen-login').classList.remove('active');document.getElementById('screen-app').classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
   currentRole=role;
   // ── Header: nombre + rol + avatar ──
   const init=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
@@ -513,6 +514,7 @@ function launchApp(role,nombre,zona){
 
 function doLogout(){
   document.getElementById('screen-app').classList.remove('active');document.getElementById('screen-login').classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
   showClientPanel();
   ['c-login-email','c-login-pass','s-email','s-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   uploadedFiles=[];clientDiscount=0;workerDeductions=[];selectedTimeSlot='';selectedWorkerId=null;fichaWorkerId=null;
