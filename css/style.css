@@ -547,6 +547,25 @@ textarea{resize:vertical;min-height:60px;}
 .cp-panel{display:none;margin-top:2px;}
 .cp-panel.open{display:block;}
 
+/* ── AVATAR CON FOTO ── */
+.av-photo-wrap{position:relative;display:inline-block;cursor:pointer;flex-shrink:0;}
+.av-photo-badge{position:absolute;bottom:-3px;right:-3px;width:18px;height:18px;border-radius:50%;background:#1A56DB;color:#fff;font-size:9px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;pointer-events:none;}
+.av-photo-wrap:hover .av-photo-badge{background:#185FA5;}
+.av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+
+/* ── REPORTES — tabla y KPIs ── */
+.rep-table{width:100%;border-collapse:collapse;font-size:13px;}
+.rep-table th{text-align:left;padding:8px 6px;color:var(--blue-mid);font-weight:500;border-bottom:.5px solid var(--blue-border);font-size:12px;}
+.rep-table td{padding:9px 6px;border-bottom:.5px solid var(--blue-border);vertical-align:middle;}
+.rep-table tr:last-child td{border-bottom:none;}
+.rep-bar-wrap{background:#E6F1FB;border-radius:4px;height:8px;overflow:hidden;margin-top:4px;}
+.rep-bar{height:100%;background:#1A56DB;border-radius:4px;}
+.rep-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.rep-kpi{background:#fff;border:.5px solid var(--blue-border);border-radius:10px;padding:12px;text-align:center;}
+.rep-kpi span{font-size:20px;font-weight:700;color:var(--blue-dark);display:block;margin-bottom:3px;}
+.rep-kpi p{font-size:11px;color:var(--blue-mid);}
+@media(max-width:600px){.rep-kpi-grid{grid-template-columns:repeat(2,1fr);}.rep-table th:nth-child(4),.rep-table td:nth-child(4){display:none;}}
+
 /* ── ACCESO RÁPIDO — filas compactas ── */
 .quick-access{margin-top:10px;display:block;}
 .qa-title{font-size:11px;font-weight:600;color:#185FA5;text-align:center;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:.3px;text-transform:uppercase;}

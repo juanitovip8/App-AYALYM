@@ -10,9 +10,9 @@
   <title>AYALYM — Limpieza profesional a domicilio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=43">
+  <link rel="stylesheet" href="css/style.css?v=44">
   <link rel="stylesheet" href="css/theme-toggle.css?v=1">
-  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=10">
+  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=11">
   <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
   <script>!function(){var t=localStorage.getItem('ayalym-theme')||'dark';document.documentElement.classList.add(t+'-mode');if(t==='light'){document.addEventListener('DOMContentLoaded',function(){var l=document.getElementById('dark-css-link');if(l)l.disabled=true;});};}();</script>
   <link rel="icon" type="image/png" href="img/logo.png">
@@ -578,10 +578,14 @@
     <!-- Tarjeta de perfil -->
     <div class="card role-profile-card">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div class="av" style="width:48px;height:48px;font-size:15px;">JM</div>
+        <div class="av-photo-wrap" id="t-profile-av-wrap" onclick="openWorkerPhotoUpload()" title="Cambiar foto">
+          <div class="av" style="width:48px;height:48px;font-size:15px;overflow:hidden;padding:0;" id="t-profile-av">JM</div>
+          <div class="av-photo-badge">📷</div>
+        </div>
+        <input type="file" id="worker-photo-input" accept="image/*" style="display:none;" onchange="handleWorkerPhotoFile(this)">
         <div style="flex:1;">
-          <p style="font-size:15px;font-weight:600;color:#042C53;">Juan Morales</p>
-          <span style="font-size:12px;color:#185FA5;">Lavado de autos</span>
+          <p style="font-size:15px;font-weight:600;color:#042C53;" id="t-profile-name">Juan Morales</p>
+          <span style="font-size:12px;color:#185FA5;" id="t-profile-type">Lavado de autos</span>
         </div>
         <div class="rbar" style="margin:0;background:none;padding:0;gap:6px;">
           <span class="rscore" style="font-size:20px;">4.8</span>
@@ -786,12 +790,13 @@
   <!-- ADMIN -->
   <div id="role-admin" class="role-section" style="display:none">
     <div class="admin-nav-wrap" id="nav-admin">
-      <div class="admin-nav-row anr-5">
+      <div class="admin-nav-row anr-6">
         <div class="nav-btn active" onclick="navGo('admin','resumen',this)"><span class="nav-icon">📊</span>Resumen</div>
         <div class="nav-btn" onclick="navGo('admin','personal',this)"><span class="nav-icon">👥</span>Personal</div>
         <div class="nav-btn" onclick="navGo('admin','supervisores',this)"><span class="nav-icon">👁️</span>Supervisores</div>
         <div class="nav-btn" onclick="navGo('admin','usuarios',this)"><span class="nav-icon">🔑</span>Usuarios</div>
         <div class="nav-btn" onclick="navGo('admin','quincenas',this)"><span class="nav-icon">💰</span>Quincenas</div>
+        <div class="nav-btn" onclick="navGo('admin','reportes',this);renderAdminReportes()"><span class="nav-icon">📈</span>Reportes</div>
       </div>
       <div class="admin-nav-row anr-6">
         <div class="nav-btn" onclick="navGo('admin','servicios',this)"><span class="nav-icon">🛠️</span>Servicios</div>
@@ -832,6 +837,7 @@
     <div id="a-agregar" class="sec"><div class="card"><p class="ctitle">Nuevo trabajador</p><div class="ph-circle" id="nw-photo-circle" onclick="document.getElementById('nw-pi').click()"><div class="ph-ph">Foto</div></div><input type="file" id="nw-pi" accept="image/*" style="display:none" onchange="previewNWPhoto(event)"><div class="frow"><div><label>Nombre</label><input type="text" id="nw-nombre" placeholder="Juan Pérez"></div><div><label>Teléfono</label><input type="text" id="nw-tel"></div></div><div class="frow"><div><label>Correo</label><input type="email" id="nw-email"></div><div><label>Año ingreso</label><input type="number" id="nw-since" placeholder="2024"></div></div><div class="frow full"><label>Especialidades</label><div style="display:flex;gap:12px;padding:6px 0;"><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-depto"><label for="nw-depto">Depto</label></div><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-auto"><label for="nw-auto">Autos</label></div><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-tap"><label for="nw-tap">Tapicería</label></div></div></div><div class="frow full"><label>Descripción</label><textarea id="nw-desc"></textarea></div><div style="display:flex;gap:8px;margin-top:8px;"><button class="btn-royal" style="flex:1;" onclick="addNewWorker()">Guardar</button><button class="btn-sec" onclick="navGo('admin','personal',null)">Cancelar</button></div></div></div>
     <div id="a-supervisores" class="sec"><div id="supervisors-list"></div></div>
     <div id="a-usuarios" class="sec"><div class="card"><p class="ctitle">Gestión de usuarios</p><div class="user-role-filter"><button class="urf-btn active" onclick="filterUsers('all',this)">Todos</button><button class="urf-btn" onclick="filterUsers('admin',this)">Admins</button><button class="urf-btn" onclick="filterUsers('supervisor',this)">Supervisores</button><button class="urf-btn" onclick="filterUsers('trabajador',this)">Trabajadores</button><button class="urf-btn" onclick="filterUsers('cliente',this)">Clientes</button></div><p class="csub">🔒 Revocar acceso bloquea el inicio de sesión sin eliminar la cuenta.</p><div id="users-list"></div><div class="div"></div><p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Registrar nuevo usuario</p><div class="frow"><div><label>Nombre</label><input type="text" id="nu-nombre" placeholder="María López"></div><div><label>Correo</label><input type="email" id="nu-email" placeholder="maria@email.com"></div></div><div class="frow"><div><label>Contraseña temporal</label><input type="password" id="nu-pass" placeholder="••••••••"></div><div><label>Rol</label><select id="nu-rol"><option value="admin">Administrador</option><option value="supervisor">Supervisor</option><option value="trabajador">Trabajador</option><option value="cliente">Cliente</option></select></div></div><button class="btn-sm" onclick="addUser()">Registrar usuario</button></div></div>
+    <div id="a-reportes" class="sec"></div>
     <div id="a-quincenas" class="sec"><div class="card"><p class="ctitle">Reporte quincenas</p><div class="frow full" style="margin-bottom:12px;"><label>Período</label><select id="q-period" onchange="renderQReport()"><option value="0">16–30 abr 2026</option><option value="1">1–15 abr 2026</option><option value="2">16–31 mar 2026</option></select></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem;" id="q-summary"></div><div id="q-worker-list"></div></div></div>
     <div id="a-servicios" class="sec">
       <div class="card">
@@ -1262,7 +1268,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=1"></script>
-<script src="js/app.js?v=61"></script>
+<script src="js/app.js?v=62"></script>
 <script src="js/theme.js?v=1"></script>
 </body>
 </html>

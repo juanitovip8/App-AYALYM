@@ -868,3 +868,85 @@ select option {
 .login-box .lb-eye { color: #185FA5 !important; opacity: .7; }
 .login-box .recover-step p,
 .login-box .recover-step span { color: #042C53 !important; }
+
+/* ─── AVATAR CON FOTO ─── */
+.av-photo-badge { border-color: var(--dk-panel) !important; }
+
+/* ─── REPORTES ─── */
+.rep-kpi { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.rep-kpi span { color: var(--dk-text) !important; }
+.rep-kpi p { color: var(--dk-sub) !important; }
+.rep-bar-wrap { background: rgba(26,86,219,.12) !important; }
+.rep-bar { background: #7ec8f5 !important; }
+.rep-table th { color: var(--dk-sub) !important; border-bottom-color: var(--dk-border) !important; }
+.rep-table td { border-bottom-color: var(--dk-border) !important; color: var(--dk-text) !important; }
+
+/* ════════════════════════════════════════════════════════
+   FIX: JS convierte hex → rgb al modificar .style.display
+   Los selectores [style*="background:#..."] dejan de coincidir
+   después de que JS modifica cualquier propiedad inline.
+   Usamos selectores de ID/clase directos para estos paneles.
+   ════════════════════════════════════════════════════════ */
+
+/* Formulario "Agregar dirección" */
+#add-dir-form {
+  background: var(--dk-card) !important;
+  border-color: var(--dk-border) !important;
+}
+
+/* Aviso "no hay slots hoy" en el wizard de reserva */
+#urg-no-today-warn {
+  background: rgba(99,56,6,.18) !important;
+  border-color: rgba(255,216,117,.15) !important;
+  color: #EF9F27 !important;
+}
+
+/* Mini-tarjeta del trabajador seleccionado (paso 3 reserva) */
+#step3-worker-card {
+  background: var(--dk-card) !important;
+  border-color: var(--dk-border) !important;
+}
+
+/* Resúmenes informativos (pago, reprogramar) */
+#pay-detail,
+#resched-svc-summary {
+  background: var(--dk-card) !important;
+  color: var(--dk-sub) !important;
+}
+
+/* Panel de cambio de zona (cliente) */
+.zone-edit-panel {
+  background: var(--dk-card) !important;
+  border: .5px solid var(--dk-border) !important;
+}
+.zone-card {
+  background: var(--dk-mid) !important;
+  border-color: var(--dk-border) !important;
+  color: var(--dk-text) !important;
+}
+.zone-card p  { color: var(--dk-text) !important; }
+.zone-card span { color: var(--dk-sub) !important; }
+.zone-card:hover  { background: var(--dk-card) !important; }
+.zone-card.selected {
+  background: rgba(26,86,219,.12) !important;
+  border-color: var(--blue) !important;
+}
+
+/* Tarjetas de trabajador (supervisor) */
+.sv-worker-card {
+  background: var(--dk-card) !important;
+  border-color: var(--dk-border) !important;
+}
+.sv-worker-info p   { color: var(--dk-text) !important; }
+.sv-worker-info span { color: var(--dk-sub) !important; }
+
+/* Separadores con color hardcodeado */
+[style*="border-top:.5px solid #B5D4F4"] {
+  border-top-color: var(--dk-border) !important;
+}
+[style*="border-bottom:.5px solid #B5D4F4"] {
+  border-bottom-color: var(--dk-border) !important;
+}
+[style*="border:.5px solid #B5D4F4"] {
+  border-color: var(--dk-border) !important;
+}

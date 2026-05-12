@@ -445,6 +445,52 @@ function toggleAddDirForm(){
   const el=document.getElementById('add-dir-form');if(el)el.style.display=el.style.display==='none'?'block':'none';
 }
 
+/* ── FOTO DE TRABAJADOR ── */
+function openWorkerPhotoUpload(){
+  const inp=document.getElementById('worker-photo-input');if(inp)inp.click();
+}
+function handleWorkerPhotoFile(input){
+  const file=input.files[0];if(!file)return;
+  if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const b64=e.target.result;
+    if(currentWorkerRef){
+      currentWorkerRef.photo=b64;
+      // Actualizar avatar de perfil
+      const av=document.getElementById('t-profile-av');
+      if(av){av.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;av.style.fontSize='0';av.style.padding='0';}
+      // Actualizar header
+      const hav=document.getElementById('header-av');
+      if(hav){hav.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;hav.style.fontSize='0';}
+      if(typeof fbSaveWorkers==='function')fbSaveWorkers();
+      showToast('green','📷','¡Foto actualizada!');
+    }
+    input.value='';
+  };
+  reader.readAsDataURL(file);
+}
+/* Admin sube foto de un trabajador */
+function adminUploadWorkerPhoto(wid){
+  let inp=document.getElementById('admin-photo-input-'+wid);
+  if(!inp){inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.id='admin-photo-input-'+wid;inp.style.display='none';inp.onchange=function(){handleAdminWorkerPhotoFile(inp,wid);};document.body.appendChild(inp);}
+  inp.click();
+}
+function handleAdminWorkerPhotoFile(input,wid){
+  const file=input.files[0];if(!file)return;
+  if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const b64=e.target.result;
+    const w=WORKERS.find(x=>x.id===wid);if(w)w.photo=b64;
+    if(typeof fbSaveWorkers==='function')fbSaveWorkers();
+    renderUsersPanel();renderStaffList(null);
+    showToast('green','📷',`Foto actualizada para ${w?w.name:'trabajador'}`);
+    input.value='';
+  };
+  reader.readAsDataURL(file);
+}
+
 /* ── RESERVA WIZARD ── */
 var promoAplicada = null; /* promo seleccionada en el paso 4 */
 
@@ -578,6 +624,19 @@ function launchApp(role,nombre,zona){
     const wRef=WORKERS.find(x=>x.name===nombre)||WORKERS[0];
     currentWorkerRef=wRef; /* fijar referencia global al trabajador logueado */
     if(wRef)wRef.status=workerActive?'active':'inactive';
+    // ── Actualizar tarjeta de perfil del trabajador ──
+    const tProfName=document.getElementById('t-profile-name');if(tProfName)tProfName.textContent=nombre;
+    const tProfType=document.getElementById('t-profile-type');
+    if(tProfType&&wRef)tProfType.textContent=(wRef.type||[]).map(t=>({depto:'Departamentos',auto:'Lavado de autos',tapiceria:'Tapicería'}[t]||t)).join(' · ');
+    // ── Mostrar foto o iniciales en avatar de perfil ──
+    const tAvEl=document.getElementById('t-profile-av');
+    if(tAvEl){
+      if(wRef&&wRef.photo){tAvEl.innerHTML=`<img src="${wRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;tAvEl.style.fontSize='0';tAvEl.style.padding='0';}
+      else{tAvEl.textContent=init;tAvEl.style.fontSize='15px';tAvEl.style.padding='';}
+    }
+    // También actualizar el header avatar si hay foto
+    const headerAv=document.getElementById('header-av');
+    if(headerAv&&wRef&&wRef.photo){headerAv.innerHTML=`<img src="${wRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;headerAv.style.fontSize='0';}
     // ── Actualizar contacto del supervisor en el chat del trabajador ──
     const mySv=wRef?SUPERVISORS.find(sv=>sv.assignedWorkers.includes(wRef.id)):null;
     const svInit2=mySv?mySv.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase():'SV';
@@ -931,9 +990,14 @@ function renderUsersPanel(filter){
   document.getElementById('users-list').innerHTML=filtered.map((u)=>{
     const i=USERS.indexOf(u);
     const isProtected=u.rolProtegido===true;
+    // Para trabajadores mostrar su foto si existe
+    const wRef=u.rol==='trabajador'?WORKERS.find(w=>w.name===u.nombre):null;
+    const avContent=wRef&&wRef.photo
+      ?`<img src="${wRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      :u.nombre.split(' ').map(n=>n[0]).join('').slice(0,2);
     return`<div class="user-card">
       <div class="user-card-top">
-        <div class="user-av" style="background:${avBgs[u.rol]||'#E6F1FB'};color:${avCols[u.rol]||'#042C53'};">${u.nombre.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+        <div class="user-av" style="background:${avBgs[u.rol]||'#E6F1FB'};color:${avCols[u.rol]||'#042C53'};overflow:hidden;font-size:${wRef&&wRef.photo?'0':'13px'};">${avContent}</div>
         <div class="user-info">
           <p>${u.nombre} <span class="role-badge ${rolColor(u.rol)}">${rolLabel(u.rol)}</span> ${u.accesoRevocado?'<span class="badge b-revoked">Acceso revocado</span>':''}</p>
           <span>${u.email}</span>
@@ -944,6 +1008,7 @@ function renderUsersPanel(filter){
             ?`<div style="display:flex;gap:4px;"><button class="btn-edit" onclick="toggleEditUser(${i})">Editar perfil</button></div><span style="font-size:11px;color:#185FA5;">Rol protegido</span>`
             :`<div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
               <button class="btn-edit" onclick="toggleEditUser(${i})">Editar</button>
+              ${wRef?`<button class="btn-light" onclick="adminUploadWorkerPhoto(${wRef.id})" title="Subir foto">📷</button>`:''}
               ${(u.rol!=='cliente'&&u.rol!=='cliente_inm')?`<button class="btn-danger" onclick="toggleUser(${i})">${u.activo?'Desactivar':'Activar'}</button>`:''}
               <button class="${u.accesoRevocado?'btn-restore':'btn-revoke'}" onclick="revokeAccess(${i})">${u.accesoRevocado?'Restaurar acceso':'Revocar acceso'}</button>
             </div>`}
@@ -2311,6 +2376,82 @@ function renderAdminKPIs(){
       <div class="akc-val">${alertas||'✓'}</div>
       <div class="akc-lbl">Evaluaciones<br>por atender</div>
     </div>
+  </div>`;
+}
+
+/* ── ADMIN: PANEL DE REPORTES ── */
+function renderAdminReportes(){
+  const el=document.getElementById('a-reportes');if(!el)return;
+  // ── KPIs globales ──
+  const totalSvcs=WORKERS.reduce((a,w)=>a+w.services,0);
+  const activeWks=WORKERS.filter(w=>w.status!=='inactive').length;
+  const ratedWks=WORKERS.filter(w=>w.rating>0);
+  const avgRating=ratedWks.length?(ratedWks.reduce((a,w)=>a+w.rating,0)/ratedWks.length).toFixed(1):'—';
+  const totalRevQ=Q_PERIODS.reduce((a,p)=>a+p.workers.reduce((b,w)=>b+w.total,0),0);
+  // ── Servicios por tipo ──
+  const svcCounts={};
+  WORKERS.forEach(w=>(w.type||[]).forEach(t=>{svcCounts[t]=(svcCounts[t]||0)+w.services;}));
+  const svcLabels={depto:'Departamentos',auto:'Lavado de autos',tapiceria:'Tapicería'};
+  const svcList=Object.entries(svcCounts).sort((a,b)=>b[1]-a[1]);
+  const maxSvc=svcList[0]?svcList[0][1]:1;
+  // ── Tabla de desempeño ──
+  const perfRows=WORKERS.map(w=>{
+    const qw=Q_PERIODS[0]?.workers.find(x=>x.id===w.id);
+    const avHtml=w.photo
+      ?`<img src="${w.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+      :`<div class="av" style="width:32px;height:32px;font-size:10px;flex-shrink:0;">${w.initials}</div>`;
+    const stBadge=w.status==='active'?'<span class="badge b-active">Activo</span>':w.status==='busy'?'<span class="badge b-busy">Ocupado</span>':'<span class="badge b-inactive">Inactivo</span>';
+    return`<tr>
+      <td><div style="display:flex;align-items:center;gap:8px;">${avHtml}<span>${w.name}</span></div></td>
+      <td style="text-align:center;">${w.services}</td>
+      <td>${s$(w.rating,12)} ${w.rating.toFixed(1)}</td>
+      <td style="text-align:right;">$${(qw?.total||0).toLocaleString('es-MX')}</td>
+      <td>${stBadge}</td>
+    </tr>`;
+  }).join('');
+  // ── Evaluaciones bajas recientes ──
+  const lowHtml=LOW_REVIEWS.length
+    ?LOW_REVIEWS.slice(0,4).map(r=>`<div class="rep-card"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:500;">${s$(r.stars,12)} ${r.worker}</span><span style="font-size:11px;color:#185FA5;">${r.date}</span></div><p style="font-size:12px;color:#185FA5;">"${r.comment}" — ${r.svc}</p></div>`).join('')
+    :`<p style="font-size:12px;color:#185FA5;text-align:center;padding:.75rem 0;">Sin evaluaciones bajas recientes ✓</p>`;
+  el.innerHTML=`
+  <div class="card">
+    <p class="ctitle">📈 Reportes generales</p>
+    <div class="rep-kpi-grid">
+      <div class="rep-kpi"><span>${totalSvcs.toLocaleString()}</span><p>Servicios realizados</p></div>
+      <div class="rep-kpi"><span>${avgRating}⭐</span><p>Calificación promedio</p></div>
+      <div class="rep-kpi"><span>${activeWks}</span><p>Trabajadores activos</p></div>
+      <div class="rep-kpi"><span>$${totalRevQ.toLocaleString('es-MX')}</span><p>Ingresos acumulados</p></div>
+    </div>
+  </div>
+  <div class="card">
+    <p class="ctitle">🛠️ Distribución de servicios</p>
+    ${svcList.map(([t,c])=>`
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:13px;">${svcLabels[t]||t}</span>
+        <span style="font-size:12px;font-weight:600;">${c} servicios</span>
+      </div>
+      <div class="rep-bar-wrap"><div class="rep-bar" style="width:${Math.round(c/maxSvc*100)}%;"></div></div>
+    </div>`).join('')}
+  </div>
+  <div class="card">
+    <p class="ctitle">👥 Desempeño por trabajador</p>
+    <div style="overflow-x:auto;">
+      <table class="rep-table">
+        <thead><tr>
+          <th>Trabajador</th>
+          <th style="text-align:center;">Servicios</th>
+          <th>Calificación</th>
+          <th style="text-align:right;">Ingresos (Q)</th>
+          <th>Estatus</th>
+        </tr></thead>
+        <tbody>${perfRows}</tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <p class="ctitle">⚠️ Evaluaciones bajas recientes</p>
+    ${lowHtml}
   </div>`;
 }
 
