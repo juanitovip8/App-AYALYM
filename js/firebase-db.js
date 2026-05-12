@@ -102,6 +102,57 @@ async function loadAllData() {
     SUPERVISORS.length = 0;
     svSnap.docs.forEach(function(d){ SUPERVISORS.push(d.data()); });
   }
+  /* Reconciliación: crear entradas faltantes de SUPERVISORS basado en USERS */
+  var svDirty = false;
+  USERS.forEach(function(u) {
+    if (u.rol !== 'supervisor') return;
+    var exists = SUPERVISORS.find(function(s){ return s.name === u.nombre || s.name === u.email; });
+    if (!exists) {
+      var svInit = u.nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
+      var svNewId = SUPERVISORS.length ? Math.max.apply(null, SUPERVISORS.map(function(s){ return s.id||0; })) + 1 : 0;
+      SUPERVISORS.push({id:svNewId, name:u.nombre, initials:svInit, zonas:[], assignedWorkers:[], photo:null});
+      svDirty = true;
+      console.log('[AYA] Supervisor reconciliado: ' + u.nombre);
+    }
+  });
+  /* También reconciliar WORKERS desde USERS con rol=trabajador */
+  USERS.forEach(function(u) {
+    if (u.rol !== 'trabajador') return;
+    var wExists = WORKERS.find(function(w){ return w.name === u.nombre; });
+    if (!wExists) {
+      var wInit = u.nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
+      var wNewId = WORKERS.length ? Math.max.apply(null, WORKERS.map(function(w){ return w.id||0; })) + 1 : 0;
+      WORKERS.push({id:wNewId, name:u.nombre, initials:wInit, photo:null, type:[], zonas:[], status:'active', rating:0, services:0, since:new Date().getFullYear(), desc:'', mapX:50, mapY:50, tiempoLlegada:30, reviews:[], todayJobs:[]});
+      console.log('[AYA] Trabajador reconciliado: ' + u.nombre);
+    }
+  });
+  /* También reconciliar PERSONAL_INM desde USERS con rol=personal_inm */
+  USERS.forEach(function(u) {
+    if (u.rol !== 'personal_inm') return;
+    var piExists = PERSONAL_INM.find(function(p){ return p.email === u.email; });
+    if (!piExists) {
+      var piInit = u.nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
+      var piNewId = PERSONAL_INM.length ? Math.max.apply(null, PERSONAL_INM.map(function(p){ return p.id||0; })) + 1 : 0;
+      PERSONAL_INM.push({id:piNewId, nombre:u.nombre, initials:piInit, email:u.email, password:u.password||'', tel:u.tel||'', activo:true, serviciosAsignados:[], asistencias:[], photo:null});
+      console.log('[AYA] Personal Inm reconciliado: ' + u.nombre);
+    }
+  });
+  /* También reconciliar CLIENTS_INM desde USERS con rol=cliente_inm */
+  USERS.forEach(function(u) {
+    if (u.rol !== 'cliente_inm') return;
+    var ciExists = CLIENTS_INM.find(function(c){ return c.email === u.email; });
+    if (!ciExists) {
+      var ciNewId = CLIENTS_INM.length ? Math.max.apply(null, CLIENTS_INM.map(function(c){ return c.id||0; })) + 1 : 0;
+      CLIENTS_INM.push({id:ciNewId, nombre:u.nombre, empresa:'', email:u.email, password:u.password||'', tel:u.tel||'', contratoId:null, activo:true, photo:null});
+      console.log('[AYA] Cliente Inm reconciliado: ' + u.nombre);
+    }
+  });
+  /* Persistir reconciliación si hubo cambios */
+  if (svDirty) {
+    var svB = _db.batch();
+    SUPERVISORS.forEach(function(sv){ svB.set(_col('supervisores').doc(String(sv.id)), _clone(sv)); });
+    await svB.commit();
+  }
 
   /* 4. CONFIG */
   var cfgSnap = await _col('config').doc('main').get();
