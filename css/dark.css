@@ -872,6 +872,25 @@ select option {
 /* ─── AVATAR CON FOTO ─── */
 .av-photo-badge { border-color: var(--dk-panel) !important; }
 
+/* ─── CHAT FLOTANTE ─── */
+.chat-contacts-pop        { background: var(--dk-panel) !important; border-color: var(--dk-border) !important; }
+.chat-contact-item        { border-bottom-color: var(--dk-border) !important; }
+.chat-contact-item:hover  { background: var(--dk-mid) !important; }
+.chat-contact-info p      { color: var(--dk-text) !important; }
+.chat-contact-info span   { color: var(--dk-sub) !important; }
+.chat-float-win           { background: var(--dk-panel) !important; border-color: var(--dk-border) !important; box-shadow: 0 -2px 24px rgba(0,0,0,.45) !important; }
+.chat-float-body          { background: var(--dk-bg) !important; }
+.chat-float-body .msg.recv { background: var(--dk-card) !important; color: var(--dk-text) !important; border-color: var(--dk-border) !important; }
+.chat-float-body .chat-locked-title { color: var(--dk-text) !important; }
+.chat-float-body .chat-locked-sub   { color: var(--dk-sub) !important; }
+.chat-float-body .chat-locked-svc   { color: var(--dk-sub) !important; }
+.chat-float-body .chat-sys-msg { background: var(--dk-mid) !important; color: var(--dk-sub) !important; }
+.chat-float-inp           { background: var(--dk-panel) !important; border-top-color: var(--dk-border) !important; }
+.chat-float-inp input     { background: var(--dk-mid) !important; color: var(--dk-text) !important; border-color: var(--dk-border) !important; }
+.chat-float-inp input::placeholder { color: var(--dk-muted) !important; }
+.chat-typing span         { background: var(--dk-border) !important; }
+.chat-fab-badge           { border-color: var(--dk-bg) !important; }
+
 /* ─── REPORTES ─── */
 .rep-kpi { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
 .rep-kpi span { color: var(--dk-text) !important; }

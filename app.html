@@ -10,9 +10,9 @@
   <title>AYALYM — Limpieza profesional a domicilio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=44">
+  <link rel="stylesheet" href="css/style.css?v=45">
   <link rel="stylesheet" href="css/theme-toggle.css?v=1">
-  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=11">
+  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=12">
   <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
   <script>!function(){var t=localStorage.getItem('ayalym-theme')||'dark';document.documentElement.classList.add(t+'-mode');if(t==='light'){document.addEventListener('DOMContentLoaded',function(){var l=document.getElementById('dark-css-link');if(l)l.disabled=true;});};}();</script>
   <link rel="icon" type="image/png" href="img/logo.png">
@@ -153,6 +153,24 @@
     </div>
   </div>
   <div class="notif-panel" id="notif-panel"><div class="notif-header"><p>Notificaciones</p><span onclick="markAllRead()">Marcar todas como leídas</span></div><div id="notif-list"></div></div>
+
+  <!-- ── CHAT FLOTANTE ── -->
+  <!-- FAB: botón flotante de chat -->
+  <div id="chat-fab" class="chat-fab" onclick="toggleChatContacts()" style="display:none;" title="Mensajes">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    <span id="chat-fab-badge" class="chat-fab-badge" style="display:none;">0</span>
+  </div>
+  <!-- Popup lista de contactos -->
+  <div id="chat-contacts-pop" class="chat-contacts-pop">
+    <div class="chat-contacts-hdr">
+      <p>💬 Mensajes</p>
+      <button class="chat-pop-close" onclick="toggleChatContacts()">✕</button>
+    </div>
+    <div id="chat-contacts-list"></div>
+  </div>
+  <!-- Contenedor de ventanas flotantes (JS las crea aquí) -->
+  <div id="chat-float-layer"></div>
+
   <div class="ficha-ov" id="ficha-ov" onclick="if(event.target===this)closeFicha()">
     <div class="ficha-card">
       <div class="fphoto" id="fp"></div><p class="fname" id="fn"></p><p class="frole" id="fr"></p>
@@ -1268,7 +1286,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=1"></script>
-<script src="js/app.js?v=62"></script>
+<script src="js/app.js?v=63"></script>
 <script src="js/theme.js?v=1"></script>
 </body>
 </html>

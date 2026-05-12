@@ -676,9 +676,16 @@ function launchApp(role,nombre,zona){
   }
   if(role==='personal_inm'){renderPersonalInmPanel();}
   if(role==='cliente_inm'){renderClienteInmInicio();}
+  /* ── Inicializar chat flotante ── */
+  setTimeout(initChatFab, 200);
 }
 
 function doLogout(){
+  /* Cerrar todas las ventanas de chat flotante */
+  const layer=document.getElementById('chat-float-layer');if(layer)layer.innerHTML='';
+  chatFloatOpen={};chatUnread={};chatContactsOpen=false;
+  const fab=document.getElementById('chat-fab');if(fab)fab.style.display='none';
+  const pop=document.getElementById('chat-contacts-pop');if(pop)pop.classList.remove('open');
   document.getElementById('screen-app').classList.remove('active');document.getElementById('screen-login').classList.add('active');
   document.querySelectorAll('.role-section').forEach(s=>s.style.display='none');
   window.scrollTo({top:0,behavior:'instant'});
@@ -901,6 +908,314 @@ function sendChat(convKey,myRole,myName,inputId,boxId){
   updateNotifBadge();
 }
 function renderChatBoxSide(convKey,asRole,boxId){renderChatBox(convKey,asRole,boxId);}
+
+/* ══════════════════════════════════════════════════════
+   CHAT FLOTANTE — FAB + popup de contactos + ventanas
+   ══════════════════════════════════════════════════════ */
+let chatUnread={};  /* {convKey: count} mensajes no leídos */
+let chatFloatOpen={}; /* {convKey: true} ventanas abiertas */
+let chatContactsOpen=false;
+
+/* ── Definición de contactos por rol ── */
+function getChatContacts(){
+  const avBg={cliente:'#0C447C',trabajador:'#633806',supervisor:'#085041',admin:'#3C3489'};
+  switch(currentRole){
+    case 'cliente':{
+      const wRef=currentWorkerRef||WORKERS[0];
+      const wPh=wRef&&wRef.photo?`<img src="${wRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:(wRef?wRef.initials:'T');
+      return[
+        {convKey:'c-t',name:wRef?wRef.name:'Trabajador',sub:'Chat de servicio',av:wPh,avBg:'#633806'},
+        {convKey:'c-a',name:'Soporte AYALYM',sub:'Asistencia y consultas',av:'🆘',avBg:'#185FA5'},
+      ];}
+    case 'trabajador':{
+      const mySv=currentWorkerRef?SUPERVISORS.find(sv=>sv.assignedWorkers.includes(currentWorkerRef.id)):SUPERVISORS[0];
+      return[
+        {convKey:'c-t',name:'Cliente del servicio',sub:'Chat durante el servicio',av:'👤',avBg:'#0C447C'},
+        {convKey:'t-sv',name:mySv?mySv.name:'Supervisor',sub:'Comunicación interna',av:mySv?mySv.initials:'SV',avBg:'#085041'},
+        {convKey:'t-a',name:'Administración',sub:'Canal directo',av:'⚙️',avBg:'#3C3489'},
+      ];}
+    case 'supervisor':
+      return[
+        {convKey:'c-t',name:'Monitor cliente-trabajador',sub:'Supervisión de servicio',av:'👁️',avBg:'#0C447C'},
+        {convKey:'sv-a',name:'Administración',sub:'Canal interno',av:'⚙️',avBg:'#3C3489'},
+      ];
+    case 'admin':
+      return[
+        {convKey:'c-a',name:'Soporte al cliente',sub:'Sesiones activas',av:'🆘',avBg:'#185FA5'},
+        {convKey:'sv-a',name:'Supervisores',sub:'Canal de coordinación',av:'👁️',avBg:'#085041'},
+        {convKey:'t-a',name:'Trabajadores',sub:'Canal de comunicación',av:'🧹',avBg:'#633806'},
+      ];
+    default:return[];
+  }
+}
+
+/* ── Mostrar/ocultar FAB según el rol ── */
+function initChatFab(){
+  const fab=document.getElementById('chat-fab');
+  if(!fab)return;
+  const noFab=['personal_inm','cliente_inm'];
+  fab.style.display=noFab.includes(currentRole)?'none':'flex';
+  chatUnread={};chatFloatOpen={};chatContactsOpen=false;
+  document.getElementById('chat-contacts-pop').classList.remove('open');
+  updateChatFab();
+}
+
+/* ── Toggle popup de contactos ── */
+function toggleChatContacts(){
+  const pop=document.getElementById('chat-contacts-pop');
+  chatContactsOpen=!chatContactsOpen;
+  pop.classList.toggle('open',chatContactsOpen);
+  if(chatContactsOpen)_renderContactsList();
+}
+function _renderContactsList(){
+  const list=document.getElementById('chat-contacts-list');if(!list)return;
+  const contacts=getChatContacts();
+  list.innerHTML=contacts.map(c=>{
+    const unread=chatUnread[c.convKey]||0;
+    const avIsEmoji=/\p{Emoji}/u.test(c.av);
+    const avHtml=avIsEmoji||!c.av.startsWith('<')?c.av:c.av;
+    return`<div class="chat-contact-item" onclick="openChatFloat('${c.convKey}')">
+      <div class="chat-contact-av" style="background:${c.avBg};">${avHtml}</div>
+      <div class="chat-contact-info">
+        <p>${c.name}</p>
+        <span>${c.sub}</span>
+      </div>
+      ${unread?`<span class="chat-contact-unread">${unread}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ── Actualizar badge del FAB ── */
+function updateChatFab(){
+  const total=Object.values(chatUnread).reduce((a,n)=>a+n,0);
+  const badge=document.getElementById('chat-fab-badge');
+  if(badge){badge.textContent=total>9?'9+':total;badge.style.display=total?'flex':'none';}
+}
+
+/* ── Abrir ventana flotante ── */
+function openChatFloat(convKey){
+  // Cerrar popup de contactos
+  chatContactsOpen=false;
+  const pop=document.getElementById('chat-contacts-pop');if(pop)pop.classList.remove('open');
+  // Si ya existe, solo mostrar/restaurar
+  const existing=document.getElementById('cfw-'+convKey);
+  if(existing){existing.classList.remove('minimized');_scrollFloatBody(convKey);return;}
+  // Buscar datos del contacto
+  const contacts=getChatContacts();
+  const c=contacts.find(x=>x.convKey===convKey)||{name:convKey,av:'💬',avBg:'#1A56DB',sub:''};
+  // Calcular posición horizontal
+  const winW=300,gap=8,marginR=16;
+  const openKeys=Object.keys(chatFloatOpen);
+  const isMobile=window.innerWidth<=600;
+  const rightPos=isMobile?0:marginR+(openKeys.length*(winW+gap));
+  // Crear ventana
+  const layer=document.getElementById('chat-float-layer');if(!layer)return;
+  const win=document.createElement('div');
+  win.className='chat-float-win';
+  win.id='cfw-'+convKey;
+  win.style.right=rightPos+'px';
+  const avIsEmoji=/\p{Emoji}/u.test(c.av)||(!c.av.startsWith('<')&&c.av.length<=4);
+  win.innerHTML=`
+    <div class="chat-float-hdr" onclick="minChatFloat('${convKey}')">
+      <div class="chat-float-hdr-av" style="background:${c.avBg};">${c.av}</div>
+      <div class="chat-float-hdr-info">
+        <p>${c.name}</p>
+        <span>${c.sub||'Chat'}</span>
+      </div>
+      <div class="chat-float-hdr-btns" onclick="event.stopPropagation()">
+        <button class="chat-float-hdr-btn" onclick="minChatFloat('${convKey}')" title="Minimizar">─</button>
+        <button class="chat-float-hdr-btn" onclick="closeChatFloat('${convKey}')" title="Cerrar">✕</button>
+      </div>
+    </div>
+    <div class="chat-float-body" id="cfb-${convKey}"></div>
+    <div class="chat-float-inp">
+      <input type="text" id="cfi-${convKey}" placeholder="Escribe un mensaje…"
+        style="font-size:16px;"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatFloat('${convKey}');}">
+      <button class="chat-float-inp-btn" onclick="sendChatFloat('${convKey}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>`;
+  layer.appendChild(win);
+  chatFloatOpen[convKey]=true;
+  chatUnread[convKey]=0;
+  updateChatFab();
+  _renderFloatMessages(convKey);
+  _scrollFloatBody(convKey);
+  // Focus input
+  setTimeout(()=>{const inp=document.getElementById('cfi-'+convKey);if(inp)inp.focus();},100);
+}
+
+/* ── Cerrar ventana ── */
+function closeChatFloat(convKey){
+  const win=document.getElementById('cfw-'+convKey);
+  if(win){win.style.animation='cfWinOut .15s ease-in forwards';setTimeout(()=>{win.remove();},150);}
+  delete chatFloatOpen[convKey];
+  _repositionFloatWindows();
+}
+
+/* ── Minimizar / restaurar ── */
+function minChatFloat(convKey){
+  const win=document.getElementById('cfw-'+convKey);
+  if(win)win.classList.toggle('minimized');
+}
+
+/* ── Reposicionar ventanas abiertas ── */
+function _repositionFloatWindows(){
+  const isMobile=window.innerWidth<=600;
+  if(isMobile)return;
+  const winW=300,gap=8,marginR=16;
+  Object.keys(chatFloatOpen).forEach((key,i)=>{
+    const w=document.getElementById('cfw-'+key);
+    if(w)w.style.right=(marginR+i*(winW+gap))+'px';
+  });
+}
+
+/* ── Renderizar mensajes en ventana flotante ── */
+function _renderFloatMessages(convKey){
+  const box=document.getElementById('cfb-'+convKey);if(!box)return;
+  const myRole=currentRole==='cliente'?'c':currentRole==='trabajador'?'t':currentRole==='supervisor'?'sv':'a';
+  /* Reutilizar lógica de renderChatBox */
+  if(convKey==='c-a'){
+    if(currentRole==='cliente'){
+      _renderSupportBoxFloat(box);return;
+    }
+    const msgs=CHAT['c-a']||[];
+    const sessionOn=supportChat.active;
+    if(!sessionOn&&!msgs.length){
+      box.innerHTML=`<div class="chat-locked"><span class="chat-locked-icon">💬</span><p class="chat-locked-title">Sin sesión activa</p><p class="chat-locked-sub">Las sesiones de soporte son iniciadas por el cliente.</p></div>`;
+      return;
+    }
+    box.innerHTML=msgs.map(m=>{
+      if(m.from==='system')return`<div class="chat-sys-msg">${m.text}</div>`;
+      return`<div class="msg ${m.from===myRole?'sent':'recv'}">${m.text}<span class="msg-meta">${m.from!==myRole?m.name+' · ':''}${m.time}</span></div>`;
+    }).join('');
+    box.scrollTop=box.scrollHeight;return;
+  }
+  /* Chat de servicio (c-t) — verificar ventana activa */
+  const SVC_KEYS=['c-t','t-sv'];
+  if(SVC_KEYS.includes(convKey)&&currentRole==='trabajador'&&!chatSvcWindow()){
+    const w=currentWorkerRef||WORKERS[0];
+    const today=new Date().toISOString().split('T')[0];
+    const nextJob=w?[...w.todayJobs].filter(j=>j.fecha===today&&j.status!=='completed').sort((a,b)=>a.hora.localeCompare(b.hora))[0]:null;
+    box.innerHTML=`<div class="chat-locked"><span class="chat-locked-icon">🔒</span><p class="chat-locked-title">Chat no disponible</p><p class="chat-locked-sub">Se activa 30 min antes del servicio.</p>${nextJob?`<p class="chat-locked-svc">Próximo: ${nextJob.svc} a las ${nextJob.hora}</p>`:''}</div>`;
+    return;
+  }
+  const msgs=CHAT[convKey]||[];
+  if(!msgs.length){box.innerHTML=`<div class="chat-locked"><span class="chat-locked-icon">💬</span><p class="chat-locked-title">Sin mensajes aún</p><p class="chat-locked-sub">Sé el primero en escribir.</p></div>`;return;}
+  box.innerHTML=msgs.map(m=>{
+    if(m.from==='system')return`<div class="chat-sys-msg">${m.text}</div>`;
+    return`<div class="msg ${m.from===myRole?'sent':'recv'}">${m.text}<span class="msg-meta">${m.from!==myRole?m.name+' · ':''}${m.time}</span></div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+/* Render de soporte para cliente en ventana flotante */
+function _renderSupportBoxFloat(box){
+  const msgs=CHAT['c-a']||[];
+  const inputRow=box.nextElementSibling; /* .chat-float-inp */
+  if(!supportChat.active&&!msgs.length){
+    box.innerHTML=`<div class="chat-locked"><span class="chat-locked-icon">💬</span><p class="chat-locked-title">¿Necesitas ayuda?</p><p class="chat-locked-sub">Inicia una sesión de soporte para chatear con el equipo AYALYM.</p></div>`;
+    if(inputRow){
+      inputRow.innerHTML=`<button class="btn-royal" style="width:100%;font-size:13px;" onclick="startSupportFloat()">Iniciar soporte</button>`;
+    }
+    return;
+  }
+  if(inputRow&&inputRow.querySelector('.btn-royal')){
+    inputRow.innerHTML=`<input type="text" id="cfi-c-a" placeholder="Escribe un mensaje…" style="font-size:16px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatFloat('c-a');}"><button class="chat-float-inp-btn" onclick="sendChatFloat('c-a')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></button>`;
+  }
+  box.innerHTML=msgs.map(m=>{
+    if(m.from==='system')return`<div class="chat-sys-msg">${m.text}</div>`;
+    return`<div class="msg ${m.from==='c'?'sent':'recv'}">${m.text}<span class="msg-meta">${m.from!=='c'?m.name+' · ':''}${m.time}</span></div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+function startSupportFloat(){
+  startSupport();
+  const box=document.getElementById('cfb-c-a');
+  if(box){_renderSupportBoxFloat(box);_scrollFloatBody('c-a');}
+}
+
+/* ── Scroll al fondo ── */
+function _scrollFloatBody(convKey){
+  const box=document.getElementById('cfb-'+convKey);
+  if(box)setTimeout(()=>{box.scrollTop=box.scrollHeight;},30);
+}
+
+/* ── Enviar desde ventana flotante ── */
+function sendChatFloat(convKey){
+  const myRole=currentRole==='cliente'?'c':currentRole==='trabajador'?'t':currentRole==='supervisor'?'sv':'a';
+  const myName=currentRole==='cliente'?'Cliente':
+    currentRole==='trabajador'?(currentWorkerRef?currentWorkerRef.name:'Trabajador'):
+    currentRole==='supervisor'?(currentSupervisorRef?currentSupervisorRef.name:'Supervisor'):'Admin';
+  const inp=document.getElementById('cfi-'+convKey);
+  if(!inp||!inp.value.trim())return;
+  /* Validaciones */
+  if(convKey==='c-a'&&!supportChat.active){showToast('amber','⚠️','No hay sesión de soporte activa');return;}
+  const SVC_CHAT_KEYS_LOCAL=['c-t'];
+  if(SVC_CHAT_KEYS_LOCAL.includes(convKey)&&currentRole==='trabajador'&&!chatSvcWindow()){
+    showToast('amber','🔒','Chat disponible solo durante el servicio o 30 min antes');return;
+  }
+  const text=inp.value.trim();
+  const time=new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0');
+  if(!CHAT[convKey])CHAT[convKey]=[];
+  CHAT[convKey].push({from:myRole,text,time,name:myName});
+  if(convKey==='c-a'&&myRole==='c')supportChat.lastClientMsg=Date.now();
+  inp.value='';
+  /* Actualizar ventana flotante */
+  _renderFloatMessages(convKey);
+  _scrollFloatBody(convKey);
+  /* Actualizar mirrors del panel */
+  const mirrors={'c-t':{c:'chat-t-c',t:'chat-c-t',sv:'chat-sv-ct'},'c-a':{c:'chat-a-c',a:'chat-c-a',sv:'chat-sv-ca'},'sv-a':{sv:'chat-a-sv',a:'chat-sv-a'},'t-a':{t:'chat-a-t',a:'chat-t-a'},'t-sv':{t:'chat-t-sv',sv:'chat-sv-t'}};
+  const m=mirrors[convKey];
+  if(m)Object.entries(m).forEach(([role,id])=>{const b=document.getElementById(id);if(b)renderChatBox(convKey,role,id);});
+  /* Notificaciones */
+  const notifyMap={'c-t':{c:['trabajador','supervisor'],t:['cliente','supervisor'],sv:['cliente','trabajador']},'c-a':{c:['admin','supervisor'],a:['cliente'],sv:['cliente']},'sv-a':{sv:['admin'],a:['supervisor']},'t-a':{t:['admin'],a:['trabajador']},'t-sv':{t:['supervisor'],sv:['trabajador']}};
+  const targets=((notifyMap[convKey]||{})[myRole])||[];
+  targets.forEach(r=>pushNotif(r,'💬','blue','Nuevo mensaje',`${myName}: ${text.slice(0,40)}`));
+  updateNotifBadge();
+  /* Simular respuesta automática después de 1-2s (demo) */
+  _simulateTyping(convKey,myRole);
+}
+
+/* ── Typing indicator + respuesta automática (demo) ── */
+function _simulateTyping(convKey,myRole){
+  if(convKey!=='c-a'&&convKey!=='c-t')return;
+  const box=document.getElementById('cfb-'+convKey);if(!box)return;
+  const delay=1000+Math.random()*1500;
+  const typDiv=document.createElement('div');
+  typDiv.className='chat-typing';
+  typDiv.innerHTML='<span></span><span></span><span></span>';
+  box.appendChild(typDiv);
+  box.scrollTop=box.scrollHeight;
+  setTimeout(()=>{
+    if(typDiv.parentNode)typDiv.remove();
+    const autoReplies={
+      'c-a':['Entendido, ya lo reviso.','¿Me puedes dar más detalles?','Un momento, lo verifico.','Claro, con gusto te ayudo.'],
+      'c-t':['Ya voy en camino.','Confirmo la cita.','Listo, nos vemos pronto.','De acuerdo, gracias.'],
+    };
+    const replies=autoReplies[convKey]||[];
+    if(!replies.length)return;
+    const reply=replies[Math.floor(Math.random()*replies.length)];
+    const respRole=convKey==='c-a'?'a':'t';
+    const respName=convKey==='c-a'?'Soporte':'Trabajador';
+    const time=new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0');
+    CHAT[convKey].push({from:respRole,text:reply,time,name:respName});
+    // Si la ventana no está abierta, contar no leído
+    if(!chatFloatOpen[convKey]){chatUnread[convKey]=(chatUnread[convKey]||0)+1;updateChatFab();}
+    _renderFloatMessages(convKey);_scrollFloatBody(convKey);
+    // Actualizar ventanas del panel también
+    const mirrors={'c-t':{c:'chat-t-c',t:'chat-c-t',sv:'chat-sv-ct'},'c-a':{c:'chat-a-c',a:'chat-c-a',sv:'chat-sv-ca'}};
+    const mr=mirrors[convKey];if(mr)Object.entries(mr).forEach(([r,id])=>{const b=document.getElementById(id);if(b)renderChatBox(convKey,r,id);});
+  },delay);
+}
+
+/* ── Hook: actualizar ventana flotante cuando sendChat() del panel actualice el chat ── */
+const _origSendChat=window.sendChat;
+function _updateFloatOnSend(convKey){
+  if(chatFloatOpen[convKey])_renderFloatMessages(convKey);
+  else{chatUnread[convKey]=(chatUnread[convKey]||0)+1;updateChatFab();if(chatContactsOpen)_renderContactsList();}
+}
 
 /* ── MSG TABS (cliente, trabajador, supervisor) ── */
 function switchMsgTab(rolePrefix,tab,btn){
