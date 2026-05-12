@@ -1763,18 +1763,20 @@ function _closeModal(){document.getElementById('admin-modal-ov').classList.remov
 
 /* Colapsado de service cards */
 function toggleSvcCard(svcId){
-  svcCardCollapsed[svcId]=!svcCardCollapsed[svcId];
+  /* Por defecto (undefined) = colapsado. false = abierto, true = colapsado */
+  const isCollapsed = svcCardCollapsed[svcId] !== false; /* undefined y true = colapsado */
+  svcCardCollapsed[svcId] = !isCollapsed; /* false = abierto, true = colapsado */
   const body=document.getElementById('stc-body-'+svcId);
   const chev=document.getElementById('stc-chev-'+svcId);
   if(body)body.classList.toggle('collapsed',!!svcCardCollapsed[svcId]);
-  if(chev)chev.classList.toggle('open',!svcCardCollapsed[svcId]);
+  if(chev)chev.classList.toggle('open',svcCardCollapsed[svcId]===false);
 }
 
 function renderSvcDurationList(){
   const el=document.getElementById('svc-duration-list');if(!el)return;
   el.innerHTML=SVC_TYPES.map((s,i)=>{
     const isOn=s.activo!==false;
-    const collapsed=!!svcCardCollapsed[s.id];
+    const collapsed=svcCardCollapsed[s.id]!==false; /* default colapsado */
     return`<div class="svc-type-card${isOn?'':' inactive'}">
       <div class="stc-hdr" onclick="toggleSvcCard('${s.id}')" style="padding:10px 12px;">
         <div style="display:flex;align-items:center;gap:8px;flex:1;">
@@ -1842,7 +1844,7 @@ function renderCleaningTypesAdmin(){
   el.innerHTML=CLEANING_TYPES.map((ct,i)=>{
     const isOn=ct.activo!==false;
     const cid='ct-'+ct.id;
-    const collapsed=!!svcCardCollapsed[cid];
+    const collapsed=svcCardCollapsed[cid]!==false; /* default colapsado */
     return`<div class="svc-type-card${isOn?'':' inactive'}">
       <div class="stc-hdr" onclick="toggleSvcCard('${cid}')" style="padding:10px 12px;">
         <div style="display:flex;align-items:center;gap:8px;flex:1;">
