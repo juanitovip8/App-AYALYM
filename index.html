@@ -1,1292 +1,1587 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-MX">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AYALYM — Limpieza profesional a domicilio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=34">
-  <link rel="stylesheet" href="css/theme-toggle.css?v=1">
-  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=5">
-  <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
-  <script>!function(){var t=localStorage.getItem('ayalym-theme')||'dark';document.documentElement.classList.add(t+'-mode');if(t==='light'){document.addEventListener('DOMContentLoaded',function(){var l=document.getElementById('dark-css-link');if(l)l.disabled=true;});};}();</script>
-  <link rel="icon" type="image/png" href="img/logo.png">
+  <title>Limpieza De Inmuebles — AYA</title>
+  <meta name="description" content="Empresa dedicada a la innovación y cuidado del medio ambiente, principalmente en servicio de Limpieza y Mantenimiento con el propósito de generar ambientes amigables con entornos limpios y elegantes.">
+  <link rel="icon" href="img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fjalla+One&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme-toggle.css?v=2">
+  <link rel="stylesheet" href="css/landing-light.css?v=2">
+  <!-- Prevenir flash: aplicar tema antes de pintar -->
+  <script>!function(){var t=localStorage.getItem('ayalym-theme')||'dark';document.documentElement.classList.add(t+'-mode');}();</script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:     #111111;
+      --dark:      #1b1b1b;
+      --mid:       #2a2a2a;
+      --gray:      #5e5e5e;
+      --light-gray:#d1d1d1;
+      --white:     #ffffff;
+      --accent:    #ffffff;
+      --portal-bg: #042C53;
+      --portal-hover: #1A56DB;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Source Sans 3', 'Source Sans Pro', Arial, sans-serif;
+      font-size: 16px;
+      color: var(--white);
+      background: var(--black);
+      line-height: 1.6;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(17,17,17,0.97);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 32px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .logo-wrap img {
+      height: 44px;
+      width: auto;
+      object-fit: contain;
+    }
+    .logo-text {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 22px;
+      color: var(--white);
+      letter-spacing: .5px;
+      line-height: 1;
+    }
+    .logo-text span { color: #b0c8e8; }
+
+    nav { display: flex; align-items: center; gap: 6px; }
+    .nav-link {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      color: var(--light-gray);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: color .2s, background .2s;
+    }
+    .nav-link:hover { color: var(--white); background: rgba(255,255,255,.07); }
+
+    .btn-portal {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--portal-bg);
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      transition: background .2s, transform .15s;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-portal:hover { background: var(--portal-hover); transform: translateY(-1px); }
+
+    /* Mobile nav toggle */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 6px;
+      border: none;
+      background: none;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+      transition: .3s;
+    }
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(17,17,17,.98);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav .nav-link { font-size: 20px; }
+    .mobile-close {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      background: none;
+      border: none;
+      color: var(--white);
+      font-size: 32px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* ─── HERO ─── */
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('img/hero-bg.jpg');
+      background-size: cover;
+      background-position: center 40%;
+      filter: brightness(.32);
+      transform: scale(1.03);
+      transition: transform 10s ease;
+    }
+    /* Gradient overlay for cleaner bottom edge */
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 180px;
+      background: linear-gradient(to bottom, transparent, var(--black));
+      z-index: 1;
+    }
+    .hero:hover .hero-bg { transform: scale(1); }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 720px;
+      padding: 40px 24px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #7ec8f5;
+      margin-bottom: 24px;
+    }
+    .hero-eyebrow::before,
+    .hero-eyebrow::after {
+      content: '';
+      display: block;
+      width: 32px;
+      height: 1px;
+      background: rgba(126,200,245,.5);
+    }
+    .hero h1 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: clamp(44px, 8.5vw, 84px);
+      line-height: 1.0;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      text-shadow: none;
+    }
+    /* Línea 1: "¡ESPACIOS" — intro compacto */
+    .hero h1 .h1-intro {
+      font-size: .52em;
+      letter-spacing: 7px;
+      color: rgba(255,255,255,.72);
+      text-shadow: 0 2px 16px rgba(0,0,0,.6);
+      line-height: 1.2;
+    }
+    /* Línea 2: "LIMPIOS," — protagonista en azul */
+    .hero h1 em {
+      font-style: normal;
+      font-size: 1.08em;
+      color: #7ec8f5;
+      line-height: .95;
+      text-shadow:
+        0 0 60px rgba(126,200,245,.55),
+        0 0 20px rgba(126,200,245,.35),
+        0 4px 32px rgba(0,0,0,.8);
+      letter-spacing: 1px;
+    }
+    /* Línea 3: "ENTORNOS FELICES!" — cierre en blanco */
+    .hero h1 .h1-close {
+      font-size: .68em;
+      color: #ffffff;
+      letter-spacing: 3px;
+      text-shadow: 0 4px 24px rgba(0,0,0,.75);
+      line-height: 1.15;
+    }
+    .hero-price-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      backdrop-filter: blur(8px);
+      padding: 10px 22px;
+      border-radius: 40px;
+      font-size: 13px;
+      color: rgba(255,255,255,.75);
+      margin-bottom: 28px;
+    }
+    .hero-price-tag strong {
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 16px;
+      letter-spacing: .3px;
+    }
+    .hero-price-tag .hpt-sep {
+      width: 1px; height: 16px;
+      background: rgba(255,255,255,.2);
+    }
+    .hero-cta-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #1A56DB;
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 15px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 16px 38px;
+      border-radius: 8px;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 6px 28px rgba(26,86,219,.45);
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 36px rgba(26,86,219,.6);
+    }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      color: rgba(255,255,255,.75);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 16px 24px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.2);
+      transition: border-color .2s, color .2s, background .2s, transform .15s;
+    }
+    .btn-secondary:hover {
+      border-color: rgba(255,255,255,.5);
+      color: var(--white);
+      background: rgba(255,255,255,.06);
+      transform: translateY(-2px);
+    }
+
+    /* ─── BARRA COMPACTA DE PROMOCIONES (sticky bajo navbar) ─── */
+    #promos-scroll-section {
+      position: sticky;
+      top: 70px; /* igual al alto del header */
+      z-index: 90;
+      background: linear-gradient(90deg, #0f0514 0%, #150b30 50%, #0a1a10 100%);
+      border-bottom: 1px solid rgba(249,115,22,.35);
+      box-shadow: 0 3px 16px rgba(249,115,22,.14), 0 1px 6px rgba(0,0,0,.4);
+      display: none;
+      overflow: hidden;
+      padding: 0;
+    }
+    #promos-scroll-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 25% 300% at 3% 50%, rgba(249,115,22,.14) 0%, transparent 65%),
+        radial-gradient(ellipse 20% 300% at 97% 50%, rgba(239,68,68,.10) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    /* Fila única de la barra */
+    .promos-bar {
+      display: flex;
+      align-items: center;
+      height: 36px;
+      padding: 0 16px;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .ps-label {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,.80);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .ps-live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #f97316;
+      box-shadow: 0 0 5px #f97316;
+      flex-shrink: 0;
+      animation: ps-pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes ps-pulse {
+      0%,100% { transform: scale(1);   box-shadow: 0 0 5px #f97316; }
+      50%      { transform: scale(1.6); box-shadow: 0 0 10px #f97316, 0 0 20px rgba(249,115,22,.40); }
+    }
+    .ps-sep { width: 1px; height: 20px; background: rgba(255,255,255,.18); flex-shrink: 0; }
+    /* Track — ocupa el espacio sobrante */
+    .promos-track-wrap {
+      flex: 1;
+      overflow: hidden;
+      mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%);
+    }
+    .promos-track {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: promos-scroll 30s linear infinite;
+      width: max-content;
+    }
+    .promos-track:hover { animation-play-state: paused; }
+    @keyframes promos-scroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    /* Tarjeta compacta tipo píldora — enlace al login */
+    .promo-scroll-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px 3px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      flex-shrink: 0;
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background .18s, border-color .18s, transform .18s;
+    }
+    .promo-scroll-card:hover {
+      background: rgba(255,255,255,.16);
+      border-color: rgba(255,255,255,.35);
+      transform: translateY(-1px);
+    }
+    .psc-glow {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      border-radius: 20px 20px 0 0;
+    }
+    .psc-emoji { font-size: 12px; flex-shrink: 0; line-height: 1; }
+    .psc-nombre {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 11px;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+    .psc-pct {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .psc-pct::after { content: ' OFF'; font-size: 8px; opacity: .75; letter-spacing: .5px; }
+    .psc-code {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      border: 1px dashed rgba(255,255,255,.28);
+    }
+    .psc-sep { width: 1px; height: 12px; background: rgba(255,255,255,.20); }
+    /* Badge de conteo — también es enlace al login */
+    .ps-count {
+      font-size: 9px;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(90deg, #f97316 0%, #ef4444 100%);
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      text-decoration: none;
+      box-shadow: 0 0 8px rgba(249,115,22,.40);
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: filter .15s;
+    }
+    .ps-count:hover { filter: brightness(1.2); }
+
+    /* ─── SERVICIOS / PROMO ─── */
+    .promo-section {
+      background: var(--black);
+      padding: 0 32px 72px;
+    }
+    .promo-heading {
+      max-width: 1200px;
+      margin: 0 auto 36px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .promo-heading-text { flex-shrink: 0; }
+    .promo-heading-text .ph-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #7ec8f5;
+      margin-bottom: 4px;
+    }
+    .promo-heading-text .ph-title {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: clamp(22px, 3vw, 34px);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      line-height: 1.1;
+      color: var(--white);
+    }
+    .promo-heading-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,.07);
+    }
+    .promo-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    /* Premium dark service cards */
+    .promo-banner {
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 18px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: transform .3s, box-shadow .3s, border-color .3s;
+      text-decoration: none;
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+    .promo-banner:hover {
+      transform: translateY(-7px);
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+      border-color: rgba(126,200,245,.2);
+    }
+    /* Top gradient accent bar */
+    .pb-accent {
+      height: 4px;
+      width: 100%;
+      border-radius: 18px 18px 0 0;
+    }
+    .pb-accent-1 { background: linear-gradient(90deg, #042C53, #1A56DB, #7ec8f5); }
+    .pb-accent-2 { background: linear-gradient(90deg, #064e3b, #059669, #34d399); }
+    .pb-accent-3 { background: linear-gradient(90deg, #3b0764, #7c3aed, #a78bfa); }
+    /* Subtle corner glow */
+    .promo-banner::after {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity .4s;
+    }
+    .promo-banner:nth-child(1)::after { background: radial-gradient(circle, rgba(26,86,219,.12), transparent 70%); }
+    .promo-banner:nth-child(2)::after { background: radial-gradient(circle, rgba(5,150,105,.12), transparent 70%); }
+    .promo-banner:nth-child(3)::after { background: radial-gradient(circle, rgba(124,58,237,.12), transparent 70%); }
+    .promo-banner:hover::after { opacity: 1; }
+
+    .pb-body {
+      padding: 28px 28px 26px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .pb-icon-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .pb-icon { font-size: 36px; }
+    .pb-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.5);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .pb-name {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: clamp(18px, 1.8vw, 22px);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      color: var(--white);
+    }
+
+    /* Price highlight */
+    .pb-price-main {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .pb-desde {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+      margin-bottom: 2px;
+    }
+    .pb-amount {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 38px;
+      line-height: 1;
+      color: var(--white);
+    }
+    .pb-iva {
+      font-size: 11px;
+      color: rgba(255,255,255,.35);
+      line-height: 1.4;
+    }
+
+    /* Price detail rows */
+    .pb-prices {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+    .pb-price-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .pb-price-item .pi-label {
+      color: rgba(255,255,255,.5);
+      font-weight: 300;
+    }
+    .pb-price-item .pi-val {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      color: rgba(255,255,255,.8);
+      letter-spacing: .3px;
+    }
+
+    /* CTA Button */
+    .pb-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.75);
+      transition: background .25s, color .25s, border-color .25s;
+    }
+    .pb-cta .cta-arrow { transition: transform .25s; font-size: 14px; }
+    .promo-banner:hover .pb-cta {
+      background: rgba(255,255,255,.11);
+      border-color: rgba(255,255,255,.2);
+      color: var(--white);
+    }
+    .promo-banner:hover .pb-cta .cta-arrow { transform: translateX(5px); }
+
+    @media (max-width: 900px) {
+      .promo-grid { grid-template-columns: 1fr; }
+      .promo-section { padding: 0 20px 48px; }
+    }
+
+    /* ─── STATS BAR ─── */
+    .stats-bar {
+      background: var(--dark);
+      border-top: 1px solid rgba(255,255,255,.06);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .stats-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    .stat-item {
+      padding: 28px 24px;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,.06);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-number {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 36px;
+      letter-spacing: .5px;
+      color: var(--white);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-number em { font-style: normal; color: #7ec8f5; }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+    }
+    @media (max-width: 768px) {
+      .stats-inner { grid-template-columns: repeat(2, 1fr); }
+      .stat-item { border-right: 1px solid rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.06); }
+      .stat-item:nth-child(2n) { border-right: none; }
+      .stat-item:nth-child(3), .stat-item:nth-child(4) { border-bottom: none; }
+    }
+
+    /* ─── SECTIONS ─── */
+    section { padding: 80px 32px; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: #7ec8f5;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: clamp(28px, 4vw, 48px);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      line-height: 1.1;
+      margin-bottom: 18px;
+    }
+    .section-sub {
+      font-size: 16px;
+      color: rgba(255,255,255,.6);
+      max-width: 600px;
+      font-weight: 300;
+    }
+    .divider {
+      width: 48px;
+      height: 3px;
+      background: #7ec8f5;
+      margin: 20px 0 40px;
+    }
+    /* ─── NOSOTROS ─── */
+    #nosotros { background: var(--black); }
+    .nosotros-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      margin-top: 40px;
+    }
+    .nosotros-text p {
+      font-size: 16px;
+      color: rgba(255,255,255,.7);
+      font-weight: 300;
+      margin-bottom: 16px;
+      line-height: 1.8;
+    }
+    .nosotros-text .highlight {
+      font-size: 18px;
+      color: var(--white);
+      font-weight: 600;
+      font-style: italic;
+      border-left: 3px solid #7ec8f5;
+      padding-left: 16px;
+      margin: 24px 0;
+    }
+    .values-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .value-item {
+      background: var(--mid);
+      border-radius: 8px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.06);
+      transition: border-color .25s, background .25s;
+    }
+    .value-item:hover {
+      border-color: rgba(126,200,245,.3);
+      background: rgba(126,200,245,.04);
+    }
+    .value-item .vi-icon { font-size: 24px; margin-bottom: 8px; }
+    .value-item h4 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 6px;
+    }
+    .value-item p { font-size: 13px; color: rgba(255,255,255,.55); font-weight: 300; line-height: 1.5; }
+
+    /* ─── CÓMO FUNCIONA (RESERVA) ─── */
+    #reserva {
+      background: var(--black);
+      padding: 80px 32px;
+    }
+    .como-header {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 64px;
+    }
+    .steps-grid {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      position: relative;
+    }
+    /* Connector line between circles */
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 31px;
+      left: calc(50% / 3 + 8px);
+      right: calc(50% / 3 + 8px);
+      height: 1px;
+      background: linear-gradient(90deg,
+        rgba(126,200,245,.35) 0%,
+        rgba(126,200,245,.1) 50%,
+        rgba(126,200,245,.35) 100%);
+      z-index: 0;
+    }
+    .step-card {
+      text-align: center;
+      padding: 0 28px 0;
+      position: relative;
+      z-index: 1;
+    }
+    .step-circle {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--mid);
+      border: 1.5px solid rgba(126,200,245,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 26px;
+      position: relative;
+    }
+    .step-num {
+      position: absolute;
+      top: -8px; right: -8px;
+      width: 20px; height: 20px;
+      background: #1A56DB;
+      border-radius: 50%;
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 10px;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0;
+    }
+    .step-card h3 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-bottom: 10px;
+      color: var(--white);
+    }
+    .step-card p {
+      font-size: 14px;
+      color: rgba(255,255,255,.45);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 220px;
+      margin: 0 auto;
+    }
+    .steps-cta {
+      text-align: center;
+      margin-top: 56px;
+    }
+    .btn-reserva {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #1A56DB;
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 15px;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 18px 48px;
+      border-radius: 10px;
+      transition: background .2s, transform .2s, box-shadow .2s;
+      box-shadow: 0 8px 32px rgba(26,86,219,.4);
+    }
+    .btn-reserva:hover {
+      background: #2563eb;
+      transform: translateY(-3px);
+      box-shadow: 0 14px 40px rgba(26,86,219,.55);
+    }
+    .btn-reserva-arrow { font-size: 18px; transition: transform .2s; }
+    .btn-reserva:hover .btn-reserva-arrow { transform: translateX(5px); }
+    @media (max-width: 768px) {
+      .steps-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+      .steps-grid::before { display: none; }
+      .step-card p { max-width: 100%; }
+      #reserva { padding: 56px 20px; }
+      .btn-reserva { width: 100%; justify-content: center; }
+    }
+
+    /* ─── REPSE ─── */
+    #repse {
+      background: var(--dark);
+      text-align: center;
+      padding: 48px 32px;
+    }
+    .repse-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px;
+      padding: 16px 32px;
+      margin-top: 20px;
+    }
+    .repse-badge .rb-icon { font-size: 32px; }
+    .repse-badge .rb-text h3 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 18px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .repse-badge .rb-text p { font-size: 13px; color: var(--light-gray); font-weight: 300; }
+
+    /* ─── CONTACT ─── */
+    #contacto { background: var(--black); }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 40px;
+    }
+    .contact-block h3 {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 16px;
+    }
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .contact-item .ci-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .contact-item .ci-body { font-weight: 300; font-size: 14px; color: rgba(255,255,255,.7); line-height: 1.6; }
+    .contact-item .ci-body strong { display: block; color: var(--white); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+    .btn-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #25D366;
+      color: var(--white);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 14px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 13px 28px;
+      border-radius: 8px;
+      transition: background .2s, transform .15s;
+      margin-top: 8px;
+    }
+    .btn-whatsapp:hover { background: #1ebe59; transform: translateY(-2px); }
+    .subscribe-form {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .subscribe-form input {
+      flex: 1;
+      min-width: 180px;
+      padding: 12px 16px;
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 6px;
+      color: var(--white);
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .subscribe-form input::placeholder { color: rgba(255,255,255,.35); }
+    .subscribe-form input:focus { outline: none; border-color: rgba(255,255,255,.4); }
+    .subscribe-form button {
+      background: var(--white);
+      color: var(--black);
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 13px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .subscribe-form button:hover { background: #e8e8e8; }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: var(--dark);
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding: 32px;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .footer-brand {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 14px;
+      color: var(--light-gray);
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .footer-logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .footer-logo-img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .footer-logo-text {
+      font-family: 'Fjalla One', sans-serif;
+      font-size: 20px;
+      color: var(--white);
+      letter-spacing: .5px;
+      line-height: 1;
+    }
+    .footer-logo-text span { color: #7ec8f5; }
+    .footer-brand strong { color: var(--white); display: block; font-size: 13px; margin-bottom: 2px; }
+    .footer-social { display: flex; gap: 12px; align-items: center; }
+    .social-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--mid);
+      border: 1px solid rgba(255,255,255,.1);
+      color: var(--white);
+      text-decoration: none;
+      font-size: 16px;
+      transition: background .2s, transform .15s;
+    }
+    .social-link:hover { background: rgba(255,255,255,.15); transform: translateY(-2px); }
+    .footer-copy { font-size: 12px; color: rgba(255,255,255,.3); text-align: center; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.05); margin-top: 16px; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      nav { display: none; }
+      .hamburger { display: flex; }
+      .nosotros-grid,
+      .contact-grid { grid-template-columns: 1fr; }
+      .values-grid { grid-template-columns: 1fr; }
+      .badge-bar-inner { gap: 20px; }
+      section { padding: 56px 20px; }
+      .header-inner { padding: 0 20px; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="app">
-<div id="toast" class="toast"></div>
-
-<!-- LOGIN -->
-<div id="screen-login" class="screen active">
-  <div class="login-wrap">
-    <div class="brand">
-      <div class="brand-logo-wrap">
-        <img src="img/logo.png" alt="AYA Limpieza y Mantenimiento" class="brand-logo-img">
-        <span class="brand-logo-text">AYA<span>LYM</span></span>
-      </div>
-      <p class="brand-tag">Servicios de limpieza profesional a domicilio</p>
-      <a href="landing.html" class="back-to-site">← Sitio web</a>
-    </div>
-    <div class="client-panel" id="client-panel">
-      <div class="client-tabs"><div class="ctab active" id="ctab-login" onclick="switchClientTab('login')">Iniciar sesión</div><div class="ctab" id="ctab-registro" onclick="switchClientTab('registro')">Registrarse</div></div>
-      <div class="form-view active" id="view-login">
-        <div class="fld"><label>Correo electrónico</label><input type="email" id="c-login-email" placeholder="correo@ejemplo.com"></div>
-        <div class="fld"><label>Contraseña</label><input type="password" id="c-login-pass" placeholder="••••••••"></div>
-        <button class="btn-royal" onclick="doClientLogin()">Iniciar sesión</button>
-        <p style="font-size:11px;color:#1A56DB;text-align:center;margin-top:10px;cursor:pointer;font-weight:500;" onclick="toggleRecover()">¿Olvidaste tu contraseña?</p>
-        <div class="recover-panel" id="recover-panel">
-          <div class="recover-step active" id="rec-1"><p style="font-size:13px;font-weight:500;color:#042C53;margin-bottom:6px;">Recuperar contraseña</p><div class="fld" style="margin-bottom:10px;"><label>Correo</label><input type="email" id="rec-email" placeholder="correo@ejemplo.com"></div><div style="display:flex;gap:8px;"><button class="btn-sec" style="flex:1;" onclick="toggleRecover()">Cancelar</button><button class="btn-royal" style="flex:2;" onclick="recoverStep1()">Enviar código</button></div></div>
-          <div class="recover-step" id="rec-2"><p style="font-size:13px;font-weight:500;color:#042C53;margin-bottom:6px;">Código enviado a <span id="rec-email-shown"></span></p><div class="fld" style="margin-bottom:10px;"><label>Código de 6 dígitos</label><input type="text" id="rec-code" placeholder="000000" maxlength="6" style="letter-spacing:6px;font-size:18px;text-align:center;"></div><div style="display:flex;gap:8px;"><button class="btn-sec" style="flex:1;" onclick="recoverBack(2)">Atrás</button><button class="btn-royal" style="flex:2;" onclick="recoverStep2()">Verificar</button></div></div>
-          <div class="recover-step" id="rec-3"><div class="fld"><label>Nueva contraseña</label><input type="password" id="rec-newpass" placeholder="Mínimo 8 caracteres"></div><div class="fld" style="margin-bottom:10px;"><label>Confirmar</label><input type="password" id="rec-newpass2"></div><div style="display:flex;gap:8px;"><button class="btn-sec" style="flex:1;" onclick="recoverBack(3)">Atrás</button><button class="btn-royal" style="flex:2;" onclick="recoverStep3()">Cambiar contraseña</button></div></div>
-          <div class="recover-step" id="rec-4"><div style="text-align:center;padding:.5rem 0;"><div style="width:48px;height:48px;border-radius:50%;background:#EAF3DE;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 10px;">✅</div><p style="font-size:14px;font-weight:500;color:#042C53;margin-bottom:6px;">¡Contraseña actualizada!</p><button class="btn-royal" onclick="finishRecover()">Iniciar sesión</button></div></div>
-        </div>
-      </div>
-      <div class="form-view" id="view-registro">
-        <div class="step-indicator"><div class="step-dot done" id="sd-1"></div><div class="step-dot" id="sd-2"></div><div class="step-dot" id="sd-3"></div></div>
-        <div id="reg-step-1"><div class="frow"><div><label>Nombre</label><input type="text" id="r-nombre" placeholder="Ana"></div><div><label>Apellido</label><input type="text" id="r-apellido" placeholder="García"></div></div><div class="fld"><label>Correo</label><input type="email" id="r-email" placeholder="ana@ejemplo.com"></div><div class="fld"><label>Teléfono</label><input type="text" id="r-tel" placeholder="+52 55 0000 0000"></div><button class="btn-royal" onclick="regNext(1)">Continuar</button></div>
-        <div id="reg-step-2" style="display:none"><div class="fld"><label>Contraseña</label><input type="password" id="r-pass" placeholder="Mínimo 8 caracteres"></div><div class="fld"><label>Confirmar contraseña</label><input type="password" id="r-pass2"></div><div class="fld"><label>Zona de servicio</label><select id="r-zona"></select></div><div style="display:flex;gap:8px;"><button class="btn-sec" style="flex:1;" onclick="regBack(2)">Atrás</button><button class="btn-royal" style="flex:2;" onclick="regNext(2)">Continuar</button></div></div>
-        <div id="reg-step-3" style="display:none"><div style="text-align:center;padding:.5rem 0 1rem;"><div style="width:52px;height:52px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 10px;">✓</div><p style="font-size:15px;font-weight:500;color:#042C53;margin-bottom:6px;">¡Casi listo!</p><div style="background:#E6F1FB;border-radius:8px;padding:12px;text-align:left;margin-bottom:14px;"><p id="r-summary" style="font-size:13px;color:#042C53;line-height:1.8;"></p></div></div><div style="display:flex;gap:8px;"><button class="btn-sec" style="flex:1;" onclick="regBack(3)">Atrás</button><button class="btn-royal" style="flex:2;" onclick="doClientRegister()">Crear cuenta</button></div></div>
-      </div>
-    </div>
-    <div class="staff-access-link" id="staff-access-link" onclick="showStaffPanel()">🔑 Acceso para trabajadores</div>
-    <div class="staff-panel" id="staff-panel">
-      <div class="staff-body" id="staff-body">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;"><button class="btn-sec" style="font-size:12px;padding:5px 10px;" onclick="showClientPanel()">← Volver</button><span style="font-size:13px;font-weight:600;color:#042C53;flex:1;text-align:center;">Acceso para personal</span></div>
-        <div class="fld"><label>Correo de trabajo</label><input type="email" id="s-email" placeholder="usuario@ayalym.com"></div>
-        <div class="fld"><label>Contraseña</label><input type="password" id="s-pass" placeholder="••••••••"></div>
-        <button class="btn-royal" onclick="doStaffLogin()">Iniciar sesión</button>
-      </div>
-    </div>
-    <!-- ACCESO RÁPIDO -->
-    <div class="quick-access">
-      <p class="qa-title"><span class="qa-dot"></span>Acceso rápido por rol</p>
-
-      <p class="qa-group-label">👤 Clientes</p>
-      <div class="qa-grid">
-        <div class="qa-card qa-cliente" onclick="quickLogin('cliente')">
-          <div class="qa-avatar">AG</div>
-          <div class="qa-info">
-            <p>Cliente</p>
-            <span>Ana García</span>
-            <span class="qa-email">ana@cliente.com</span>
-          </div>
-          <button class="qa-btn">Entrar</button>
-        </div>
-        <div class="qa-card qa-cliente-inm" onclick="quickLogin('cliente_inm')">
-          <div class="qa-avatar qa-av-cliente-inm">PL</div>
-          <div class="qa-info">
-            <p>Cliente Inm.</p>
-            <span>Patricia León</span>
-            <span class="qa-email">pleon@romaboutique.com</span>
-          </div>
-          <button class="qa-btn qa-btn-cliente-inm">Entrar</button>
-        </div>
-      </div>
-
-      <p class="qa-group-label">🔑 Trabajadores</p>
-      <div class="qa-grid">
-        <div class="qa-card qa-trabajador" onclick="quickLogin('trabajador')">
-          <div class="qa-avatar qa-av-trabajador">JM</div>
-          <div class="qa-info">
-            <p>Trabajador</p>
-            <span>Juan Morales</span>
-            <span class="qa-email">juan@ayalym.com</span>
-          </div>
-          <button class="qa-btn qa-btn-trabajador">Entrar</button>
-        </div>
-        <div class="qa-card qa-supervisor" onclick="quickLogin('supervisor')">
-          <div class="qa-avatar qa-av-supervisor">LS</div>
-          <div class="qa-info">
-            <p>Supervisor</p>
-            <span>Laura Supervisor</span>
-            <span class="qa-email">laura@ayalym.com</span>
-          </div>
-          <button class="qa-btn qa-btn-supervisor">Entrar</button>
-        </div>
-        <div class="qa-card qa-admin" onclick="quickLogin('admin')">
-          <div class="qa-avatar qa-av-admin">CM</div>
-          <div class="qa-info">
-            <p>Admin</p>
-            <span>Carlos Mendoza</span>
-            <span class="qa-email">admin@ayalym.com</span>
-          </div>
-          <button class="qa-btn qa-btn-admin">Entrar</button>
-        </div>
-        <div class="qa-card qa-personal-inm" onclick="quickLogin('personal_inm')">
-          <div class="qa-avatar qa-av-personal-inm">PR</div>
-          <div class="qa-info">
-            <p>Personal Inm.</p>
-            <span>Pedro Ramírez</span>
-            <span class="qa-email">pedro@ayalym.com</span>
-          </div>
-          <button class="qa-btn qa-btn-personal-inm">Entrar</button>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- APP -->
-<div id="screen-app" class="screen">
-  <div class="header">
-    <div class="header-brand">
-      <img src="img/logo.png" alt="AYA" class="header-logo">
-      <span class="header-brand-name">AYA<span class="header-brand-lym">LYM</span></span>
-    </div>
-    <div class="header-right">
-      <div class="header-user-info" id="header-user-info">
-        <div class="header-av" id="header-av">AG</div>
-        <div class="header-user-text">
-          <span class="header-uname" id="header-uname">Ana García</span>
-          <span class="header-urole" id="header-urole">Cliente</span>
-        </div>
-      </div>
-      <a href="landing.html" class="btn-site">🌐 Sitio web</a>
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo-wrap">
+      <img src="img/logo.png" alt="AYA Logo">
+      <span class="logo-text">AYA<span>LYM</span></span>
+    </a>
+    <nav>
+      <a href="#" class="nav-link">Inicio</a>
+      <a href="#servicios" class="nav-link">Servicios</a>
+      <a href="#nosotros" class="nav-link">Nosotros</a>
+      <a href="#repse" class="nav-link">Repse</a>
+      <a href="#contacto" class="nav-link">Contacto</a>
       <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar a modo claro" aria-label="Cambiar tema">
         <span class="tt-icon">☀️</span>
         <span class="tt-label">Claro</span>
       </button>
-      <div class="notif-bell" onclick="toggleNotifPanel()"><span style="font-size:16px;">🔔</span><span class="notif-badge" id="notif-badge">0</span></div>
-      <button class="btn-logout" onclick="doLogout()">✕ Salir</button>
-    </div>
+    </nav>
+    <a href="app.html" class="btn-portal">✨ Reserva tu limpieza</a>
+    <button class="hamburger" onclick="document.querySelector('.mobile-nav').classList.add('open')" aria-label="Abrir menú">
+      <span></span><span></span><span></span>
+    </button>
   </div>
-  <div class="notif-panel" id="notif-panel"><div class="notif-header"><p>Notificaciones</p><span onclick="markAllRead()">Marcar todas como leídas</span></div><div id="notif-list"></div></div>
-  <div class="ficha-ov" id="ficha-ov" onclick="if(event.target===this)closeFicha()">
-    <div class="ficha-card">
-      <div class="fphoto" id="fp"></div><p class="fname" id="fn"></p><p class="frole" id="fr"></p>
-      <div class="fstats"><div class="fstat"><p>Calificación</p><span id="frat"></span></div><div class="fstat"><p>Servicios</p><span id="fsvc"></span></div><div class="fstat"><p>Desde</p><span id="fsince"></span></div></div>
-      <div id="fstars" style="display:flex;gap:2px;justify-content:center;margin-bottom:12px;"></div>
-      <div id="fdetails"></div>
-      <p style="font-size:13px;font-weight:500;color:#042C53;margin:12px 0 8px;">Evaluaciones</p>
-      <div id="fall-reviews" style="max-height:180px;overflow-y:auto;"></div>
-      <div style="display:flex;gap:8px;margin-top:14px;"><button class="btn-royal" style="flex:1;" onclick="selectWorker()">Seleccionar</button><button class="btn-sec" onclick="closeFicha()">Cerrar</button></div>
-    </div>
-  </div>
-
-  <div class="confirm-ov" id="confirm-ov" onclick="if(event.target===this)closeConfirmPanel()">
-    <div class="confirm-card">
-      <p class="confirm-title">Confirmar reserva</p>
-      <div id="confirm-worker-row" class="confirm-worker-row" style="display:none;"></div>
-      <div id="confirm-rows"></div>
-      <div style="border-top:1.5px solid #B5D4F4;margin-top:4px;"></div>
-      <div class="confirm-total"><span>Total a pagar</span><span id="confirm-total-val">—</span></div>
-      <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Método de pago</p>
-      <div class="pay-methods">
-        <div class="pay-btn active" id="pay-tarjeta" onclick="selectPayMethod('tarjeta',this)"><span class="pay-icon">💳</span>Tarjeta</div>
-        <div class="pay-btn" id="pay-transferencia" onclick="selectPayMethod('transferencia',this)"><span class="pay-icon">🏦</span>Transferencia</div>
-        <div class="pay-btn" id="pay-efectivo" onclick="selectPayMethod('efectivo',this)"><span class="pay-icon">💵</span>Efectivo</div>
-      </div>
-      <div id="pay-detail" style="background:#E6F1FB;border-radius:8px;padding:10px 12px;font-size:12px;color:#185FA5;margin-bottom:14px;"></div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-royal" style="flex:2;" onclick="confirmarPago()">Pagar y confirmar</button>
-        <button class="btn-sec" style="flex:1;" onclick="closeConfirmPanel()">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- OVERLAY: REPROGRAMAR SERVICIO -->
-  <div class="confirm-ov" id="reschedule-ov" onclick="if(event.target===this)closeReschedule()">
-    <div class="confirm-card">
-      <p class="confirm-title">📅 Reprogramar servicio</p>
-      <div id="resched-svc-summary" style="background:#E6F1FB;border-radius:8px;padding:10px 14px;margin-bottom:16px;"></div>
-      <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Selecciona la nueva fecha y horario</p>
-      <div class="frow" style="margin-bottom:6px;"><div style="flex:1;"><label>Nueva fecha</label><input type="date" id="resched-fecha" onchange="onReschedFechaChange()"></div></div>
-      <div class="fecha-warn" id="resched-fecha-warn"></div>
-      <div id="resched-slots-wrap" style="display:none;margin-bottom:14px;">
-        <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:6px;">Horarios disponibles</p>
-        <div id="resched-slot-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-royal" id="btn-confirm-resched" style="flex:2;" onclick="confirmReschedule()">Confirmar nueva fecha</button>
-        <button class="btn-sec" style="flex:1;" onclick="closeReschedule()">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- NUEVO REPORTE DE VISITA (supervisor / admin) -->
-  <div class="confirm-ov" id="inm-report-ov" onclick="if(event.target===this)closeInmReport()">
-    <div class="confirm-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <p class="confirm-title" style="margin-bottom:0;">📋 Nuevo reporte de visita</p>
-        <button class="btn-sec" style="padding:4px 12px;font-size:13px;" onclick="closeInmReport()">✕</button>
-      </div>
-      <div class="frow">
-        <div><label>Fecha de visita</label><input type="date" id="rep-fecha"></div>
-        <div><label>Hora</label><input type="time" id="rep-hora"></div>
-      </div>
-      <div class="frow full">
-        <label>Actividades realizadas</label>
-        <textarea id="rep-actividades" rows="4" style="resize:vertical;width:100%;border:.5px solid #B5D4F4;border-radius:8px;padding:9px 11px;font-size:13px;color:#042C53;font-family:inherit;" placeholder="Describe las actividades realizadas durante la visita…"></textarea>
-      </div>
-      <div class="frow full">
-        <label>Observaciones / estado del inmueble</label>
-        <textarea id="rep-observaciones" rows="3" style="resize:vertical;width:100%;border:.5px solid #B5D4F4;border-radius:8px;padding:9px 11px;font-size:13px;color:#042C53;font-family:inherit;" placeholder="Incidencias, condiciones generales del inmueble…"></textarea>
-      </div>
-      <div style="margin-bottom:14px;">
-        <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:7px;">📷 Evidencia fotográfica <span style="font-weight:400;color:#185FA5;">(opcional · máx. 8 fotos)</span></p>
-        <div class="upload-area" style="padding:10px 14px;" onclick="document.getElementById('rep-fotos-input').click()">
-          <p>Toca para subir fotos</p><span>JPG / PNG</span>
-        </div>
-        <input type="file" id="rep-fotos-input" accept="image/*" multiple style="display:none" onchange="handleReportFotos(event)">
-        <div id="rep-fotos-prev" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>
-        <p id="rep-fotos-count" style="font-size:11px;color:#185FA5;margin-top:4px;"></p>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:4px;">
-        <button class="btn-sec" style="flex:1;" onclick="closeInmReport()">Cancelar</button>
-        <button class="btn-royal" style="flex:2;" onclick="saveInmReport()">💾 Guardar reporte</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- EDITAR SERVICIO INMUEBLE (admin) -->
-  <div class="confirm-ov" id="inm-edit-ov" onclick="if(event.target===this)closeInmEdit()">
-    <div class="confirm-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <p class="confirm-title" style="margin-bottom:0;">✏️ Editar servicio de inmueble</p>
-        <button class="btn-sec" style="padding:4px 12px;font-size:13px;" onclick="closeInmEdit()">✕</button>
-      </div>
-      <input type="hidden" id="inm-edit-id">
-
-      <!-- Cliente -->
-      <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">👤 Datos del cliente</p>
-      <div class="frow full"><label>Nombre / empresa</label><input type="text" id="ie-cli-nombre" placeholder="Corporativo Reforma S.A."></div>
-      <div class="frow"><div><label>Contacto directo</label><input type="text" id="ie-cli-contacto" placeholder="Nombre del contacto"></div><div><label>Teléfono</label><input type="text" id="ie-cli-tel" placeholder="+52 55 0000 0000"></div></div>
-      <div class="frow full"><label>Correo</label><input type="email" id="ie-cli-email" placeholder="correo@empresa.com"></div>
-
-      <div class="div" style="margin:12px 0;"></div>
-
-      <!-- Inmueble -->
-      <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🏢 Datos del inmueble</p>
-      <div class="frow"><div><label>Tipo</label><select id="ie-tipo"><option value="Oficina">Oficina</option><option value="Casa">Casa</option><option value="Departamento">Departamento</option><option value="Bodega">Bodega</option><option value="Local comercial">Local comercial</option><option value="Edificio">Edificio</option></select></div><div><label>Superficie (m²)</label><input type="number" id="ie-m2" min="1" placeholder="120"></div></div>
-      <div class="frow full"><label>Dirección</label><input type="text" id="ie-direccion" placeholder="Av. Reforma 200, Piso 3"></div>
-      <div class="frow full"><label>Colonia</label><input type="text" id="ie-colonia" placeholder="Cuauhtémoc"></div>
-
-      <div class="div" style="margin:12px 0;"></div>
-
-      <!-- Servicio -->
-      <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🧹 Servicio</p>
-      <div class="frow full"><label>Tipo de servicio</label><input type="text" id="ie-svc-tipo" placeholder="Limpieza general, post-construcción…"></div>
-      <div class="frow full"><label>Descripción</label><textarea id="ie-svc-desc" rows="2" style="resize:vertical;width:100%;border:.5px solid #B5D4F4;border-radius:8px;padding:8px 10px;font-size:13px;color:#042C53;" placeholder="Descripción del trabajo…"></textarea></div>
-      <div class="frow"><div><label>Frecuencia</label><select id="ie-frecuencia"><option value="diaria">Diaria</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option><option value="única">Única</option></select></div><div><label>Hora de servicio</label><input type="time" id="ie-hora"></div></div>
-      <div class="frow"><div><label>Inicio de contrato</label><input type="date" id="ie-fecha-inicio"></div><div><label>Fin de contrato</label><input type="date" id="ie-fecha-fin"></div></div>
-
-      <div class="div" style="margin:12px 0;"></div>
-
-      <!-- Pago -->
-      <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">💳 Forma de pago</p>
-      <div class="frow"><div><label>Método</label><select id="ie-pago-metodo"><option value="transferencia">Transferencia</option><option value="cheque">Cheque</option><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option></select></div><div><label>Periodicidad</label><select id="ie-pago-periodicidad"><option value="mensual">Mensual</option><option value="quincenal">Quincenal</option><option value="semanal">Semanal</option><option value="única">Única</option></select></div></div>
-      <div class="frow full"><label>Monto ($)</label><input type="number" id="ie-pago-monto" min="0" placeholder="0"></div>
-
-      <div class="div" style="margin:12px 0;"></div>
-
-      <!-- Datos fiscales -->
-      <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🧾 Datos fiscales</p>
-      <div class="frow full"><label>Razón social</label><input type="text" id="ie-fiscal-razon" placeholder="Empresa S.A. de C.V."></div>
-      <div class="frow"><div><label>RFC</label><input type="text" id="ie-fiscal-rfc" placeholder="EMP850101XYZ"></div><div><label>Régimen fiscal</label><input type="text" id="ie-fiscal-regimen" placeholder="601 – General de Ley"></div></div>
-      <div class="frow full"><label>Uso CFDI</label><input type="text" id="ie-fiscal-cfdi" placeholder="G03 – Gastos en general"></div>
-      <div class="frow full"><label>Dirección fiscal</label><input type="text" id="ie-fiscal-dir" placeholder="Av. Reforma 222, Col. Cuauhtémoc, CDMX"></div>
-
-      <div class="div" style="margin:12px 0;"></div>
-
-      <!-- Supervisor -->
-      <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">👁️ Supervisor asignado</p>
-      <div class="frow full"><label>Supervisor</label><select id="ie-supervisor"></select></div>
-
-      <div class="div" style="margin:12px 0;"></div>
-
-      <!-- Notas -->
-      <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📝 Notas internas</p>
-      <div class="frow full"><label>Notas</label><textarea id="ie-notas" rows="2" style="resize:vertical;width:100%;border:.5px solid #B5D4F4;border-radius:8px;padding:8px 10px;font-size:13px;color:#042C53;" placeholder="Acceso, instrucciones especiales…"></textarea></div>
-
-      <div style="display:flex;gap:8px;margin-top:20px;">
-        <button class="btn-sec" style="flex:1;" onclick="closeInmEdit()">Cancelar</button>
-        <button class="btn-royal" style="flex:2;" onclick="saveInmEdit()">💾 Guardar cambios</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CLIENTE -->
-  <div id="role-cliente" class="role-section" style="display:none">
-    <div class="bottom-nav" id="nav-cliente">
-      <div class="bnav-btn active" onclick="navGo('cliente','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
-      <div class="bnav-btn" onclick="navGo('cliente','reserva',this)"><span class="bnav-icon">➕</span>Reservar</div>
-      <div class="bnav-btn" onclick="navGo('cliente','historial',this)"><span class="bnav-icon">🕐</span>Servicios</div>
-      <div class="bnav-btn" onclick="navGo('cliente','mensajes',this)"><span class="bnav-icon">💬</span>Mensajes</div>
-      <div class="bnav-btn" onclick="navGo('cliente','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
-    </div>
-    <!-- BARRA DE PROMOCIONES ACTIVAS (solo para clientes registrados) -->
-    <div id="client-promos-bar">
-      <div class="cp-bar">
-        <span class="cp-label"><span class="cp-dot"></span>🔥 Ofertas</span>
-        <span class="cp-sep"></span>
-        <div class="cp-track-wrap">
-          <div class="cp-track" id="cp-track"></div>
-        </div>
-      </div>
-    </div>
-    <div id="c-resumen" class="sec active">
-      <div class="card">
-        <p class="ctitle">Mi resumen</p>
-        <div class="dash-tabs" id="cliente-dash-tabs">
-          <button class="dash-tab active" onclick="selectClienteTab('actividad',this)">📋 Mi actividad</button>
-          <button class="dash-tab" onclick="selectClienteTab('zona',this)">📍 Mi zona</button>
-          <button class="dash-tab" onclick="selectClienteTab('cuenta',this)">👤 Mi cuenta</button>
-        </div>
-        <div id="cliente-dash-panel"></div>
-      </div>
-    </div>
-    <div id="c-reserva" class="sec">
-      <div class="card">
-        <p class="ctitle">Nueva reserva</p>
-        <div class="discount-banner" id="discount-banner" style="display:none"><div style="flex:1;"><p>🎁 Tienes un descuento disponible</p><span id="discount-banner-text">Por evaluación baja anterior</span></div><span class="discount-tag" id="discount-tag">-$0</span></div>
-
-        <!-- Indicador de pasos -->
-        <div class="step-indicator" style="margin-bottom:18px;">
-          <div class="step-dot done" id="rs-1"></div>
-          <div class="step-dot" id="rs-2"></div>
-          <div class="step-dot" id="rs-3"></div>
-          <div class="step-dot" id="rs-4"></div>
-        </div>
-
-        <!-- PASO 1 — Tipo de servicio -->
-        <div id="res-step-1">
-          <div style="background:#E6F1FB;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;"><div class="av" style="width:34px;height:34px;font-size:11px;" id="c-user-av">AG</div><div><p style="font-size:13px;font-weight:500;color:#042C53;" id="c-user-name">Ana García</p><p style="font-size:11px;color:#185FA5;" id="c-user-zona">Narvarte / Del Valle</p></div></div>
-          <div class="frow full"><label>Tipo de servicio</label><select id="svc" onchange="onSvcChange()"></select></div>
-          <div id="cleaning-type-section" style="margin-bottom:14px;"><p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Tipo de limpieza</p><div id="cleaning-types-list"></div></div>
-          <div class="dur-banner" id="dur-banner"><span style="font-size:18px;">⏱️</span><div><p>Duración estimada</p><span id="dur-banner-text">60–90 minutos</span></div></div>
-          <div id="depto-fields"><div class="frow"><div><label>Habitaciones</label><select id="habitaciones" onchange="calcPrice()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4+</option></select></div><div><label>Baños</label><select id="banos" onchange="calcPrice()"><option value="1">1</option><option value="2">2</option><option value="3">3+</option></select></div></div></div>
-          <div id="auto-fields" style="display:none"><div class="frow full"><label>Vehículo</label><select id="vehiculo" onchange="calcPrice()"><option value="sedan">Sedán</option><option value="suv">SUV</option><option value="pickup">Pickup</option></select></div></div>
-          <div id="tapiceria-fields" style="display:none"><div class="frow"><div><label>Mueble</label><select id="mueble" onchange="onMuebleChange()"><option value="silla">Silla</option><option value="sofa">Sofá</option><option value="tapete">Tapete</option><option value="alfombra">Alfombra</option><option value="colchon">Colchón</option></select></div><div id="mat-wrap"><label>Material</label><select id="material" onchange="calcPrice()"><option value="tela">Tela</option><option value="piel">Piel</option><option value="mixta">Mixta</option></select></div></div><div class="frow full" id="cantidad-wrap"><label id="cantidad-label">Cantidad</label><select id="cantidad" onchange="calcPrice()"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="6">6</option></select></div><div class="frow full" id="colchon-wrap" style="display:none"><label>Tamaño</label><select id="colchon-tipo" onchange="calcPrice()"><option value="individual">Individual $500</option><option value="matrimonial">Matrimonial $650</option><option value="kingsize">King Size $750</option></select></div><div class="frow full" id="medida-wrap" style="display:none"><label>Medida (m²)</label><select id="medida" onchange="calcPrice()"><option value="1">Hasta 2m²</option><option value="2">2–5m²</option><option value="3">5–10m²</option><option value="4">10+m²</option></select></div><div style="margin-top:10px;"><p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:6px;">Fotos del mueble <span style="font-size:11px;font-weight:400;color:#185FA5;">(requerido)</span></p><div class="upload-area" onclick="document.getElementById('fi').click()"><p>Subir fotos</p><span>JPG/PNG · máx 5</span></div><input type="file" id="fi" accept="image/*" multiple style="display:none" onchange="handleFiles(event)"><div class="up-prev" id="prev-wrap"></div><p id="fc" style="font-size:11px;color:#185FA5;"></p></div></div>
-          <!-- Extras opcionales (se inyectan por JS según el tipo de servicio) -->
-          <div id="svc-extras-section" style="display:none;margin-top:14px;">
-            <div id="svc-extras-fields"></div>
-          </div>
-          <!-- Dirección del servicio -->
-          <div style="margin-top:14px;background:#EEF5FF;border-radius:10px;padding:12px 14px;border:.5px solid #B5D4F4;">
-            <p style="font-size:12px;font-weight:600;color:#042C53;margin-bottom:8px;">📍 Dirección del servicio</p>
-            <div id="res-dir-section"></div>
-            <div class="frow full"><label>Calle y número</label><input type="text" id="res-calle" placeholder="Ej. Insurgentes Sur 1450, Int. 3B"></div>
-            <div class="frow"><div><label>Colonia</label><input type="text" id="res-colonia" placeholder="Narvarte"></div><div><label>C.P.</label><input type="text" id="res-cp" placeholder="03020" maxlength="5" style="letter-spacing:1px;"></div></div>
-            <div class="frow full"><label>Referencias <span style="font-weight:400;color:#185FA5;">(opcional)</span></label><input type="text" id="res-ref" placeholder="Entre calles, color de fachada, portón…"></div>
-          </div>
-          <button class="btn-royal" style="margin-top:14px;width:100%;" onclick="reservaNext(1)">Continuar →</button>
-        </div>
-
-        <!-- PASO 2 — Urgencia + Selección de trabajador -->
-        <div id="res-step-2" style="display:none">
-          <!-- Urgency selector at top -->
-          <div class="urg-step2-block">
-            <p class="urg-step2-title">⚡ ¿Qué tan urgente es tu servicio?</p>
-            <div id="urg-no-today-warn" style="display:none;background:#FFF8E6;border:.5px solid #FFD875;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#7A4900;line-height:1.5;">⏰ No hay horarios disponibles para hoy. Los servicios urgentes y rápidos están deshabilitados — puedes agendar a partir de mañana.</div>
-            <select id="urgencia" onchange="onUrgenciaChange()"></select>
-            <p class="urg-step2-hint" id="urg-step2-hint"></p>
-          </div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:4px;">Selecciona a tu trabajador</p>
-          <p style="font-size:11px;color:#185FA5;margin-bottom:10px;">Solo se muestran los trabajadores que pueden cubrir tu nivel de urgencia.</p>
-          <div id="workers-section" style="margin-bottom:10px;">
-            <div id="workers-section-hdr" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-              <p style="font-size:12px;font-weight:500;color:#042C53;">Disponibles en tu zona</p>
-            </div>
-            <div id="workers-list"></div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:16px;">
-            <button class="btn-sec" style="flex:1;" onclick="reservaBack(2)">← Atrás</button>
-            <button class="btn-royal" style="flex:2;" onclick="reservaNext(2)">Continuar →</button>
-          </div>
-        </div>
-
-        <!-- PASO 3 — Fecha y horario del trabajador elegido -->
-        <div id="res-step-3" style="display:none">
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">¿Cuándo necesitas el servicio?</p>
-          <!-- Mini tarjeta del trabajador seleccionado -->
-          <div id="step3-worker-card" style="display:none;align-items:center;gap:10px;background:#E6F1FB;border-radius:10px;padding:10px 12px;margin-bottom:14px;border:.5px solid #B5D4F4;"></div>
-          <div class="frow full"><div><label>Fecha</label><input type="date" id="fecha" onchange="onFechaChange()"></div></div>
-          <div class="fecha-warn" id="fecha-warn"></div>
-          <div id="time-slots-section" style="margin-bottom:10px;display:none;">
-            <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:6px;">Horarios disponibles</p>
-            <p style="font-size:11px;color:#185FA5;margin-bottom:8px;">Incluye 1 hora de traslado entre servicios.</p>
-            <div id="time-slots-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:16px;">
-            <button class="btn-sec" style="flex:1;" onclick="reservaBack(3)">← Atrás</button>
-            <button class="btn-royal" style="flex:2;" onclick="reservaNext(3)">Continuar →</button>
-          </div>
-        </div>
-
-        <!-- PASO 4 — Resumen y pago -->
-        <div id="res-step-4" style="display:none">
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:12px;">Revisa tu reserva</p>
-
-          <!-- SELECTOR DE PROMOCIONES -->
-          <div class="promo-selector-box">
-            <p class="psb-title">🏷️ ¿Tienes una promoción?</p>
-            <select id="promo-select" class="psb-select" onchange="onPromoSelectChange()">
-              <option value="">— Sin promoción —</option>
-            </select>
-            <div id="promo-code-wrap" style="display:none;">
-              <div class="psb-code-row">
-                <input type="text" id="promo-code-input" class="psb-code-input" placeholder="Ej: VERANO25" oninput="this.value=this.value.toUpperCase()">
-                <button class="psb-code-btn" onclick="applyPromoCode()">Aplicar</button>
-              </div>
-            </div>
-            <div id="promo-applied-badge" class="psb-badge" style="display:none;"></div>
-            <p class="psb-nota">⚠️ Las promociones y códigos no son acumulables. Solo se aplica un descuento por reserva.</p>
-          </div>
-
-          <div class="pbox">
-            <p style="font-size:12px;color:#185FA5;font-weight:500;margin-bottom:8px;">Resumen de pago</p>
-            <div class="prow2" id="pr-base"><span>Servicio base</span><span>—</span></div>
-            <div class="prow2" id="pr-clean" style="display:none"><span>Tipo de limpieza</span><span id="pr-clean-val">—</span></div>
-            <div id="pr-extras-area"></div>
-            <div class="prow2" id="pr-urg" style="display:none"><span>Urgencia</span><span>—</span></div>
-            <div class="prow2" id="pr-domingo" style="display:none;color:#7A4900;"><span>🌞 Domingo (+50%)</span><span id="pr-domingo-val">—</span></div>
-            <div class="prow2" id="pr-festivo" style="display:none;color:#991B1B;"><span>🎉 Día festivo (+100%)</span><span id="pr-festivo-val">—</span></div>
-            <div class="prow2" id="pr-desc" style="display:none;color:#1A56DB;"><span>🎁 Descuento</span><span id="pr-desc-val">—</span></div>
-            <div class="prow2" id="pr-iva" style="display:none"><span>IVA 16%</span><span>—</span></div>
-            <div class="prow2 total" id="pr-total"><span>Total</span><span>—</span></div>
-            <p id="min-note" style="font-size:11px;color:#185FA5;margin-top:6px;display:none;">* Mínimo $1,200 en tapicería</p>
-          </div>
-          <div class="fbox">
-            <div class="ftoggle" onclick="toggleFactura()"><p>Requiero factura</p><div class="tsw" id="ftoggle"></div></div>
-            <div class="ff" id="ffields">
-              <div class="div"></div>
-              <div class="persona-tabs"><div class="ptab active" id="ptab-fisica" onclick="setPersonaTipo('fisica')">Persona Física</div><div class="ptab" id="ptab-moral" onclick="setPersonaTipo('moral')">Persona Moral</div></div>
-              <div class="ptab-content active" id="pf-fisica">
-                <div class="frow"><div><label>Nombre completo</label><input type="text" id="f-nombre-fisica" placeholder="Juan García López"></div><div><label>RFC</label><input type="text" id="f-rfc-fisica" placeholder="GALJ850101XYZ"></div></div>
-                <div class="frow"><div><label>Correo fiscal</label><input type="email" id="f-email-fisica" placeholder="fiscal@email.com"></div><div><label>CURP</label><input type="text" id="f-curp" placeholder="GALJ850101HDFXXX00"></div></div>
-                <div class="frow full"><label>Domicilio fiscal</label><input type="text" id="f-dir-fisica" placeholder="Av. Insurgentes 123, Roma Norte"></div>
-                <div class="frow"><div><label>CP</label><input type="text" id="f-cp-fisica" placeholder="06600"></div><div><label>Estado</label><select id="f-estado-fisica"><option>Ciudad de México</option><option>Estado de México</option><option>Jalisco</option></select></div></div>
-                <div class="frow"><div><label>Régimen fiscal</label><select id="f-regimen-fisica"><option>612 — Pers. Físicas</option><option>626 — Simplificado</option></select></div><div><label>Uso CFDI</label><select id="f-cfdi-fisica"><option>G03 — Gastos generales</option><option>D10 — Servicios del hogar</option></select></div></div>
-              </div>
-              <div class="ptab-content" id="pf-moral">
-                <div class="frow"><div><label>Razón social</label><input type="text" id="f-razon-moral" placeholder="Empresa S.A. de C.V."></div><div><label>RFC</label><input type="text" id="f-rfc-moral" placeholder="ELI850101XYZ"></div></div>
-                <div class="frow"><div><label>Correo fiscal</label><input type="email" id="f-email-moral" placeholder="contabilidad@empresa.com"></div><div><label>Teléfono</label><input type="text" id="f-tel-moral"></div></div>
-                <div class="frow full"><label>Domicilio fiscal</label><input type="text" id="f-dir-moral" placeholder="Paseo de la Reforma 123"></div>
-                <div class="frow"><div><label>CP</label><input type="text" id="f-cp-moral"></div><div><label>Estado</label><select id="f-estado-moral"><option>Ciudad de México</option><option>Estado de México</option></select></div></div>
-                <div class="frow"><div><label>Régimen fiscal</label><select id="f-regimen-moral"><option>601 — General de Ley</option><option>603 — Sin fines lucrativos</option></select></div><div><label>Uso CFDI</label><select id="f-cfdi-moral"><option>G03 — Gastos generales</option><option>G01 — Adquisición</option></select></div></div>
-                <div class="frow full"><label>Representante legal</label><input type="text" id="f-rep-moral"></div>
-              </div>
-            </div>
-          </div>
-          <div class="params-checklist" id="params-checklist">
-            <p>Para agendar necesitas:</p>
-            <div class="param-item" id="pcheck-fecha"><div class="pcheck"></div>Seleccionar una fecha válida</div>
-            <div class="param-item" id="pcheck-slot"><div class="pcheck"></div>Elegir un horario disponible</div>
-            <div class="param-item" id="pcheck-foto" style="display:none;"><div class="pcheck"></div>Subir al menos una foto del mueble</div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:14px;">
-            <button class="btn-sec" style="flex:1;" onclick="reservaBack(4)">← Atrás</button>
-            <button class="btn-royal disabled" id="btn-reservar" style="flex:2;" onclick="reservar()">Revisar y pagar</button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-    <div id="c-historial" class="sec">
-      <div class="card"><p class="ctitle">Historial y evaluaciones</p>
-        <div class="rbar-compact"><span class="rscore-sm" id="client-avg">4.5</span><div id="client-avg-stars" style="display:flex;gap:2px;"></div><span class="rlabel" style="margin-left:4px;">Promedio · <span id="c-total">2</span> servicios</span></div>
-        <!-- Servicio 1 -->
-        <div class="hrow-c">
-          <div class="hrow-c-main">
-            <div class="hrow-c-info">
-              <span class="hrow-c-title">Limpieza profunda · Depto</span>
-              <span class="badge bok" style="font-size:10px;padding:2px 6px;">Completado</span>
-            </div>
-            <div class="hrow-c-sub">12 abr · Juan Morales · 3h est.</div>
-          </div>
-          <div class="hrow-c-right">
-            <span class="hrow-c-price">$1,036</span>
-            <button class="btn-amber hrow-c-btn" onclick="openIR(this,'Limpieza depto',0)">Evaluar</button>
-          </div>
-        </div>
-        <div id="ir-0" style="display:none;background:#E6F1FB;border-radius:8px;padding:10px 12px;margin:2px 0 6px;"><p style="font-size:12px;color:#185FA5;margin-bottom:6px;">¿Cómo fue el servicio?</p><div class="stars-row" id="isr-0"><span class="star" onclick="setIS(0,1)">★</span><span class="star" onclick="setIS(0,2)">★</span><span class="star" onclick="setIS(0,3)">★</span><span class="star" onclick="setIS(0,4)">★</span><span class="star" onclick="setIS(0,5)">★</span></div><p id="isl-0" style="font-size:11px;color:#185FA5;margin-bottom:6px;">Selecciona estrellas</p><textarea id="ic-0" placeholder="Comentario (opcional)..." style="margin-bottom:8px;min-height:44px;"></textarea><div style="display:flex;gap:8px;"><button class="btn-sm" style="flex:1;" onclick="submitIR(0,'Limpieza depto')">Enviar</button><button class="btn-sec" onclick="closeIR(0)">Cancelar</button></div></div>
-        <!-- Servicio 2 -->
-        <div class="hrow-c">
-          <div class="hrow-c-main">
-            <div class="hrow-c-info">
-              <span class="hrow-c-title">Lavado auto SUV + interior</span>
-              <span class="badge bok" style="font-size:10px;padding:2px 6px;">Completado</span>
-            </div>
-            <div class="hrow-c-sub">3 abr · Polanco · 45 min</div>
-          </div>
-          <div class="hrow-c-right">
-            <span class="hrow-c-price">$1,624</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="c-mensajes" class="sec">
-      <div class="card">
-        <p class="ctitle">💬 Mensajes</p>
-        <div class="msg-tabs" id="c-msg-tabs">
-          <button class="msg-tab active" onclick="switchMsgTab('c','trabajador',this)">🧹 Mi trabajador</button>
-          <button class="msg-tab" onclick="switchMsgTab('c','soporte',this)">🆘 Soporte</button>
-        </div>
-        <!-- Chat con trabajador -->
-        <div id="c-msg-trabajador" class="msg-panel active">
-          <div class="chat-contact-bar">
-            <div class="av" style="width:34px;height:34px;font-size:11px;">JM</div>
-            <div><p>Juan Morales</p><span>Disponible 30 min antes del servicio</span></div>
-            <span class="badge bok" style="margin-left:auto;">En línea</span>
-          </div>
-          <div class="chat-box" id="chat-c-t"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-c-t" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('c-t','c','Ana','cinput-c-t','chat-c-t')">
-            <button class="btn-sm" onclick="sendChat('c-t','c','Ana','cinput-c-t','chat-c-t')">Enviar</button>
-          </div>
-        </div>
-        <!-- Chat de soporte -->
-        <div id="c-msg-soporte" class="msg-panel">
-          <div class="chat-contact-bar">
-            <div class="admin-badge">⚙️</div>
-            <div><p>Soporte AYALYM</p><span>Respuesta en menos de 24 horas</span></div>
-            <span class="badge bok" style="margin-left:auto;">En línea</span>
-          </div>
-          <div class="chat-box" id="chat-c-a"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-c-a" placeholder="Escribe tu consulta..." onkeydown="if(event.key==='Enter')sendChat('c-a','c','Ana','cinput-c-a','chat-c-a')">
-            <button class="btn-sm" onclick="sendChat('c-a','c','Ana','cinput-c-a','chat-c-a')">Enviar</button>
-          </div>
-        </div>
-      </div>
-      <!-- Ubicación dentro de mensajes — contenido renderizado por renderClientUbicacion() -->
-      <div class="card" id="client-ubicacion-card"></div>
-    </div>
-    <div id="c-perfil" class="sec">
-      <div class="card">
-        <p class="ctitle">Mi perfil</p>
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding-bottom:16px;border-bottom:.5px solid #B5D4F4;"><div class="av" style="width:56px;height:56px;font-size:18px;" id="perfil-av">AG</div><div><p style="font-size:16px;font-weight:500;color:#042C53;" id="perfil-name">Ana García</p><p style="font-size:12px;color:#185FA5;">ana@cliente.com</p></div></div>
-        <p style="font-size:13px;font-weight:500;color:#042C53;margin-bottom:10px;">Zona de cobertura</p>
-        <div class="zone-display"><div><p id="zone-current-name">Narvarte / Del Valle</p><span id="zone-current-cols">Narvarte Poniente, Narvarte Oriente, Del Valle</span></div><button class="btn-sm" style="padding:5px 12px;font-size:12px;" onclick="toggleZoneEdit()">Cambiar</button></div>
-        <div class="zone-edit-panel" id="zone-edit-panel"><p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Selecciona tu nueva zona</p><div id="zone-options-list"></div><div style="display:flex;gap:8px;margin-top:10px;"><button class="btn-sm" style="flex:1;" onclick="saveZone()">Confirmar</button><button class="btn-sec" onclick="toggleZoneEdit()">Cancelar</button></div></div>
-        <p style="font-size:12px;color:#185FA5;margin-top:8px;line-height:1.6;">Tu zona determina qué trabajadores verás disponibles al reservar.</p>
-        <!-- Cambiar contraseña -->
-        <div style="border-top:.5px solid #B5D4F4;margin-top:16px;padding-top:14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleCpPanel('cliente')">
-            <p style="font-size:13px;font-weight:500;color:#042C53;">🔐 Cambiar contraseña</p>
-            <span style="font-size:12px;color:#185FA5;">Editar</span>
-          </div>
-          <div class="cp-panel" id="cp-panel-cliente">
-            <div class="fld" style="margin-top:12px;"><label>Contraseña actual</label><input type="password" id="cp-current-cliente" placeholder="••••••••"></div>
-            <div class="fld"><label>Nueva contraseña</label><input type="password" id="cp-new1-cliente" placeholder="Mínimo 8 caracteres"></div>
-            <div class="fld"><label>Confirmar nueva contraseña</label><input type="password" id="cp-new2-cliente" placeholder="Repite la nueva contraseña"></div>
-            <div style="display:flex;gap:8px;margin-top:4px;">
-              <button class="btn-royal" style="flex:2;" onclick="changePassword('cliente')">Guardar contraseña</button>
-              <button class="btn-sec" style="flex:1;" onclick="toggleCpPanel('cliente')">Cancelar</button>
-            </div>
-          </div>
-        </div>
-        <!-- Mis direcciones -->
-        <div style="border-top:.5px solid #B5D4F4;margin-top:16px;padding-top:14px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <p style="font-size:13px;font-weight:500;color:#042C53;">📍 Mis direcciones</p>
-            <button class="btn-sm" style="padding:5px 12px;font-size:12px;" onclick="toggleAddDirForm()">+ Agregar</button>
-          </div>
-          <div id="client-dirs-list"></div>
-          <div id="add-dir-form" style="display:none;margin-top:8px;background:#EEF5FF;border-radius:8px;padding:10px 12px;border:.5px solid #B5D4F4;">
-            <div class="frow full"><label>Alias</label><input type="text" id="nd-alias" placeholder="ej. Casa, Trabajo, Oficina"></div>
-            <div class="frow full"><label>Calle y número</label><input type="text" id="nd-calle" placeholder="Insurgentes Sur 1450, Int. 3B"></div>
-            <div class="frow"><div><label>Colonia</label><input type="text" id="nd-colonia" placeholder="Narvarte"></div><div><label>C.P.</label><input type="text" id="nd-cp" placeholder="03020" maxlength="5" style="letter-spacing:1px;"></div></div>
-            <div class="frow full"><label>Referencias <span style="font-weight:400;color:#185FA5;">(opcional)</span></label><input type="text" id="nd-ref" placeholder="Entre calles, color de fachada…"></div>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-              <button class="btn-royal" style="flex:2;" onclick="addClientDir()">Guardar dirección</button>
-              <button class="btn-sec" style="flex:1;" onclick="toggleAddDirForm()">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TRABAJADOR -->
-  <div id="role-trabajador" class="role-section" style="display:none">
-    <!-- Tarjeta de perfil -->
-    <div class="card role-profile-card">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div class="av" style="width:48px;height:48px;font-size:15px;">JM</div>
-        <div style="flex:1;">
-          <p style="font-size:15px;font-weight:600;color:#042C53;">Juan Morales</p>
-          <span style="font-size:12px;color:#185FA5;">Lavado de autos</span>
-        </div>
-        <div class="rbar" style="margin:0;background:none;padding:0;gap:6px;">
-          <span class="rscore" style="font-size:20px;">4.8</span>
-          <div class="rdetail"><div class="rstars" id="w-avg-stars"></div><p class="rlabel">15 reseñas</p></div>
-        </div>
-      </div>
-      <div class="str-row"><p id="wsl">Estatus: <strong style="color:#1A56DB;">Activo</strong></p><button class="status-pill sp-inactivar" id="sp" onclick="toggleWStatus()">Inactivarme</button></div>
-    </div>
-    <!-- Nav inferior -->
-    <div class="bottom-nav" id="nav-trabajador">
-      <div class="bnav-btn active" onclick="navGo('trabajador','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
-      <div class="bnav-btn" onclick="navGo('trabajador','solicitudes',this)"><span class="bnav-icon">📬</span>Solicitudes</div>
-      <div class="bnav-btn" onclick="navGo('trabajador','agenda',this)"><span class="bnav-icon">📅</span>Próximos</div>
-      <div class="bnav-btn" onclick="navGo('trabajador','realizados',this)"><span class="bnav-icon">✅</span>Realizados</div>
-      <div class="bnav-btn" onclick="navGo('trabajador','mensajes-t',this)"><span class="bnav-icon">💬</span>Mensajes</div>
-    </div>
-    <!-- Secciones -->
-    <div id="t-resumen" class="sec active">
-      <div class="card">
-        <p class="ctitle">Mi resumen</p>
-        <div class="dash-tabs" id="trabajador-dash-tabs">
-          <button class="dash-tab active" onclick="selectTrabajadorTab('hoy',this)">📅 Hoy</button>
-          <button class="dash-tab" onclick="selectTrabajadorTab('quincena',this)">💰 Quincena</button>
-          <button class="dash-tab" onclick="selectTrabajadorTab('evaluaciones',this)">⭐ Evaluaciones</button>
-          <button class="dash-tab" onclick="selectTrabajadorTab('notas',this)">📝 Notas</button>
-        </div>
-        <div id="trabajador-dash-panel"></div>
-      </div>
-      <!-- Contraseña -->
-      <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleCpPanel('trabajador')"><p style="font-size:13px;font-weight:500;color:#042C53;">🔐 Cambiar contraseña</p><span style="font-size:12px;color:#185FA5;">Editar</span></div><div class="cp-panel" id="cp-panel-trabajador"><div class="fld" style="margin-top:12px;"><label>Contraseña actual</label><input type="password" id="cp-current-trabajador" placeholder="••••••••"></div><div class="fld"><label>Nueva contraseña</label><input type="password" id="cp-new1-trabajador" placeholder="Mínimo 8 caracteres"></div><div class="fld"><label>Confirmar</label><input type="password" id="cp-new2-trabajador" placeholder="Repite la nueva contraseña"></div><div style="display:flex;gap:8px;margin-top:4px;"><button class="btn-royal" style="flex:2;" onclick="changePassword('trabajador')">Guardar</button><button class="btn-sec" style="flex:1;" onclick="toggleCpPanel('trabajador')">Cancelar</button></div></div></div>
-    </div>
-    <!-- SOLICITUDES PENDIENTES -->
-    <div id="t-solicitudes" class="sec"></div>
-    <!-- PRÓXIMOS (agenda upcoming) -->
-    <div id="t-agenda" class="sec"></div>
-    <!-- REALIZADOS (historial completados) -->
-    <div id="t-realizados" class="sec"></div>
-    <!-- MENSAJES -->
-    <div id="t-mensajes-t" class="sec">
-      <div class="card">
-        <p class="ctitle">💬 Mensajes</p>
-        <div class="msg-tabs" id="t-msg-tabs">
-          <button class="msg-tab active" onclick="switchMsgTab('t','cliente',this)">👤 Cliente</button>
-          <button class="msg-tab" onclick="switchMsgTab('t','supervisor',this)">👁️ Supervisor</button>
-          <button class="msg-tab" onclick="switchMsgTab('t','admin',this)">⚙️ Admin</button>
-        </div>
-        <!-- Chat con cliente -->
-        <div id="t-msg-cliente" class="msg-panel active">
-          <div class="chat-contact-bar">
-            <div class="av" style="width:34px;height:34px;font-size:11px;">AG</div>
-            <div><p>Ana García</p><span>Servicio hoy 09:00</span></div>
-            <span class="badge bok" style="margin-left:auto;">Activo</span>
-          </div>
-          <div class="chat-box" id="chat-t-c"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-t-c" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('c-t','t','Juan','cinput-t-c','chat-t-c')">
-            <button class="btn-sm" onclick="sendChat('c-t','t','Juan','cinput-t-c','chat-t-c')">Enviar</button>
-          </div>
-        </div>
-        <!-- Chat con supervisor -->
-        <div id="t-msg-supervisor" class="msg-panel">
-          <div class="chat-contact-bar">
-            <div class="av" style="width:34px;height:34px;font-size:11px;background:#085041;">LS</div>
-            <div><p>Laura Supervisor</p><span>Supervisora de zona</span></div>
-            <span class="badge bok" style="margin-left:auto;">En línea</span>
-          </div>
-          <div class="chat-box" id="chat-t-sv"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-t-sv" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('t-sv','t','Juan','cinput-t-sv','chat-t-sv')">
-            <button class="btn-sm" onclick="sendChat('t-sv','t','Juan','cinput-t-sv','chat-t-sv')">Enviar</button>
-          </div>
-        </div>
-        <!-- Chat con admin -->
-        <div id="t-msg-admin" class="msg-panel">
-          <div class="chat-contact-bar">
-            <div class="admin-badge">⚙️</div>
-            <div><p>Administrador AYALYM</p><span>Soporte y coordinación</span></div>
-            <span class="badge bok" style="margin-left:auto;">En línea</span>
-          </div>
-          <div class="chat-box" id="chat-t-a"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-t-a" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendChat('t-a','t','Juan','cinput-t-a','chat-t-a')">
-            <button class="btn-sm" onclick="sendChat('t-a','t','Juan','cinput-t-a','chat-t-a')">Enviar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SUPERVISOR -->
-  <div id="role-supervisor" class="role-section" style="display:none">
-    <!-- Tarjeta de perfil -->
-    <div class="card role-profile-card" style="background:linear-gradient(135deg,#042C53,#185FA5);border:none;">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div class="av" style="width:48px;height:48px;font-size:15px;background:rgba(255,255,255,.2);">LS</div>
-        <div style="flex:1;"><p style="font-size:15px;font-weight:600;color:#fff;" id="sv-name-disp">Laura Supervisor</p><span style="font-size:12px;color:rgba(255,255,255,.7);">Zona Roma / Narvarte</span></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-        <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px;text-align:center;"><p style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:3px;">Trabajadores</p><span style="font-size:20px;font-weight:500;color:#fff;" id="sv-count">2</span></div>
-        <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px;text-align:center;"><p style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:3px;">Activos hoy</p><span style="font-size:20px;font-weight:500;color:#fff;" id="sv-active">2</span></div>
-        <div style="background:rgba(255,255,255,.15);border-radius:8px;padding:10px;text-align:center;"><p style="font-size:10px;color:rgba(255,255,255,.7);margin-bottom:3px;">Servicios hoy</p><span style="font-size:20px;font-weight:500;color:#fff;">5</span></div>
-      </div>
-    </div>
-    <!-- Nav inferior -->
-    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(6,1fr);">
-      <div class="bnav-btn active" onclick="navGo('supervisor','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','trabajadores',this)"><span class="bnav-icon">👥</span>Equipo</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','eval-sv',this)"><span class="bnav-icon">⭐</span>Evaluar</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','mensajes-sv',this)"><span class="bnav-icon">💬</span>Mensajes</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','mapa-sv',this)"><span class="bnav-icon">📍</span>Mapa</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','inmuebles-sv',this)"><span class="bnav-icon">🏢</span>Inmuebles</div>
-    </div>
-    <!-- Secciones -->
-    <div id="sv-resumen" class="sec active">
-      <div class="card">
-        <p class="ctitle">Mi resumen</p>
-        <div class="dash-tabs" id="supervisor-dash-tabs">
-          <button class="dash-tab active" onclick="selectSupervisorTab('equipo',this)">👥 Mi equipo</button>
-          <button class="dash-tab" onclick="selectSupervisorTab('evaluaciones',this)">⭐ Evaluaciones</button>
-          <button class="dash-tab" onclick="selectSupervisorTab('alertas',this)">⚠️ Alertas</button>
-          <button class="dash-tab" onclick="selectSupervisorTab('notas',this)">📝 Notas</button>
-        </div>
-        <div id="supervisor-dash-panel"></div>
-      </div>
-      <!-- Contraseña -->
-      <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleCpPanel('supervisor')"><p style="font-size:13px;font-weight:500;color:#042C53;">🔐 Cambiar contraseña</p><span style="font-size:12px;color:#185FA5;">Editar</span></div><div class="cp-panel" id="cp-panel-supervisor"><div class="fld" style="margin-top:12px;"><label>Contraseña actual</label><input type="password" id="cp-current-supervisor" placeholder="••••••••"></div><div class="fld"><label>Nueva contraseña</label><input type="password" id="cp-new1-supervisor" placeholder="Mínimo 8 caracteres"></div><div class="fld"><label>Confirmar</label><input type="password" id="cp-new2-supervisor" placeholder="Repite la nueva contraseña"></div><div style="display:flex;gap:8px;margin-top:4px;"><button class="btn-royal" style="flex:2;" onclick="changePassword('supervisor')">Guardar</button><button class="btn-sec" style="flex:1;" onclick="toggleCpPanel('supervisor')">Cancelar</button></div></div></div>
-    </div>
-    <div id="sv-trabajadores" class="sec"><div id="sv-workers-list"></div></div>
-    <div id="sv-eval-sv" class="sec"><div class="card"><p class="ctitle">⭐ Evaluaciones del personal</p><div id="sv-eval-avg-banner" style="background:linear-gradient(135deg,#042C53,#185FA5);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:14px;"><div style="text-align:center;flex-shrink:0;"><span style="font-size:32px;font-weight:500;color:#fff;" id="sv-eval-avg-num">—</span><p style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px;">Promedio equipo</p></div><div style="flex:1;"><div id="sv-eval-avg-stars" style="display:flex;gap:3px;margin-bottom:4px;"></div><p style="font-size:12px;color:rgba(255,255,255,.8);" id="sv-eval-avg-sub">— reseñas en total</p></div></div><div id="sv-eval-list"></div></div></div>
-    <!-- MENSAJES UNIFICADOS (trabajadores + admin) -->
-    <div id="sv-mensajes-sv" class="sec">
-      <div class="card">
-        <p class="ctitle">💬 Mensajes</p>
-        <div class="msg-tabs" id="sv-msg-tabs" style="flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;">
-          <button class="msg-tab active" onclick="switchMsgTab('sv','equipo',this)">👥 Mi equipo</button>
-          <button class="msg-tab" onclick="switchMsgTab('sv','monitor',this);renderSVMonitorSelector()">💬 Cliente/Trab.</button>
-          <button class="msg-tab" onclick="switchMsgTab('sv','soporte',this);renderChatBox('c-a','sv','chat-sv-ca')">🆘 Soporte</button>
-          <button class="msg-tab" onclick="switchMsgTab('sv','admin',this)">⚙️ Admin</button>
-        </div>
-
-        <!-- Mi equipo: trab → supervisor -->
-        <div id="sv-msg-equipo" class="msg-panel active">
-          <div class="sv-chat-selector" id="sv-chat-selector"></div>
-          <div id="sv-chat-display"></div>
-        </div>
-
-        <!-- Monitor: cliente ↔ trabajador (solo lectura + intervención) -->
-        <div id="sv-msg-monitor" class="msg-panel">
-          <div class="chat-contact-bar" style="margin-bottom:8px;">
-            <div class="av" style="width:34px;height:34px;font-size:11px;">AG</div>
-            <div style="flex:1;"><p>Ana García ↔ Juan Morales</p><span>Conversación en tiempo real · supervisor puede intervenir</span></div>
-          </div>
-          <div class="sv-chat-selector" id="sv-monitor-selector"></div>
-          <div class="chat-box" id="chat-sv-ct"></div>
-          <div class="chat-input-row" style="margin-top:8px;">
-            <input type="text" id="cinput-sv-ct" placeholder="Intervenir en la conversación..." onkeydown="if(event.key==='Enter')sendChat('c-t','sv','Laura (Supervisor)','cinput-sv-ct','chat-sv-ct')">
-            <button class="btn-sm" onclick="sendChat('c-t','sv','Laura (Supervisor)','cinput-sv-ct','chat-sv-ct')">Enviar</button>
-          </div>
-        </div>
-
-        <!-- Soporte: cliente ↔ admin/soporte — supervisor puede responder -->
-        <div id="sv-msg-soporte" class="msg-panel">
-          <div class="chat-contact-bar">
-            <div class="av" style="width:34px;height:34px;font-size:11px;">AG</div>
-            <div style="flex:1;"><p>Ana García — Soporte</p><span>Canal de soporte al cliente · supervisores y admin</span></div>
-            <span class="badge bok" style="margin-left:auto;">En línea</span>
-          </div>
-          <div class="chat-box" id="chat-sv-ca"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-sv-ca" placeholder="Responder al cliente..." onkeydown="if(event.key==='Enter')sendChat('c-a','sv','Laura (Supervisor)','cinput-sv-ca','chat-sv-ca')">
-            <button class="btn-sm" onclick="sendChat('c-a','sv','Laura (Supervisor)','cinput-sv-ca','chat-sv-ca')">Enviar</button>
-          </div>
-        </div>
-
-        <!-- Chat con Admin -->
-        <div id="sv-msg-admin" class="msg-panel">
-          <div class="chat-contact-bar">
-            <div class="admin-badge">⚙️</div>
-            <div><p>Administrador AYALYM</p><span>Canal directo de supervisores</span></div>
-            <span class="badge bok" style="margin-left:auto;">En línea</span>
-          </div>
-          <div class="chat-box" id="chat-sv-a"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-sv-a" placeholder="Escribe tu mensaje..." onkeydown="if(event.key==='Enter')sendChat('sv-a','sv','Laura','cinput-sv-a','chat-sv-a')">
-            <button class="btn-sm" onclick="sendChat('sv-a','sv','Laura','cinput-sv-a','chat-sv-a')">Enviar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="sv-mapa-sv" class="sec"><div class="card"><p class="ctitle">📍 Mapa de trabajadores</p><div class="map-container" style="margin-bottom:12px;"><svg width="100%" height="220" id="sv-map-svg"></svg></div><div id="sv-worker-loc-list"></div></div></div>
-
-    <!-- SUPERVISOR: SERVICIOS DE INMUEBLES -->
-    <div id="sv-inmuebles-sv" class="sec">
-      <div class="card">
-        <p class="ctitle">🏢 Mis servicios de inmuebles</p>
-        <p class="csub">Servicios activos asignados a tu supervisión.</p>
-        <div id="sv-prop-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ADMIN -->
-  <div id="role-admin" class="role-section" style="display:none">
-    <div class="admin-nav-wrap" id="nav-admin">
-      <div class="admin-nav-row anr-5">
-        <div class="nav-btn active" onclick="navGo('admin','resumen',this)"><span class="nav-icon">📊</span>Resumen</div>
-        <div class="nav-btn" onclick="navGo('admin','personal',this)"><span class="nav-icon">👥</span>Personal</div>
-        <div class="nav-btn" onclick="navGo('admin','supervisores',this)"><span class="nav-icon">👁️</span>Supervisores</div>
-        <div class="nav-btn" onclick="navGo('admin','usuarios',this)"><span class="nav-icon">🔑</span>Usuarios</div>
-        <div class="nav-btn" onclick="navGo('admin','quincenas',this)"><span class="nav-icon">💰</span>Quincenas</div>
-      </div>
-      <div class="admin-nav-row anr-6">
-        <div class="nav-btn" onclick="navGo('admin','servicios',this)"><span class="nav-icon">🛠️</span>Servicios</div>
-        <div class="nav-btn" onclick="navGo('admin','inmuebles',this)"><span class="nav-icon">🏢</span>Inmuebles</div>
-        <div class="nav-btn" onclick="navGo('admin','personal-inm',this)"><span class="nav-icon">👷</span>Personal Inm.</div>
-        <div class="nav-btn" onclick="navGo('admin','facturacion',this)"><span class="nav-icon">🧾</span>Facturación</div>
-        <div class="nav-btn" onclick="navGo('admin','notas-admin',this)"><span class="nav-icon">📝</span>Notas</div>
-        <div class="nav-btn" onclick="navGo('admin','soporte-admin',this)"><span class="nav-icon">💬</span>Mensajes</div>
-      </div>
-      <div class="admin-nav-row anr-1">
-        <div class="nav-btn nav-btn-promo" onclick="navGo('admin','promociones',this);renderAdminPromociones()"><span class="nav-icon">🎁</span>Promociones &amp; Campañas</div>
-      </div>
-    </div>
-    <div id="a-resumen" class="sec active">
-      <div id="admin-kpi-bar"></div>
-      <div class="card" id="top-cards-card"><p class="ctitle">🏆 Destacados del mes</p><div id="top-cards-list"></div></div>
-      <div class="card"><p class="ctitle">📈 Análisis</p>
-        <div class="dash-tabs">
-          <div class="dash-tab active" onclick="selectDashTab('financiero',this)">💰 Financiero</div>
-          <div class="dash-tab" onclick="selectDashTab('personal',this)">👥 Personal</div>
-          <div class="dash-tab" onclick="selectDashTab('evaluaciones',this)">⭐ Evaluaciones</div>
-          <div class="dash-tab" onclick="selectDashTab('quincenas',this)">📋 Quincenas</div>
-          <div class="dash-tab" onclick="selectDashTab('zonas',this)">📍 Zonas</div>
-        </div>
-        <div id="dash-panel">
-          <div class="date-filter-row"><button class="df-btn active" id="df-dia" onclick="setDateFilter('dia',this)">Día</button><button class="df-btn" id="df-mes" onclick="setDateFilter('mes',this)">Mes</button><button class="df-btn" id="df-año" onclick="setDateFilter('año',this)">Año</button><button class="df-btn" id="df-rango" onclick="setDateFilter('rango',this)">Rango</button></div>
-          <div class="date-input-section show" id="di-dia"><div class="frow full"><label>Día</label><input type="date" id="fi-dia" value="2026-04-27" onchange="renderFinance()"></div></div>
-          <div class="date-input-section" id="di-mes"><div class="frow"><div><label>Mes</label><select id="fi-mes" onchange="renderFinance()"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4" selected>Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div><div><label>Año</label><select id="fi-mes-año" onchange="renderFinance()"><option value="2025">2025</option><option value="2026" selected>2026</option></select></div></div></div>
-          <div class="date-input-section" id="di-año"><div class="frow full"><label>Año</label><select id="fi-año" onchange="renderFinance()"><option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option></select></div></div>
-          <div class="date-input-section" id="di-rango"><div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;"><div style="flex:1;min-width:120px;"><label>Fecha inicio</label><input type="date" id="fi-rango-inicio" value="2026-04-01" onchange="renderFinance()"></div><div style="flex:1;min-width:120px;"><label>Fecha fin</label><input type="date" id="fi-rango-fin" value="2026-04-30" onchange="renderFinance()"></div><button class="btn-sm" onclick="renderFinance()">Aplicar</button></div></div>
-          <div class="period-badge" id="finance-period-label">27 de abril 2026</div>
-          <div class="finance-grid" id="finance-grid"></div>
-          <div id="finance-detail"></div>
-        </div>
-      </div>
-    </div>
-    <div id="a-personal" class="sec"><div class="card"><p class="ctitle">Trabajadores</p><div class="svc-tabs"><div class="svc-tab active" onclick="filterStaff('all',this)">Todos</div><div class="svc-tab" onclick="filterStaff('auto',this)">Autos</div><div class="svc-tab" onclick="filterStaff('depto',this)">Depto</div><div class="svc-tab" onclick="filterStaff('tapiceria',this)">Tapicería</div></div><div id="staff-list"></div><div class="div"></div><button class="btn-sm" onclick="navGo('admin','agregar',null)">+ Agregar trabajador</button></div></div>
-    <div id="a-agregar" class="sec"><div class="card"><p class="ctitle">Nuevo trabajador</p><div class="ph-circle" id="nw-photo-circle" onclick="document.getElementById('nw-pi').click()"><div class="ph-ph">Foto</div></div><input type="file" id="nw-pi" accept="image/*" style="display:none" onchange="previewNWPhoto(event)"><div class="frow"><div><label>Nombre</label><input type="text" id="nw-nombre" placeholder="Juan Pérez"></div><div><label>Teléfono</label><input type="text" id="nw-tel"></div></div><div class="frow"><div><label>Correo</label><input type="email" id="nw-email"></div><div><label>Año ingreso</label><input type="number" id="nw-since" placeholder="2024"></div></div><div class="frow full"><label>Especialidades</label><div style="display:flex;gap:12px;padding:6px 0;"><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-depto"><label for="nw-depto">Depto</label></div><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-auto"><label for="nw-auto">Autos</label></div><div class="cbrow" style="padding:0;border:none;"><input type="checkbox" id="nw-tap"><label for="nw-tap">Tapicería</label></div></div></div><div class="frow full"><label>Descripción</label><textarea id="nw-desc"></textarea></div><div style="display:flex;gap:8px;margin-top:8px;"><button class="btn-royal" style="flex:1;" onclick="addNewWorker()">Guardar</button><button class="btn-sec" onclick="navGo('admin','personal',null)">Cancelar</button></div></div></div>
-    <div id="a-supervisores" class="sec"><div id="supervisors-list"></div></div>
-    <div id="a-usuarios" class="sec"><div class="card"><p class="ctitle">Gestión de usuarios</p><div class="user-role-filter"><button class="urf-btn active" onclick="filterUsers('all',this)">Todos</button><button class="urf-btn" onclick="filterUsers('admin',this)">Admins</button><button class="urf-btn" onclick="filterUsers('supervisor',this)">Supervisores</button><button class="urf-btn" onclick="filterUsers('trabajador',this)">Trabajadores</button><button class="urf-btn" onclick="filterUsers('cliente',this)">Clientes</button></div><p class="csub">🔒 Revocar acceso bloquea el inicio de sesión sin eliminar la cuenta.</p><div id="users-list"></div><div class="div"></div><p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Registrar nuevo usuario</p><div class="frow"><div><label>Nombre</label><input type="text" id="nu-nombre" placeholder="María López"></div><div><label>Correo</label><input type="email" id="nu-email" placeholder="maria@email.com"></div></div><div class="frow"><div><label>Contraseña temporal</label><input type="password" id="nu-pass" placeholder="••••••••"></div><div><label>Rol</label><select id="nu-rol"><option value="admin">Administrador</option><option value="supervisor">Supervisor</option><option value="trabajador">Trabajador</option><option value="cliente">Cliente</option></select></div></div><button class="btn-sm" onclick="addUser()">Registrar usuario</button></div></div>
-    <div id="a-quincenas" class="sec"><div class="card"><p class="ctitle">Reporte quincenas</p><div class="frow full" style="margin-bottom:12px;"><label>Período</label><select id="q-period" onchange="renderQReport()"><option value="0">16–30 abr 2026</option><option value="1">1–15 abr 2026</option><option value="2">16–31 mar 2026</option></select></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem;" id="q-summary"></div><div id="q-worker-list"></div></div></div>
-    <div id="a-servicios" class="sec">
-      <div class="card">
-        <p class="ctitle">⚙️ Configuración de servicios</p>
-        <div class="msg-tabs" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;">
-          <button class="msg-tab active" onclick="switchSvcTab('servicios',this)">📋 Servicios</button>
-          <button class="msg-tab" onclick="switchSvcTab('limpieza',this)">🧹 Limpieza</button>
-          <button class="msg-tab" onclick="switchSvcTab('urgencias',this)">⚡ Urgencias</button>
-          <button class="msg-tab" onclick="switchSvcTab('zonas',this)">📍 Zonas</button>
-        </div>
-
-        <!-- Servicios / Duraciones -->
-        <div id="svcp-servicios" class="svc-adm-panel">
-          <p class="csub">Define el precio base y la duración estimada de cada tipo de servicio.</p>
-          <div id="svc-duration-list"></div>
-          <div class="div"></div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Agregar nuevo tipo</p>
-          <div class="frow"><div><label>Nombre</label><input type="text" id="ns-name" placeholder="Nuevo servicio"></div><div><label>Precio base ($)</label><input type="number" id="ns-price" placeholder="500"></div></div>
-          <div class="frow"><div><label>Duración mín. (min)</label><input type="number" id="ns-dur-min" placeholder="30"></div><div><label>Duración máx. (min)</label><input type="number" id="ns-dur-max" placeholder="60"></div></div>
-          <button class="btn-sm" onclick="addSvcType()">+ Agregar servicio</button>
-        </div>
-
-        <!-- Tipos de limpieza -->
-        <div id="svcp-limpieza" class="svc-adm-panel" style="display:none">
-          <p class="csub">El cliente elige el tipo al reservar limpieza de departamento. El factor multiplica el precio base.</p>
-          <div id="cleaning-types-admin-list"></div>
-          <div class="div"></div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Agregar nuevo tipo</p>
-          <div class="frow"><div><label>Nombre</label><input type="text" id="nct-nombre" placeholder="Ej: Limpieza ecológica"></div><div><label>Factor (1.0 = base)</label><input type="number" id="nct-factor" placeholder="1.2" step="0.1" min="1"></div></div>
-          <div class="frow full"><label>Descripción</label><input type="text" id="nct-desc" placeholder="Breve descripción del tipo de limpieza"></div>
-          <button class="btn-sm" onclick="addCleaningType()">+ Agregar tipo</button>
-        </div>
-
-        <!-- Urgencias -->
-        <div id="svcp-urgencias" class="svc-adm-panel" style="display:none">
-          <p class="csub">Cada nivel aplica un porcentaje adicional sobre el precio base al momento de reservar.</p>
-          <div id="urgencias-list"></div>
-          <div class="div"></div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Agregar nivel de urgencia</p>
-          <div class="frow"><div><label>Nombre</label><input type="text" id="nu-name" placeholder="Express"></div><div><label>Incremento (%)</label><input type="number" id="nu-pct" placeholder="50"></div></div>
-          <button class="btn-sm" onclick="addUrgencia()">+ Agregar urgencia</button>
-        </div>
-
-        <!-- Zonas -->
-        <div id="svcp-zonas" class="svc-adm-panel" style="display:none">
-          <p class="csub">Las zonas definen la cobertura geográfica de cada trabajador y del cliente al reservar.</p>
-          <div id="zonas-list"></div>
-          <div class="div"></div>
-          <p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:10px;">Agregar nueva zona</p>
-          <div class="frow full"><label>Nombre de la zona</label><input type="text" id="nz-nombre" placeholder="Ej: Xochimilco / Tláhuac"></div>
-          <div class="frow full"><label>Colonias que cubre</label><input type="text" id="nz-colonias" placeholder="Ej: Xochimilco, Santa Cecilia, La Nopalera"></div>
-          <button class="btn-sm" onclick="addZona()">+ Agregar zona</button>
-        </div>
-      </div>
-    </div>
-    <div id="a-notas-admin" class="sec"><div class="card"><p class="ctitle">📝 Notas de trabajadores sobre clientes</p><p class="csub">Comentarios internos que los trabajadores escriben sobre sus clientes.</p><div id="admin-notes-list"></div></div></div>
-    <div id="a-soporte-admin" class="sec">
-      <div class="card">
-        <p class="ctitle">💬 Mensajes y soporte</p>
-        <p class="csub">Conversaciones con todos los usuarios de la plataforma</p>
-        <div class="msg-tabs" id="admin-msg-tabs">
-          <button class="msg-tab active" onclick="switchAdminMsgTab('cliente',this)">👤 Cliente</button>
-          <button class="msg-tab" onclick="switchAdminMsgTab('supervisor',this)">👁️ Supervisor</button>
-          <button class="msg-tab" onclick="switchAdminMsgTab('trabajador',this)">🧹 Trabajador</button>
-        </div>
-        <!-- Admin ↔ Cliente -->
-        <div id="admin-msg-cliente" class="msg-panel active">
-          <div class="chat-contact-bar">
-            <div class="av" style="width:34px;height:34px;font-size:11px;">AG</div>
-            <div><p>Ana García</p><span>Cliente · ana@cliente.com</span></div>
-            <span class="badge bok" style="margin-left:auto;">Cliente</span>
-          </div>
-          <div class="chat-box" id="chat-a-c"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-a-c" placeholder="Responder a Ana García..." onkeydown="if(event.key==='Enter')sendChat('c-a','a','Admin','cinput-a-c','chat-a-c')">
-            <button class="btn-sm" onclick="sendChat('c-a','a','Admin','cinput-a-c','chat-a-c')">Enviar</button>
-          </div>
-        </div>
-        <!-- Admin ↔ Supervisor -->
-        <div id="admin-msg-supervisor" class="msg-panel">
-          <div class="chat-contact-bar">
-            <div class="av" style="width:34px;height:34px;font-size:11px;background:#085041;">LS</div>
-            <div><p>Laura Supervisor</p><span>Supervisor · laura@ayalym.com</span></div>
-            <span class="badge bok" style="margin-left:auto;">Supervisor</span>
-          </div>
-          <div class="chat-box" id="chat-a-sv"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-a-sv" placeholder="Responder a Laura..." onkeydown="if(event.key==='Enter')sendChat('sv-a','a','Admin','cinput-a-sv','chat-a-sv')">
-            <button class="btn-sm" onclick="sendChat('sv-a','a','Admin','cinput-a-sv','chat-a-sv')">Enviar</button>
-          </div>
-        </div>
-        <!-- Admin ↔ Trabajador -->
-        <div id="admin-msg-trabajador" class="msg-panel">
-          <div class="chat-contact-bar">
-            <div class="av" style="width:34px;height:34px;font-size:11px;background:#633806;">JM</div>
-            <div><p>Juan Morales</p><span>Trabajador · juan@ayalym.com</span></div>
-            <span class="badge bwarn" style="margin-left:auto;">Trabajador</span>
-          </div>
-          <div class="chat-box" id="chat-a-t"></div>
-          <div class="chat-input-row">
-            <input type="text" id="cinput-a-t" placeholder="Responder a Juan..." onkeydown="if(event.key==='Enter')sendChat('t-a','a','Admin','cinput-a-t','chat-a-t')">
-            <button class="btn-sm" onclick="sendChat('t-a','a','Admin','cinput-a-t','chat-a-t')">Enviar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── ADMIN: PROMOCIONES & CAMPAÑAS ── -->
-    <div id="a-promociones" class="sec">
-
-      <!-- ═══ FORM NUEVA PROMO ═══ -->
-      <div class="card promo-admin-card">
-        <p class="ctitle">➕ Nueva promoción</p>
-
-        <!-- Tipo selector -->
-        <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Tipo</p>
-        <div class="promo-tipo-pills" id="promo-tipo-pills">
-          <button class="ptp-btn active" data-tipo="descuento"  onclick="selectPromoTipo('descuento',this)">🏷️ Descuento</button>
-          <button class="ptp-btn"        data-tipo="codigo"     onclick="selectPromoTipo('codigo',this)">🎟️ Código promo</button>
-          <button class="ptp-btn"        data-tipo="referido"   onclick="selectPromoTipo('referido',this)">🔗 Referido</button>
-          <button class="ptp-btn"        data-tipo="campana"    onclick="selectPromoTipo('campana',this)">📢 Campaña</button>
-        </div>
-
-        <!-- Sub-tipo campaña (solo visible cuando tipo=campana) -->
-        <div id="promo-campana-wrap" style="display:none;margin-bottom:10px;">
-          <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Campaña</p>
-          <div class="promo-campana-pills">
-            <button class="pcp-btn active" data-camp="buen_fin"  onclick="selectPromoCampana('buen_fin',this)">🛍️ Buen Fin</button>
-            <button class="pcp-btn"        data-camp="hot_sale"  onclick="selectPromoCampana('hot_sale',this)">🔥 Hot Sale</button>
-            <button class="pcp-btn"        data-camp="navidad"   onclick="selectPromoCampana('navidad',this)">🎄 Navidad</button>
-            <button class="pcp-btn"        data-camp="madres"    onclick="selectPromoCampana('madres',this)">💐 Día Madres</button>
-            <button class="pcp-btn"        data-camp="verano"    onclick="selectPromoCampana('verano',this)">☀️ Verano</button>
-            <button class="pcp-btn"        data-camp="custom"    onclick="selectPromoCampana('custom',this)">✏️ Personalizada</button>
-          </div>
-        </div>
-
-        <!-- Campos comunes -->
-        <div class="promo-form-grid">
-          <div class="fld">
-            <label>Nombre de la promoción</label>
-            <input type="text" id="pf-nombre" placeholder="Ej: Descuento inauguración">
-          </div>
-          <div class="fld">
-            <label>Descripción corta</label>
-            <input type="text" id="pf-desc" placeholder="Ej: 20% de descuento en tu primer servicio">
-          </div>
-
-          <!-- Descuento % (visible para: descuento, campana) -->
-          <div class="fld" id="pf-wrap-pct">
-            <label>Descuento (%)</label>
-            <input type="number" id="pf-pct" min="1" max="100" placeholder="Ej: 20">
-          </div>
-
-          <!-- Código (visible para: codigo, referido) -->
-          <div class="fld" id="pf-wrap-code" style="display:none;">
-            <label>Código</label>
-            <input type="text" id="pf-code" placeholder="Ej: AYALYM20" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
-          </div>
-
-          <!-- Generado por referido (solo referido) -->
-          <div class="fld" id="pf-wrap-ref" style="display:none;">
-            <label>Nombre del referido</label>
-            <input type="text" id="pf-ref" placeholder="Nombre de quien refirió">
-          </div>
-
-          <div class="fld">
-            <label>Fecha inicio</label>
-            <input type="date" id="pf-inicio">
-          </div>
-          <div class="fld">
-            <label>Fecha fin</label>
-            <input type="date" id="pf-fin">
-          </div>
-
-          <div class="fld">
-            <label>Emoji</label>
-            <input type="text" id="pf-emoji" placeholder="🎉" maxlength="4" style="font-size:20px;text-align:center;">
-          </div>
-          <div class="fld">
-            <label>Color de acento</label>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;">
-              <input type="color" id="pf-color" value="#1A56DB" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;padding:2px;">
-              <button class="pcolor-btn" style="background:#e63946;" onclick="document.getElementById('pf-color').value='#e63946'"></button>
-              <button class="pcolor-btn" style="background:#f4a261;" onclick="document.getElementById('pf-color').value='#f4a261'"></button>
-              <button class="pcolor-btn" style="background:#2a9d8f;" onclick="document.getElementById('pf-color').value='#2a9d8f'"></button>
-              <button class="pcolor-btn" style="background:#1A56DB;" onclick="document.getElementById('pf-color').value='#1A56DB'"></button>
-              <button class="pcolor-btn" style="background:#7209b7;" onclick="document.getElementById('pf-color').value='#7209b7'"></button>
-              <button class="pcolor-btn" style="background:#ef9f27;" onclick="document.getElementById('pf-color').value='#ef9f27'"></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Preview card -->
-        <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;">Vista previa en sitio web</p>
-        <div id="promo-preview-wrap"></div>
-
-        <button class="btn-royal" style="margin-top:14px;width:100%;" onclick="addPromocion()">🚀 Publicar en sitio web</button>
-      </div>
-
-      <!-- ═══ LISTA DE PROMOS ═══ -->
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <p class="ctitle" style="margin:0;">📋 Promociones publicadas</p>
-          <span id="promo-count-badge" class="badge" style="background:#E6F1FB;color:#1A56DB;font-size:11px;padding:2px 9px;border-radius:10px;">0 activas</span>
-        </div>
-        <div id="promo-list-admin">
-          <p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin promociones publicadas aún.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── ADMIN: SERVICIOS DE INMUEBLES ── -->
-    <div id="a-inmuebles" class="sec">
-      <div class="card">
-        <p class="ctitle">🏢 Inmuebles</p>
-        <!-- Pestañas principales -->
-        <div class="msg-tabs" style="margin-bottom:14px;">
-          <button class="msg-tab active" id="inm-main-tab-contratos" onclick="switchInmMainTab('contratos',this)">📋 Contratos</button>
-          <button class="msg-tab" id="inm-main-tab-clientes" onclick="switchInmMainTab('clientes',this)">👤 Clientes</button>
-        </div>
-
-        <!-- PANEL: Contratos (contenido original) -->
-        <div id="inm-panel-contratos">
-        <p class="csub">Contratos de limpieza para corporativos, hoteles, edificios y propiedades.</p>
-
-        <!-- Botón nuevo servicio -->
-        <div class="inm-form-wrap" id="inm-form-wrap">
-          <div class="inm-form-hdr" onclick="togglePropForm()">
-            <span>➕ Nuevo servicio de inmueble</span>
-            <span id="inm-form-arrow">▼</span>
-          </div>
-          <div class="inm-form-body" id="inm-form-body">
-            <!-- 1. Cliente -->
-            <p class="inm-section-label">👤 Datos del cliente</p>
-            <div class="frow"><div><label>Nombre / Empresa</label><input type="text" id="inm-cli-nombre" placeholder="Corporativo Reforma S.A."></div><div><label>Contacto</label><input type="text" id="inm-cli-contacto" placeholder="Roberto Silva"></div></div>
-            <div class="frow"><div><label>Teléfono</label><input type="text" id="inm-cli-tel" placeholder="+52 55 0000 0000"></div><div><label>Correo</label><input type="email" id="inm-cli-email" placeholder="contacto@empresa.com"></div></div>
-
-            <!-- 2. Inmueble -->
-            <p class="inm-section-label">🏗️ Datos del inmueble</p>
-            <div class="frow"><div><label>Tipo de inmueble</label><select id="inm-tipo"><option value="Oficina">Oficina</option><option value="Hotel">Hotel</option><option value="Departamento">Departamento</option><option value="Local comercial">Local comercial</option><option value="Bodega">Bodega</option><option value="Otro">Otro</option></select></div><div><label>Superficie (m²)</label><input type="number" id="inm-m2" placeholder="150" min="1"></div></div>
-            <div class="frow full"><label>Dirección</label><input type="text" id="inm-direccion" placeholder="Av. Reforma 200, Piso 3"></div>
-            <div class="frow full"><label>Colonia</label><input type="text" id="inm-colonia" placeholder="Cuauhtémoc"></div>
-
-            <!-- 3. Servicio -->
-            <p class="inm-section-label">🛠️ Datos del servicio</p>
-            <div class="frow full"><label>Tipo de servicio</label><input type="text" id="inm-svc-tipo" placeholder="Ej: Limpieza post-construcción, Mantenimiento semanal…"></div>
-            <div class="frow full"><label>Descripción</label><textarea id="inm-svc-desc" placeholder="Detalles del servicio a realizar…" style="resize:vertical;min-height:55px;"></textarea></div>
-            <div class="frow"><div><label>Frecuencia</label><select id="inm-frecuencia"><option value="única">Única</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div><div><label>Hora</label><input type="time" id="inm-hora" value="08:00"></div></div>
-
-            <!-- 4. Contrato -->
-            <p class="inm-section-label">📋 Contrato</p>
-            <div class="frow"><div><label>Fecha inicio</label><input type="date" id="inm-fecha-inicio"></div><div><label>Fecha fin</label><input type="date" id="inm-fecha-fin"></div></div>
-            <div class="frow full"><label>Estatus del contrato</label><select id="inm-contrato-status"><option value="por_firmar">⏳ Por firmar</option><option value="firmado">✅ Firmado</option><option value="sin_contrato">📄 Sin contrato</option></select></div>
-
-            <!-- 5. Forma de pago -->
-            <p class="inm-section-label">💳 Forma de pago</p>
-            <div class="frow"><div><label>Método</label><select id="inm-pago-metodo"><option value="transferencia">Transferencia bancaria</option><option value="cheque">Cheque</option><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option></select></div><div><label>Periodicidad</label><select id="inm-pago-periodicidad"><option value="única">Única</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div></div>
-            <div class="frow full"><label>Monto ($)</label><input type="number" id="inm-pago-monto" placeholder="15000" min="0"></div>
-
-            <!-- 6. Datos fiscales -->
-            <p class="inm-section-label">🧾 Datos fiscales</p>
-            <div class="frow full"><label>Razón social</label><input type="text" id="inm-fiscal-razon" placeholder="Empresa S.A. de C.V."></div>
-            <div class="frow"><div><label>RFC</label><input type="text" id="inm-fiscal-rfc" placeholder="EMP200101XYZ" style="text-transform:uppercase;"></div><div><label>Régimen fiscal</label><input type="text" id="inm-fiscal-regimen" placeholder="601 - General…"></div></div>
-            <div class="frow full"><label>Uso CFDI</label><input type="text" id="inm-fiscal-cfdi" placeholder="G03 - Gastos en general"></div>
-            <div class="frow full"><label>Dirección fiscal</label><input type="text" id="inm-fiscal-dir" placeholder="Calle, Col., Ciudad, CP"></div>
-
-            <!-- 7. Asignación -->
-            <p class="inm-section-label">👁️ Asignación y notas</p>
-            <div class="frow full"><label>Supervisor asignado</label><select id="inm-supervisor-sel"></select></div>
-            <div class="frow full"><label>Notas internas</label><textarea id="inm-notas" placeholder="Acceso, coordinación, observaciones…" style="resize:vertical;min-height:50px;"></textarea></div>
-
-            <div style="display:flex;gap:8px;margin-top:12px;">
-              <button class="btn-royal" style="flex:2;" onclick="createPropertyService()">Guardar contrato</button>
-              <button class="btn-sec" style="flex:1;" onclick="togglePropForm()">Cancelar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filtros -->
-        <div class="inm-filter-bar">
-          <button class="msg-tab active" id="inm-ftab-activo" onclick="switchPropTab('activo',this)">Activos</button>
-          <button class="msg-tab" id="inm-ftab-pendiente" onclick="switchPropTab('pendiente',this)">Pendientes</button>
-          <button class="msg-tab" id="inm-ftab-completado" onclick="switchPropTab('completado',this)">Completados</button>
-          <button class="msg-tab" id="inm-ftab-vencido" onclick="switchPropTab('vencido',this)">Vencidos</button>
-          <button class="msg-tab" id="inm-ftab-all" onclick="switchPropTab('all',this)">Todos</button>
-        </div>
-
-        <!-- Lista -->
-        <div id="prop-services-list"></div>
-        </div><!-- /inm-panel-contratos -->
-
-        <!-- PANEL: Clientes Inmuebles -->
-        <div id="inm-panel-clientes" style="display:none;">
-          <p class="csub">Clientes con acceso al portal de seguimiento de su contrato.</p>
-          <!-- Formulario agregar cliente -->
-          <div class="inm-form-wrap" id="ci-form-wrap">
-            <div class="inm-form-hdr" onclick="toggleCiForm()">
-              <span>➕ Nuevo cliente de inmueble</span>
-              <span id="ci-form-arrow">▼</span>
-            </div>
-            <div class="inm-form-body" id="ci-form-body">
-              <div class="frow"><div><label>Nombre completo</label><input type="text" id="ci-nombre" placeholder="Patricia León"></div><div><label>Empresa</label><input type="text" id="ci-empresa" placeholder="Hotel Roma Boutique"></div></div>
-              <div class="frow"><div><label>Correo (usuario de acceso)</label><input type="email" id="ci-email" placeholder="pleon@empresa.com"></div><div><label>Teléfono</label><input type="text" id="ci-tel" placeholder="+52 55 0000 0000"></div></div>
-              <div class="frow"><div><label>Contraseña inicial</label><input type="password" id="ci-pass" placeholder="Mínimo 6 caracteres"></div><div><label>Contrato asignado</label><select id="ci-contrato"><option value="">Sin contrato</option></select></div></div>
-              <div style="display:flex;gap:8px;margin-top:10px;">
-                <button class="btn-royal" style="flex:2;" onclick="addClienteInm()">💾 Guardar cliente</button>
-                <button class="btn-sec" style="flex:1;" onclick="toggleCiForm()">Cancelar</button>
-              </div>
-            </div>
-          </div>
-          <!-- Lista clientes -->
-          <div id="admin-clients-inm-list" style="margin-top:10px;"></div>
-        </div><!-- /inm-panel-clientes -->
-
-      </div>
-    </div>
-
-    <!-- ── ADMIN: FACTURACIÓN ── -->
-    <div id="a-facturacion" class="sec">
-      <div class="card">
-        <p class="ctitle">🧾 Solicitudes de facturación</p>
-        <div class="msg-tabs" style="flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;" id="fact-filter-tabs">
-          <button class="msg-tab active" onclick="filterFacturas('todas',this)">Todas</button>
-          <button class="msg-tab" onclick="filterFacturas('nueva',this)">🔵 Nuevas</button>
-          <button class="msg-tab" onclick="filterFacturas('atendida',this)">🟡 Atendidas</button>
-          <button class="msg-tab" onclick="filterFacturas('enviada',this)">✅ Enviadas</button>
-        </div>
-        <div id="fact-list" style="margin-top:8px;"></div>
-      </div>
-    </div>
-
-    <!-- ── ADMIN: PERSONAL DE INMUEBLES ── -->
-    <div id="a-personal-inm" class="sec">
-      <div class="card">
-        <p class="ctitle">👷 Personal de Inmuebles</p>
-        <p class="csub">Equipo operativo asignado a los servicios de inmuebles.</p>
-
-        <!-- Formulario agregar -->
-        <div class="inm-form-wrap" id="pi-form-wrap">
-          <div class="inm-form-hdr" onclick="togglePiForm()">
-            <span>➕ Agregar personal</span>
-            <span id="pi-form-arrow">▼</span>
-          </div>
-          <div class="inm-form-body" id="pi-form-body">
-            <div class="frow"><div><label>Nombre completo</label><input type="text" id="pi-nombre" placeholder="Pedro Ramírez"></div><div><label>Iniciales</label><input type="text" id="pi-initials" placeholder="PR" maxlength="2" style="text-transform:uppercase;"></div></div>
-            <div class="frow"><div><label>Correo</label><input type="email" id="pi-email" placeholder="pedro@ayalym.com"></div><div><label>Teléfono</label><input type="text" id="pi-tel" placeholder="+52 55 0000 0000"></div></div>
-            <div class="frow full"><label>Contraseña</label><input type="password" id="pi-pass" placeholder="Mínimo 8 caracteres"></div>
-            <div style="display:flex;gap:8px;margin-top:10px;">
-              <button class="btn-royal" style="flex:2;" onclick="addPersonalInm()">Guardar</button>
-              <button class="btn-sec" style="flex:1;" onclick="togglePiForm()">Cancelar</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Lista de personal -->
-        <div id="personal-inm-list" style="margin-top:12px;"></div>
-      </div>
-
-      <!-- Overlay asignar servicio -->
-      <div class="inm-edit-ov" id="asignar-pi-ov">
-        <div class="inm-edit-card" style="max-width:380px;">
-          <div class="inm-edit-hdr"><span>Asignar a servicio</span><button class="inm-edit-close" onclick="closeAsignarPi()">✕</button></div>
-          <div style="padding:16px;">
-            <p style="font-size:12px;color:#185FA5;margin-bottom:10px;">Selecciona el servicio a asignar:</p>
-            <input type="hidden" id="ap-pidx">
-            <select id="ap-select" style="width:100%;margin-bottom:14px;"></select>
-            <div style="display:flex;gap:8px;">
-              <button class="btn-royal" style="flex:2;" onclick="confirmarAsignarPi()">Asignar</button>
-              <button class="btn-sec" style="flex:1;" onclick="closeAsignarPi()">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
+</header>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav">
+  <button class="mobile-close" onclick="document.querySelector('.mobile-nav').classList.remove('open')" aria-label="Cerrar menú">✕</button>
+  <a href="#" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Inicio</a>
+  <a href="#servicios" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Servicios</a>
+  <a href="#nosotros" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Nosotros</a>
+  <a href="#repse" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Repse</a>
+  <a href="#contacto" class="nav-link" onclick="document.querySelector('.mobile-nav').classList.remove('open')">Contacto</a>
+  <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema" style="margin-top:4px;">
+    <span class="tt-icon">☀️</span>
+    <span class="tt-label">Claro</span>
+  </button>
+  <a href="app.html" class="btn-portal" style="margin-top:12px;">✨ Reserva tu limpieza</a>
 </div>
 
-<!-- ── PANEL: PERSONAL DE INMUEBLES ── -->
-<div id="role-personal_inm" class="role-section" style="display:none">
-  <div class="bottom-nav" id="nav-personal_inm" style="grid-template-columns:repeat(4,1fr)">
-    <div class="bnav-btn active" onclick="navGo('personal_inm','inicio',this)"><span class="bnav-icon">🏠</span>Inicio</div>
-    <div class="bnav-btn" onclick="navGo('personal_inm','servicios',this)"><span class="bnav-icon">🏢</span>Servicios</div>
-    <div class="bnav-btn" onclick="navGo('personal_inm','asistencias',this)"><span class="bnav-icon">📋</span>Asistencias</div>
-    <div class="bnav-btn" onclick="navGo('personal_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
+<!-- BARRA COMPACTA DE PROMOCIONES — sticky bajo navbar -->
+<section id="promos-scroll-section">
+  <div class="promos-bar">
+    <span class="ps-label">
+      <span class="ps-live-dot"></span>
+      🔥 OFERTAS
+    </span>
+    <span class="ps-sep"></span>
+    <div class="promos-track-wrap">
+      <div class="promos-track" id="promos-track">
+        <!-- Cards inyectadas por landing-promos.js -->
+      </div>
+    </div>
+    <a class="ps-count" id="ps-count" href="app.html">0 ofertas</a>
   </div>
-  <div id="pi-inicio" class="sec active"><div id="pi-inicio-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="pi-servicios" class="sec"><div id="pi-servicios-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="pi-asistencias" class="sec"><div id="pi-asistencias-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="pi-perfil" class="sec"><div id="pi-perfil-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-</div>
+</section>
 
-<!-- ── PANEL: CLIENTE INMUEBLES ── -->
-<div id="role-cliente_inm" class="role-section" style="display:none">
-  <div class="bottom-nav" id="nav-cliente_inm">
-    <div class="bnav-btn active" onclick="navGo('cliente_inm','inicio',this)"><span class="bnav-icon">🏠</span>Inicio</div>
-    <div class="bnav-btn" onclick="navGo('cliente_inm','contrato',this)"><span class="bnav-icon">📄</span>Contrato</div>
-    <div class="bnav-btn" onclick="navGo('cliente_inm','reportes',this)"><span class="bnav-icon">📋</span>Reportes</div>
-    <div class="bnav-btn" onclick="navGo('cliente_inm','asistencias',this)"><span class="bnav-icon">🕐</span>Asistencias</div>
-    <div class="bnav-btn" onclick="navGo('cliente_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Limpieza profesional</div>
+    <h1>
+      <span class="h1-intro">¡Espacios</span>
+      <em>limpios,</em>
+      <span class="h1-close">entornos felices!</span>
+    </h1>
+    <div class="hero-price-tag">
+      <span>Reserva desde</span>
+      <div class="hpt-sep"></div>
+      <strong><span id="lp-hero-desde">$500</span> + IVA</strong>
+    </div>
+    <div class="hero-cta-wrap">
+      <a href="#reserva" class="btn-primary">✨ Reserva tu limpieza</a>
+      <a href="#servicios" class="btn-secondary">Ver servicios</a>
+    </div>
   </div>
-  <div id="cinm-inicio" class="sec active"><div id="cinm-inicio-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="cinm-contrato" class="sec"><div id="cinm-contrato-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="cinm-reportes" class="sec"><div id="cinm-reportes-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="cinm-asistencias" class="sec"><div id="cinm-asistencias-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="cinm-perfil" class="sec"><div id="cinm-perfil-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-</div>
+</section>
 
-<!-- OVERLAY: RESET CONTRASEÑA CLIENTE INM (admin) -->
-<div class="confirm-ov" id="ci-pass-ov" onclick="if(event.target===this)closeCiPassOv()">
-  <div class="confirm-card">
-    <p class="confirm-title">🔑 Restablecer contraseña</p>
-    <p style="font-size:13px;color:#185FA5;margin-bottom:14px;" id="ci-pass-ov-name"></p>
-    <input type="hidden" id="ci-pass-ov-id">
-    <div class="fld"><label>Nueva contraseña</label><input type="password" id="ci-pass-ov-new" placeholder="Mínimo 6 caracteres"></div>
-    <div class="fld" style="margin-bottom:14px;"><label>Confirmar contraseña</label><input type="password" id="ci-pass-ov-new2" placeholder="Repite la contraseña"></div>
-    <div style="display:flex;gap:8px;">
-      <button class="btn-sec" style="flex:1;" onclick="closeCiPassOv()">Cancelar</button>
-      <button class="btn-royal" style="flex:2;" onclick="saveResetClienteInmPass()">💾 Guardar</button>
+<!-- CÓMO FUNCIONA -->
+<section id="reserva">
+  <div class="como-header">
+    <div class="section-label">Proceso simple</div>
+    <h2 class="section-title">Reserva en 3 pasos</h2>
+    <div class="divider" style="margin:20px auto 0;"></div>
+  </div>
+  <div class="steps-grid">
+
+    <div class="step-card">
+      <div class="step-circle">
+        📱
+        <div class="step-num">1</div>
+      </div>
+      <h3>Elige tu servicio</h3>
+      <p>Selecciona el tipo de limpieza, la fecha, el horario y tu zona en CDMX.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="34" height="34" fill="none" aria-hidden="true">
+          <!-- Cabeza -->
+          <circle cx="24" cy="10" r="5.5" fill="#fff" opacity=".95"/>
+          <!-- Cuerpo -->
+          <path d="M16 26c0-5 3.5-9 8-9s8 4 8 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" fill="none" opacity=".95"/>
+          <!-- Brazo izq con mopa -->
+          <line x1="16" y1="26" x2="10" y2="36" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+          <!-- Palo de mopa -->
+          <line x1="10" y1="36" x2="6" y2="44" stroke="#7ec8f5" stroke-width="2.6" stroke-linecap="round"/>
+          <!-- Cabeza de mopa -->
+          <path d="M3 44 Q6 41 9 44 Q6 47 3 44Z" fill="#7ec8f5" opacity=".9"/>
+          <!-- Brazo der -->
+          <line x1="32" y1="26" x2="38" y2="33" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+          <!-- Piernas -->
+          <line x1="24" y1="35" x2="20" y2="46" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+          <line x1="24" y1="35" x2="28" y2="46" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".95"/>
+          <!-- Brillo / burbujas -->
+          <circle cx="38" cy="20" r="2" fill="#7ec8f5" opacity=".7"/>
+          <circle cx="43" cy="26" r="1.3" fill="#7ec8f5" opacity=".5"/>
+          <circle cx="40" cy="30" r="1" fill="#7ec8f5" opacity=".4"/>
+        </svg>
+        <div class="step-num">2</div>
+      </div>
+      <h3>Te asignamos un experto</h3>
+      <p>Conectamos con el especialista mejor calificado y disponible en tu zona.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-circle">
+        ✨
+        <div class="step-num">3</div>
+      </div>
+      <h3>Disfruta tu espacio</h3>
+      <p>Nuestro equipo llega puntual y deja cada rincón impecable. Tú solo relájate.</p>
+    </div>
+
+  </div>
+  <div class="steps-cta">
+    <a href="app.html" class="btn-reserva">
+      Reserva tu limpieza
+      <span class="btn-reserva-arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- SERVICIOS -->
+<section class="promo-section" id="servicios">
+  <div class="promo-heading">
+    <div class="promo-heading-text">
+      <div class="ph-eyebrow">Lo que ofrecemos</div>
+      <div class="ph-title">Nuestros servicios</div>
+    </div>
+    <div class="promo-heading-line"></div>
+  </div>
+  <!-- Script síncrono: oculta tarjetas inactivas ANTES de pintar (evita flash) -->
+  <script>
+  (function(){
+    try{
+      var raw=localStorage.getItem('ayalym-prices');
+      if(raw){
+        var a=(JSON.parse(raw).svcActivo)||{};
+        ['depto','auto','tapiceria'].forEach(function(k){
+          if(a[k]===false){
+            /* Inyectar estilo en <head> para que aplique antes del paint */
+            var s=document.createElement('style');
+            s.id='lp-hide-'+k;
+            s.textContent='#lp-card-'+k+'{display:none!important}';
+            document.head.appendChild(s);
+          }
+        });
+        /* Ocultar sección completa si no hay ningún servicio activo */
+        var alOff=['depto','auto','tapiceria'].every(function(k){return a[k]===false;});
+        if(alOff){
+          var s2=document.createElement('style');
+          s2.id='lp-hide-servicios';
+          s2.textContent='#servicios{display:none!important}';
+          document.head.appendChild(s2);
+        }
+      }
+    }catch(e){}
+  })();
+  </script>
+
+  <div class="promo-grid">
+
+    <!-- LIMPIEZA DE DEPARTAMENTO -->
+    <a href="app.html" class="promo-banner" id="lp-card-depto">
+      <div class="pb-accent pb-accent-1"></div>
+      <div class="pb-body">
+        <div class="pb-icon-row">
+          <span class="pb-icon">🏠</span>
+          <span class="pb-badge">Depto · Casa · Oficina</span>
+        </div>
+        <div class="pb-name">Limpieza de departamento</div>
+        <div class="pb-price-main">
+          <div>
+            <div class="pb-desde">Desde</div>
+            <div class="pb-amount" id="lp-depto-desde">$500</div>
+          </div>
+          <div class="pb-iva">+ IVA<br>por visita</div>
+        </div>
+        <div class="pb-prices">
+          <div class="pb-price-item">
+            <span class="pi-label" id="lp-depto-lbl-general">General (1 hab, 1 baño)</span>
+            <span class="pi-val" id="lp-depto-general">$500</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label" id="lp-depto-lbl-fina">Limpieza fina ×<span id="lp-fina-factor">1.2</span></span>
+            <span class="pi-val" id="lp-depto-fina">$600</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label" id="lp-depto-lbl-profunda">Limpieza profunda ×<span id="lp-prof-factor">1.4</span></span>
+            <span class="pi-val" id="lp-depto-profunda">$700</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">+Habitación extra</span>
+            <span class="pi-val" id="lp-depto-hab">+$120</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">+Baño extra</span>
+            <span class="pi-val" id="lp-depto-bano">+$80</span>
+          </div>
+        </div>
+        <div class="pb-cta">
+          Reservar ahora
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- LAVADO DE AUTO -->
+    <a href="app.html" class="promo-banner" id="lp-card-auto">
+      <div class="pb-accent pb-accent-2"></div>
+      <div class="pb-body">
+        <div class="pb-icon-row">
+          <span class="pb-icon">🚗</span>
+          <span class="pb-badge">Exterior · Interior</span>
+        </div>
+        <div class="pb-name">Lavado de auto</div>
+        <div class="pb-price-main">
+          <div>
+            <div class="pb-desde">Desde</div>
+            <div class="pb-amount" id="lp-auto-desde">$400</div>
+          </div>
+          <div class="pb-iva">+ IVA<br>por servicio</div>
+        </div>
+        <div class="pb-prices">
+          <div class="pb-price-item">
+            <span class="pi-label">Sedán (exterior)</span>
+            <span class="pi-val" id="lp-auto-sedan">$400</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">SUV (exterior)</span>
+            <span class="pi-val" id="lp-auto-suv">$500</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Pickup (exterior)</span>
+            <span class="pi-val" id="lp-auto-pickup">$620</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">+Limpieza interior</span>
+            <span class="pi-val" id="lp-auto-interior">+$900</span>
+          </div>
+        </div>
+        <div class="pb-cta">
+          Reservar ahora
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- LAVADO DE TAPICERÍA -->
+    <a href="app.html" class="promo-banner" id="lp-card-tapiceria">
+      <div class="pb-accent pb-accent-3"></div>
+      <div class="pb-body">
+        <div class="pb-icon-row">
+          <span class="pb-icon">🛋️</span>
+          <span class="pb-badge">Tapicería · Alfombras · Colchones</span>
+        </div>
+        <div class="pb-name">Lavado de tapicería</div>
+        <div class="pb-price-main">
+          <div>
+            <div class="pb-desde">Desde</div>
+            <div class="pb-amount" id="lp-tap-desde">$1,200</div>
+          </div>
+          <div class="pb-iva">+ IVA<br>mínimo</div>
+        </div>
+        <div class="pb-prices">
+          <div class="pb-price-item">
+            <span class="pi-label">Silla (por pieza)</span>
+            <span class="pi-val" id="lp-tap-silla">$100</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Sofá tela (por pieza)</span>
+            <span class="pi-val" id="lp-tap-sofa-tela">$380</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Sofá piel (por pieza)</span>
+            <span class="pi-val" id="lp-tap-sofa-piel">$560</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Colchón individual</span>
+            <span class="pi-val" id="lp-tap-colchon">$500</span>
+          </div>
+          <div class="pb-price-item">
+            <span class="pi-label">Tapete / Alfombra</span>
+            <span class="pi-val" id="lp-tap-tapete">$80/m²</span>
+          </div>
+        </div>
+        <div class="pb-cta">
+          Reservar ahora
+          <span class="cta-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-number">+500<em>*</em></div>
+      <div class="stat-label">Servicios realizados</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">100<em>%</em></div>
+      <div class="stat-label">Satisfacción garantizada</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">REPSE</div>
+      <div class="stat-label">ACR15827 / 2025</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">CDMX</div>
+      <div class="stat-label">Área Metropolitana</div>
     </div>
   </div>
 </div>
 
-</div>
+<!-- NOSOTROS -->
+<section id="nosotros">
+  <div class="section-inner">
+    <div class="nosotros-grid">
+      <div>
+        <div class="section-label">Quiénes somos</div>
+        <h2 class="section-title">Misión y Visión</h2>
+        <div class="divider"></div>
+        <div class="nosotros-text">
+          <p class="highlight">Empresa dedicada a la innovación y cuidado del medio ambiente, generando ambientes amigables con entornos limpios y elegantes.</p>
+          <p>Brindamos la seguridad de que nuestros clientes y sus colaboradores se sientan como en casa al llegar a sus instalaciones, obteniendo su entera satisfacción con la calidad de nuestro servicio.</p>
+          <p>Nuestro equipo de profesionales está comprometido con los más altos estándares de calidad, utilizando productos eco-amigables y tecnología de punta.</p>
+        </div>
+      </div>
+      <div class="values-grid">
+        <div class="value-item">
+          <div class="vi-icon">🌿</div>
+          <h4>Sustentabilidad</h4>
+          <p>Productos y procesos respetuosos con el medio ambiente.</p>
+        </div>
+        <div class="value-item">
+          <div class="vi-icon">⭐</div>
+          <h4>Excelencia</h4>
+          <p>Estándares de calidad en cada servicio que realizamos.</p>
+        </div>
+        <div class="value-item">
+          <div class="vi-icon">🤝</div>
+          <h4>Confianza</h4>
+          <p>Personal capacitado y certificado para tu tranquilidad.</p>
+        </div>
+        <div class="value-item">
+          <div class="vi-icon">⏱️</div>
+          <h4>Puntualidad</h4>
+          <p>Cumplimos con tiempos y compromisos establecidos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<script src="js/data.js?v=18"></script>
-<script src="js/app.js?v=53"></script>
-<script src="js/theme.js?v=1"></script>
+<!-- REPSE -->
+<section id="repse">
+  <div class="section-inner">
+    <div class="section-label">Registro oficial</div>
+    <h2 class="section-title" style="color:var(--white);">Certificación REPSE</h2>
+    <p style="color:rgba(255,255,255,.6);font-weight:300;">Contamos con registro ante el Registro de Prestadoras de Servicios Especializados u Obras Especializadas.</p>
+    <div class="repse-badge">
+      <div class="rb-icon">📜</div>
+      <div class="rb-text">
+        <h3>Aviso de registro REPSE</h3>
+        <p>No. ACR15827/2025 — AYA LIMPIEZA Y MANTENIMIENTO S.A. DE C.V.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto">
+  <div class="section-inner">
+    <div class="section-label">Estamos para ti</div>
+    <h2 class="section-title">Contáctanos</h2>
+    <div class="divider"></div>
+    <div class="contact-grid">
+      <div class="contact-block">
+        <h3>Información de contacto</h3>
+        <div class="contact-item">
+          <span class="ci-icon">🏢</span>
+          <div class="ci-body">
+            <strong>Empresa</strong>
+            AYA LIMPIEZA Y MANTENIMIENTO S.A. DE C.V.
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="ci-icon">📍</span>
+          <div class="ci-body">
+            <strong>Dirección</strong>
+            Prol. Paseo de la Reforma No. 799 Int. 1308,<br>
+            Col. Lomas de Santa Fe, Alcaldía Álvaro Obregón,<br>
+            C.P. 01219, CDMX.
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="ci-icon">🕐</span>
+          <div class="ci-body">
+            <strong>Horario de atención</strong>
+            Lunes a Viernes: 8:00 — 18:00 hrs<br>
+            Sábado: 9:00 — 14:00 hrs
+          </div>
+        </div>
+        <a href="https://wa.me/521XXXXXXXXXX" class="btn-whatsapp" target="_blank" rel="noopener">
+          💬 Envíanos un WhatsApp
+        </a>
+      </div>
+      <div class="contact-block">
+        <h3>Suscríbete</h3>
+        <p style="font-size:14px;color:rgba(255,255,255,.6);font-weight:300;margin-bottom:16px;">
+          Suscríbete para recibir noticias sobre promociones de limpieza de inmuebles.
+        </p>
+        <div class="subscribe-form">
+          <input type="email" placeholder="Correo electrónico">
+          <button type="button" onclick="alert('¡Gracias por suscribirte!')">Registrarse</button>
+        </div>
+        <div style="margin-top:32px;">
+          <h3 style="margin-bottom:14px;">Síguenos</h3>
+          <div style="display:flex;gap:12px;">
+            <a href="https://www.facebook.com/ayalym23" class="social-link" target="_blank" rel="noopener" aria-label="Facebook">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="https://www.instagram.com/ayalym23" class="social-link" target="_blank" rel="noopener" aria-label="Instagram">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+            </a>
+            <a href="https://www.tiktok.com/@ayalym23" class="social-link" target="_blank" rel="noopener" aria-label="TikTok">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo-wrap">
+        <img src="img/logo.png" alt="AYA Logo" class="footer-logo-img">
+        <span class="footer-logo-text">AYA<span>LYM</span></span>
+      </div>
+      <strong>AYA LIMPIEZA Y MANTENIMIENTO</strong>
+      S.A. DE C.V. — CDMX, México
+    </div>
+    <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;">
+      <a href="#" style="font-size:12px;color:rgba(255,255,255,.4);text-decoration:none;">Política de privacidad</a>
+      <a href="app.html" class="btn-portal" style="font-size:12px;padding:7px 16px;">✨ Reservar</a>
+    </div>
+  </div>
+  <div class="footer-copy">
+    © 2025 AYA LIMPIEZA Y MANTENIMIENTO S.A. DE C.V. — Con tecnología de AYALYM Portal
+  </div>
+</footer>
+
+<script src="js/theme.js"></script>
+<script src="js/landing-prices.js?v=4"></script>
+<script src="js/landing-promos.js?v=3"></script>
 </body>
 </html>

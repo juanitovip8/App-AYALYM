@@ -60,7 +60,7 @@
       ? '<span class="psc-sep">·</span>' + pctHtml + codeHtml
       : '';
 
-    return '<a class="promo-scroll-card" href="index.html" style="border-color:' + color + '40;">'
+    return '<a class="promo-scroll-card" href="app.html" style="border-color:' + color + '40;">'
          +   '<div class="psc-glow" style="background:' + color + ';"></div>'
          +   '<span class="psc-emoji">' + emoji + '</span>'
          +   '<span class="psc-nombre">' + nombre + '</span>'
