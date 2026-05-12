@@ -811,6 +811,11 @@ select option {
 .res-dir-addr                      { color: var(--dk-sub) !important; }
 
 /* ─── URGENCIAS (.urg-*) ─── */
+.urg-card                          { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
+.urg-inp                           { background: var(--dk-mid) !important; border-color: var(--dk-border2) !important; color: var(--dk-text) !important; }
+.urg-inp:focus                     { background: var(--dk-panel) !important; border-color: #4e7fff !important; }
+.urg-card-filter                   { border-top-color: var(--dk-border) !important; }
+.urg-dias-row                      { border-top-color: var(--dk-border) !important; }
 .urg-label, .urg-pct-sign          { color: var(--dk-sub) !important; }
 .urg-step2-block                   { background: var(--dk-card) !important; border-color: var(--dk-border) !important; }
 .urg-step2-title                   { color: var(--dk-text) !important; }

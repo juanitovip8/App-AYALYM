@@ -2671,7 +2671,7 @@ function renderUrgencias(){
           u.modo==='mismo_dia'?'Solo muestra trabajadores con al menos un horario libre hoy.':
           `Solo muestra trabajadores que llegan en ≤ ${u.maxMin||120} minutos al domicilio.`
         }</p>
-        <div class="urg-filter-row" style="margin-top:8px;border-top:.5px solid #D1E4F6;padding-top:8px;">
+        <div class="urg-filter-row urg-dias-row">
           <div class="urg-field urg-field-pct">
             <label class="urg-label">Días mín.</label>
             <div class="urg-pct-wrap">

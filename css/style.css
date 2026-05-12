@@ -1636,6 +1636,7 @@ textarea{resize:vertical;min-height:60px;}
 .urg-card-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
 .urg-card-filter{margin-top:10px;padding-top:10px;border-top:.5px solid #D8E8F7;}
 .urg-filter-row{display:flex;gap:8px;align-items:flex-end;}
+.urg-dias-row{margin-top:8px;border-top:.5px solid #D1E4F6;padding-top:8px;}
 .urg-filter-hint{font-size:11px;color:#5C7A9A;margin-top:5px;line-height:1.4;}
 /* Booking step 2: urgency block */
 .urg-step2-block{background:#F4F8FF;border:.5px solid #D0E3F7;border-radius:12px;padding:12px 14px;margin-bottom:16px;}
