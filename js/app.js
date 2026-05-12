@@ -514,6 +514,7 @@ function launchApp(role,nombre,zona){
 
 function doLogout(){
   document.getElementById('screen-app').classList.remove('active');document.getElementById('screen-login').classList.add('active');
+  document.querySelectorAll('.role-section').forEach(s=>s.style.display='none');
   window.scrollTo({top:0,behavior:'instant'});
   showClientPanel();
   ['c-login-email','c-login-pass','s-email','s-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
