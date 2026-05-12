@@ -9,12 +9,12 @@ const avBgs={admin:'#EEEDFE',supervisor:'#E1F5EE',cliente:'#E6F1FB',trabajador:'
 const avCols={admin:'#3C3489',supervisor:'#085041',cliente:'#0C447C',trabajador:'#633806'};
 
 /* RECOVER */
-function toggleRecover(){recoverOpen=!recoverOpen;document.getElementById('recover-panel').classList.toggle('open',recoverOpen);if(recoverOpen){['rec-1','rec-2','rec-3','rec-4'].forEach((id,i)=>{document.getElementById(id).className='recover-step'+(i===0?' active':'');});}}
+function toggleRecover(){showLV('recover');}
 function recoverStep1(){const e=document.getElementById('rec-email').value.trim();if(!e){showToast('amber','⚠️','Ingresa tu correo');return;}document.getElementById('rec-email-shown').textContent=e;document.getElementById('rec-1').className='recover-step';document.getElementById('rec-2').className='recover-step active';showToast('blue','📧','Código enviado (demo: cualquier código)');}
 function recoverStep2(){const c=document.getElementById('rec-code').value.trim();if(!c){showToast('amber','⚠️','Ingresa el código');return;}document.getElementById('rec-2').className='recover-step';document.getElementById('rec-3').className='recover-step active';}
 function recoverStep3(){const p1=document.getElementById('rec-newpass').value,p2=document.getElementById('rec-newpass2').value;if(p1.length<8){showToast('amber','⚠️','Mínimo 8 caracteres');return;}if(p1!==p2){showToast('red','❌','Las contraseñas no coinciden');return;}document.getElementById('rec-3').className='recover-step';document.getElementById('rec-4').className='recover-step active';}
 function recoverBack(step){if(step===2){document.getElementById('rec-2').className='recover-step';document.getElementById('rec-1').className='recover-step active';}if(step===3){document.getElementById('rec-3').className='recover-step';document.getElementById('rec-2').className='recover-step active';}}
-function finishRecover(){document.getElementById('recover-panel').classList.remove('open');recoverOpen=false;showToast('green','✅','Contraseña cambiada.');}
+function finishRecover(){showLV('main');showToast('green','✅','Contraseña cambiada.');}
 function setPersonaTipo(tipo){facturaPersonaTipo=tipo;document.getElementById('ptab-fisica').classList.toggle('active',tipo==='fisica');document.getElementById('ptab-moral').classList.toggle('active',tipo==='moral');document.getElementById('pf-fisica').classList.toggle('active',tipo==='fisica');document.getElementById('pf-moral').classList.toggle('active',tipo==='moral');}
 
 /* CLEANING TYPES */
@@ -234,7 +234,53 @@ function switchClientTab(tab){['login','registro'].forEach(t=>{document.getEleme
 function showStaffPanel(){document.getElementById('client-panel').style.display='none';document.getElementById('staff-access-link').style.display='none';document.getElementById('staff-panel').classList.add('open');}
 function showClientPanel(){document.getElementById('client-panel').style.display='';document.getElementById('staff-access-link').style.display='';document.getElementById('staff-panel').classList.remove('open');}
 function selStaffRole(r){staffRole=r;['trabajador','supervisor','admin','personal_inm'].forEach(x=>document.getElementById('srole-'+x).classList.toggle('active',x===r));document.getElementById('hint-role').textContent={trabajador:'Trabajador',supervisor:'Supervisor',admin:'Administrador',personal_inm:'Personal Inmuebles'}[r];}
-function doClientLogin(){
+/* --- Login unificado --- */
+function showLV(view){
+  ['main','register','recover'].forEach(function(v){
+    var el=document.getElementById('lv-'+v);
+    if(el)el.style.display=v===view?'':'none';
+  });
+  if(view==='recover'){
+    ['rec-1','rec-2','rec-3','rec-4'].forEach(function(id,i){
+      var el=document.getElementById(id);
+      if(el)el.className='recover-step'+(i===0?' active':'');
+    });
+  }
+}
+function showClientPanel(){showLV('main');}
+function togglePassVis(id,btn){
+  var el=document.getElementById(id);if(!el)return;
+  el.type=el.type==='password'?'text':'password';
+  btn.textContent=el.type==='password'?'👁':'🙈';
+}
+function doLogin(){
+  var e=document.getElementById('login-email').value.trim(),p=document.getElementById('login-pass').value.trim();
+  if(!e||!p){showToast('amber','⚠️','Ingresa tu correo y contraseña');return;}
+  var user=USERS.find(function(u){return u.email===e;});
+  if(!user){showToast('red','❌','Correo o contraseña incorrectos');return;}
+  if(user.password&&user.password!==p){showToast('red','❌','Correo o contraseña incorrectos');return;}
+  if(!user.activo){showToast('red','🔒','Tu cuenta ha sido desactivada. Contacta al administrador.');return;}
+  if(user.accesoRevocado){showToast('red','🔒','Tu acceso ha sido revocado. Contacta al administrador.');return;}
+  if(user.rol==='cliente_inm'){
+    var ci=CLIENTS_INM.find(function(c){return c.email===e;});
+    if(!ci||ci.activo===false){showToast('red','🔒','Cuenta sin acceso activo. Contacta al administrador.');return;}
+    currentClientInmId=ci.id;
+    launchApp('cliente_inm',ci.nombre,'');
+  }else if(user.rol==='personal_inm'){
+    var pi=PERSONAL_INM.find(function(x){return x.email===e;});
+    if(!pi||pi.activo===false){showToast('red','🔒','Cuenta sin acceso activo.');return;}
+    currentPersonalId=pi.id;
+    launchApp('personal_inm',user.nombre,'');
+  }else{
+    launchApp(user.rol,user.nombre,'');
+  }
+}
+function doClientLogin(){doLogin();}
+function doStaffLogin(){doLogin();}
+function switchClientTab(){}
+function showStaffPanel(){}
+function selStaffRole(){}
+function doClientLogin_OLD(){
   const e=document.getElementById('c-login-email').value.trim(),p=document.getElementById('c-login-pass').value.trim();
   if(!e||!p){showToast('amber','⚠️','Ingresa tu correo y contraseña');return;}
   const user=USERS.find(u=>u.email===e);
@@ -516,8 +562,7 @@ function doLogout(){
   document.getElementById('screen-app').classList.remove('active');document.getElementById('screen-login').classList.add('active');
   document.querySelectorAll('.role-section').forEach(s=>s.style.display='none');
   window.scrollTo({top:0,behavior:'instant'});
-  showClientPanel();
-  ['c-login-email','c-login-pass','s-email','s-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['login-email','login-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});showLV('main');;
   uploadedFiles=[];clientDiscount=0;workerDeductions=[];selectedTimeSlot='';selectedWorkerId=null;fichaWorkerId=null;
   ['prev-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   facturaOn=false;const ft=document.getElementById('ftoggle');if(ft)ft.classList.remove('on');const ff=document.getElementById('ffields');if(ff)ff.classList.remove('show');

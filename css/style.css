@@ -36,14 +36,26 @@ body{font-family:var(--font-sans);background:#F4F8FD;-webkit-font-smoothing:anti
   padding:2rem 1rem 3rem;
   background:linear-gradient(160deg,#042C53 0%,#0b1e35 60%,#111 100%);
 }
-#screen-login .login-wrap{width:100%;max-width:640px;}
+#screen-login .login-wrap{width:100%;max-width:480px;}
 #screen-login .brand{background:rgba(255,255,255,.06)!important;border-color:rgba(255,255,255,.1)!important;border-radius:12px 12px 0 0;border-bottom:none!important;}
-#screen-login .client-panel{border-radius:0 0 12px 12px;}
-#screen-login .staff-panel{border-radius:12px;}
-#screen-login .staff-access-link{color:rgba(255,255,255,.55);border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.05);}
-#screen-login .staff-access-link:hover{color:#fff;background:rgba(255,255,255,.10);}
-#screen-login .quick-access{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:1rem 1.25rem;}
-#screen-login .qa-group-label{color:rgba(255,255,255,.5);}
+
+/* ── LOGIN BOX — tarjeta blanca ── */
+.login-box{background:#fff;border:.5px solid var(--blue-border);border-radius:0 0 14px 14px;padding:1.5rem 1.75rem 1.75rem;}
+.lb-title{font-size:17px;font-weight:700;color:#042C53;margin-bottom:1.1rem;text-align:center;}
+.lb-pass-field{position:relative;}
+.lb-pass-field input{padding-right:38px;}
+.lb-eye{position:absolute;right:10px;top:50%;transform:translateY(2px);cursor:pointer;font-size:15px;user-select:none;opacity:.6;}
+.lb-eye:hover{opacity:1;}
+.lb-btn-main{width:100%;margin-top:4px;}
+.lb-link-sm{font-size:11px;color:#1A56DB;text-align:center;margin-top:10px;cursor:pointer;font-weight:500;}
+.lb-link-sm:hover{text-decoration:underline;}
+.lb-divider{display:flex;align-items:center;gap:10px;margin:14px 0 10px;color:#B5D4F4;font-size:11px;}
+.lb-divider::before,.lb-divider::after{content:'';flex:1;height:.5px;background:#B5D4F4;}
+.lb-divider span{white-space:nowrap;color:#185FA5;font-size:11px;}
+.lb-btn-reg{width:100%;background:#fff;color:#1A56DB;border:1.5px solid #1A56DB;font-size:13px;}
+.lb-btn-reg:hover{background:#E6F1FB;}
+.lb-back-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.lb-back-row p{font-size:14px;font-weight:600;color:#042C53;margin:0;}
 
 /* ── APP SCREEN — sin padding extra ── */
 #screen-app{flex:1;display:flex;flex-direction:column;}
