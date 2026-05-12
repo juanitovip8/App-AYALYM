@@ -117,9 +117,9 @@ body {
   background: var(--dk-card) !important;
   border-color: var(--dk-border) !important;
 }
+.qa-card:hover { background: #2e2e2e !important; }
 .qa-card p { color: var(--dk-text) !important; }
 .qa-card span { color: var(--dk-sub) !important; }
-.qa-email { color: var(--dk-muted) !important; }
 
 /* ─── FORMS & INPUTS ─── */
 label { color: var(--dk-sub) !important; }
