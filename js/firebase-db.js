@@ -149,6 +149,13 @@ async function loadAllData() {
     PROMOTIONS.length = 0;
   }
 
+  /* 9. SUPERVISOR ASISTENCIAS — siempre cargar desde Firestore (datos operativos, nunca purgar) */
+  var svAstSnap = await _col('sv_asistencias').get();
+  if (!svAstSnap.empty) {
+    SUPERVISOR_ASISTENCIAS.length = 0;
+    svAstSnap.docs.forEach(function(d){ SUPERVISOR_ASISTENCIAS.push(d.data()); });
+  }
+
   /* Marcar versión como aplicada */
   if (forceReseed && typeof DATA_VERSION !== 'undefined') {
     localStorage.setItem('aya_data_ver', String(DATA_VERSION));
@@ -224,6 +231,16 @@ function fbSavePropertyServices() {
     PROPERTY_SERVICES.forEach(function(ps){ b.set(_col('servicios_prop').doc(String(ps.id)), _clone(ps)); });
     b.commit().catch(function(e){ console.warn('fbSavePropertyServices', e); });
   } catch(e) { console.warn('fbSavePropertyServices', e); }
+}
+
+function fbSaveSupervisorAsistencias() {
+  try {
+    var b = _db.batch();
+    SUPERVISOR_ASISTENCIAS.forEach(function(a) {
+      b.set(_col('sv_asistencias').doc(String(a.id)), _clone(a));
+    });
+    b.commit().catch(function(e){ console.warn('fbSaveSupervisorAsistencias', e); });
+  } catch(e) { console.warn('fbSaveSupervisorAsistencias', e); }
 }
 
 function fbSavePromotions() {

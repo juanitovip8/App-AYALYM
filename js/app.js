@@ -2863,6 +2863,137 @@ function renderAdminKPIs(){
 }
 
 /* ── ADMIN: PANEL DE REPORTES ── */
+/* ── Estado filtros de asistencias admin ── */
+let _adminAstFiltro='dia';
+let _adminAstFechaA='';
+let _adminAstFechaB='';
+
+function switchRepTab(tab,btn){
+  ['rendimiento','asistencias'].forEach(t=>{
+    const p=document.getElementById('rep-panel-'+t);
+    if(p)p.style.display=t===tab?'':'none';
+  });
+  document.querySelectorAll('#a-reportes .msg-tab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(tab==='asistencias')renderAdminAstReport();
+}
+
+function _astDateRange(){
+  const hoy=new Date();
+  const yyyy=hoy.getFullYear();
+  const mm=String(hoy.getMonth()+1).padStart(2,'0');
+  const dd=String(hoy.getDate()).padStart(2,'0');
+  const todayStr=`${yyyy}-${mm}-${dd}`;
+  switch(_adminAstFiltro){
+    case 'dia': return{from:todayStr,to:todayStr,label:'Hoy '+todayStr};
+    case 'quincena':{
+      const d=hoy.getDate();
+      const from=d<=15?`${yyyy}-${mm}-01`:`${yyyy}-${mm}-16`;
+      return{from,to:todayStr,label:'Quincena '+from+' → '+todayStr};
+    }
+    case 'mes': return{from:`${yyyy}-${mm}-01`,to:todayStr,label:'Mes '+yyyy+'-'+mm};
+    case 'año': return{from:`${yyyy}-01-01`,to:todayStr,label:'Año '+yyyy};
+    case 'rango':{
+      const f=_adminAstFechaA||`${yyyy}-${mm}-01`;
+      const t=_adminAstFechaB||todayStr;
+      return{from:f,to:t,label:f+' → '+t};
+    }
+    default: return{from:todayStr,to:todayStr,label:todayStr};
+  }
+}
+
+function _setAstFiltro(f){
+  _adminAstFiltro=f;
+  if(f!=='rango'){_adminAstFechaA='';_adminAstFechaB='';}
+  renderAdminAstReport();
+}
+
+function renderAdminAstReport(){
+  /* El contenido va dentro del card, en ast-report-body o en rep-panel-asistencias */
+  const el=document.getElementById('ast-report-body')||document.getElementById('rep-panel-asistencias');if(!el)return;
+  const{from,to,label}=_astDateRange();
+  const filtered=SUPERVISOR_ASISTENCIAS.filter(a=>a.fecha>=from&&a.fecha<=to)
+    .sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.supervisorNombre.localeCompare(b.supervisorNombre));
+  const filtBtns=['dia','quincena','mes','año','rango'].map(f=>
+    `<button class="urf-btn${_adminAstFiltro===f?' active':''}" onclick="_setAstFiltro('${f}')">${{dia:'Hoy',quincena:'Quincena',mes:'Mes',año:'Año',rango:'Rango'}[f]}</button>`
+  ).join('');
+  const rangoInps=_adminAstFiltro==='rango'?`
+    <input type="date" value="${_adminAstFechaA}" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #B5D4F4;" onchange="_adminAstFechaA=this.value;renderAdminAstReport()">
+    <span style="font-size:12px;color:#5C7A9A;">—</span>
+    <input type="date" value="${_adminAstFechaB}" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #B5D4F4;" onchange="_adminAstFechaB=this.value;renderAdminAstReport()">
+  `:'';
+  const tbodyHtml=filtered.length?filtered.map(a=>`<tr>
+    <td>${a.supervisorNombre}</td>
+    <td>${a.servicioFolio}</td>
+    <td>${a.clienteNombre}</td>
+    <td>${a.inmuebleDireccion||'—'}</td>
+    <td>${a.fecha}</td>
+    <td>${a.entrada||'—'}</td>
+    <td>${a.salida||'—'}</td>
+    <td>${_fmtDur(a.duracion)}</td>
+  </tr>`).join('')
+  :`<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
+  el.innerHTML=`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+      <div class="user-role-filter" style="margin:0;">${filtBtns}</div>
+      ${rangoInps}
+      <button class="btn-sm" style="margin-left:auto;font-size:11px;" onclick="exportAsistenciasPDF()">⬇ Exportar PDF</button>
+    </div>
+    <p style="font-size:11px;color:#5C7A9A;margin-bottom:10px;">${filtered.length} registro${filtered.length!==1?'s':''} · ${label}</p>
+    <div style="overflow-x:auto;">
+      <table class="rep-table" id="ast-report-table">
+        <thead><tr>
+          <th>Supervisor</th><th>Folio</th><th>Cliente</th>
+          <th>Inmueble</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th>
+        </tr></thead>
+        <tbody>${tbodyHtml}</tbody>
+      </table>
+    </div>`;
+}
+
+function exportAsistenciasPDF(){
+  const{from,to,label}=_astDateRange();
+  const filtered=SUPERVISOR_ASISTENCIAS.filter(a=>a.fecha>=from&&a.fecha<=to)
+    .sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const rows=filtered.map(a=>`<tr>
+    <td>${a.supervisorNombre}</td><td>${a.servicioFolio}</td><td>${a.clienteNombre}</td>
+    <td>${a.inmuebleDireccion||'—'}</td><td>${a.fecha}</td>
+    <td>${a.entrada||'—'}</td><td>${a.salida||'—'}</td><td>${_fmtDur(a.duracion)}</td>
+  </tr>`).join('');
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Asistencias AYALYM — ${label}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a2e;padding:20px;}
+  .logo{font-size:22px;font-weight:800;color:#042C53;letter-spacing:-0.5px;}
+  .logo span{color:#185FA5;}
+  h2{font-size:13px;color:#042C53;margin:10px 0 2px;}
+  p.sub{font-size:10px;color:#666;margin-bottom:14px;}
+  table{width:100%;border-collapse:collapse;}
+  th{background:#042C53;color:#fff;padding:7px 9px;text-align:left;font-size:10px;}
+  td{padding:6px 9px;border-bottom:1px solid #e0e7ef;font-size:10px;}
+  tr:nth-child(even) td{background:#f4f8fc;}
+  .footer{margin-top:14px;font-size:9px;color:#999;text-align:right;}
+  @media print{@page{margin:15mm;} button{display:none;}}
+</style></head><body>
+  <div class="logo">AYA<span>LYM</span></div>
+  <h2>Reporte de Asistencias de Supervisores</h2>
+  <p class="sub">Período: ${label} &nbsp;·&nbsp; Generado el ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <table>
+    <thead><tr>
+      <th>Supervisor</th><th>Folio</th><th>Cliente</th>
+      <th>Inmueble</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th>
+    </tr></thead>
+    <tbody>${rows||'<tr><td colspan="8" style="text-align:center;padding:1rem;color:#666;">Sin registros en este período</td></tr>'}</tbody>
+  </table>
+  <div class="footer">Total: ${filtered.length} registro${filtered.length!==1?'s':''}. AYALYM © ${new Date().getFullYear()}</div>
+  <script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+  const w=window.open('','_blank','width=960,height=720');
+  if(w){w.document.write(html);w.document.close();}
+  else{showToast('amber','⚠️','Permite ventanas emergentes para exportar PDF');}
+}
+
 function renderAdminReportes(){
   const el=document.getElementById('a-reportes');if(!el)return;
   // ── KPIs globales ──
@@ -2896,9 +3027,9 @@ function renderAdminReportes(){
   const lowHtml=LOW_REVIEWS.length
     ?LOW_REVIEWS.slice(0,4).map(r=>`<div class="rep-card"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:500;">${s$(r.stars,12)} ${r.worker}</span><span style="font-size:11px;color:#185FA5;">${r.date}</span></div><p style="font-size:12px;color:#185FA5;">"${r.comment}" — ${r.svc}</p></div>`).join('')
     :`<p style="font-size:12px;color:#185FA5;text-align:center;padding:.75rem 0;">Sin evaluaciones bajas recientes ✓</p>`;
-  el.innerHTML=`
+  const rendimientoHtml=`
   <div class="card">
-    <p class="ctitle">📈 Reportes generales</p>
+    <p class="ctitle">📈 KPIs generales</p>
     <div class="rep-kpi-grid">
       <div class="rep-kpi"><span>${totalSvcs.toLocaleString()}</span><p>Servicios realizados</p></div>
       <div class="rep-kpi"><span>${avgRating}⭐</span><p>Calificación promedio</p></div>
@@ -2908,34 +3039,35 @@ function renderAdminReportes(){
   </div>
   <div class="card">
     <p class="ctitle">🛠️ Distribución de servicios</p>
-    ${svcList.map(([t,c])=>`
+    ${svcList.length?svcList.map(([t,c])=>`
     <div style="margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
         <span style="font-size:13px;">${svcLabels[t]||t}</span>
         <span style="font-size:12px;font-weight:600;">${c} servicios</span>
       </div>
       <div class="rep-bar-wrap"><div class="rep-bar" style="width:${Math.round(c/maxSvc*100)}%;"></div></div>
-    </div>`).join('')}
+    </div>`).join(''):'<p style="font-size:13px;color:#185FA5;">Sin datos de servicios aún.</p>'}
   </div>
   <div class="card">
     <p class="ctitle">👥 Desempeño por trabajador</p>
-    <div style="overflow-x:auto;">
-      <table class="rep-table">
-        <thead><tr>
-          <th>Trabajador</th>
-          <th style="text-align:center;">Servicios</th>
-          <th>Calificación</th>
-          <th style="text-align:right;">Ingresos (Q)</th>
-          <th>Estatus</th>
-        </tr></thead>
-        <tbody>${perfRows}</tbody>
-      </table>
-    </div>
+    ${WORKERS.length?`<div style="overflow-x:auto;"><table class="rep-table"><thead><tr>
+      <th>Trabajador</th><th style="text-align:center;">Servicios</th>
+      <th>Calificación</th><th style="text-align:right;">Ingresos (Q)</th><th>Estatus</th>
+    </tr></thead><tbody>${perfRows}</tbody></table></div>`
+    :'<p style="font-size:13px;color:#185FA5;">Sin trabajadores registrados.</p>'}
   </div>
-  <div class="card">
-    <p class="ctitle">⚠️ Evaluaciones bajas recientes</p>
-    ${lowHtml}
-  </div>`;
+  <div class="card"><p class="ctitle">⚠️ Evaluaciones bajas recientes</p>${lowHtml}</div>`;
+  el.innerHTML=`
+    <div class="msg-tabs" style="margin-bottom:14px;">
+      <button class="msg-tab active" onclick="switchRepTab('rendimiento',this)">📊 Rendimiento</button>
+      <button class="msg-tab" onclick="switchRepTab('asistencias',this)">📋 Asistencias supervisores</button>
+    </div>
+    <div id="rep-panel-rendimiento">${rendimientoHtml}</div>
+    <div id="rep-panel-asistencias" style="display:none;">
+      <div class="card"><p class="ctitle">📋 Asistencias de supervisores</p>
+        <div id="ast-report-body"></div>
+      </div>
+    </div>`;
 }
 
 function selectClienteTab(tab,btn){
@@ -4793,8 +4925,104 @@ function buildInmRowSV(ps){
   </div>`;
 }
 
+/* ══════════════════════════════════════════════════════
+   SUPERVISOR — ASISTENCIAS (entrada / salida por servicio)
+   ══════════════════════════════════════════════════════ */
+function _todaySVAst(servicioId){
+  const today=new Date().toISOString().split('T')[0];
+  const svId=currentSupervisorRef?currentSupervisorRef.id:-1;
+  return SUPERVISOR_ASISTENCIAS.find(a=>a.supervisorId===svId&&a.servicioId===servicioId&&a.fecha===today)||null;
+}
+function _fmtDur(min){
+  if(!min&&min!==0)return'—';
+  const h=Math.floor(min/60),m=min%60;
+  return h>0?(m>0?h+'h '+m+'m':h+'h'):(m+'m');
+}
+function _nowHM(){
+  const n=new Date();
+  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+
+function marcarEntradaSV(servicioId){
+  if(!currentSupervisorRef){showToast('amber','⚠️','Sin sesión de supervisor');return;}
+  if(_todaySVAst(servicioId)){showToast('amber','⚠️','Ya registraste tu entrada hoy');return;}
+  const ps=PROPERTY_SERVICES.find(p=>p.id===servicioId);if(!ps)return;
+  const hora=_nowHM();
+  const today=new Date().toISOString().split('T')[0];
+  SUPERVISOR_ASISTENCIAS.push({
+    id:'ast'+Date.now(),
+    supervisorId:currentSupervisorRef.id,
+    supervisorNombre:currentSupervisorRef.name,
+    servicioId:ps.id,
+    servicioFolio:ps.folio||String(ps.id),
+    servicioTipo:ps.tipo,
+    clienteNombre:ps.cliente.nombre,
+    inmuebleDireccion:ps.inmueble.direccion,
+    fecha:today,entrada:hora,salida:null,duracion:null,notas:'',
+  });
+  fbSaveSupervisorAsistencias();
+  renderSVAstHoy();
+  showToast('green','📍','Entrada registrada: '+hora);
+}
+
+function marcarSalidaSV(servicioId){
+  if(!currentSupervisorRef)return;
+  const today=new Date().toISOString().split('T')[0];
+  const ast=SUPERVISOR_ASISTENCIAS.find(a=>a.supervisorId===currentSupervisorRef.id&&a.servicioId===servicioId&&a.fecha===today);
+  if(!ast){showToast('amber','⚠️','No hay entrada registrada hoy');return;}
+  if(ast.salida){showToast('amber','⚠️','Ya registraste tu salida hoy');return;}
+  const hora=_nowHM();
+  ast.salida=hora;
+  const[eh,em]=ast.entrada.split(':').map(Number);
+  const[sh,sm]=hora.split(':').map(Number);
+  ast.duracion=(sh*60+sm)-(eh*60+em);
+  fbSaveSupervisorAsistencias();
+  renderSVAstHoy();
+  showToast('green','🏁','Salida registrada: '+hora);
+}
+
+function renderSVAstHoy(){
+  const el=document.getElementById('sv-ast-today');
+  if(!el||!currentSupervisorRef)return;
+  const svId=currentSupervisorRef.id;
+  const today=new Date().toISOString().split('T')[0];
+  const mine=PROPERTY_SERVICES.filter(ps=>ps.supervisorId===svId&&ps.status==='activo');
+  if(!mine.length){el.innerHTML='';return;}
+  const dt=new Date(today+'T12:00:00');
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const meses=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fechaLabel=dias[dt.getDay()]+' '+dt.getDate()+' de '+meses[dt.getMonth()];
+  const rows=mine.map(ps=>{
+    const ast=SUPERVISOR_ASISTENCIAS.find(a=>a.supervisorId===svId&&a.servicioId===ps.id&&a.fecha===today);
+    let statusHtml='',btnHtml='';
+    if(!ast){
+      statusHtml=`<span class="badge" style="background:#FEF3C7;color:#92400E;">Sin entrada</span>`;
+      btnHtml=`<button class="btn-sm" style="font-size:11px;padding:5px 12px;background:#065041;border-color:#065041;" onclick="marcarEntradaSV(${ps.id})">📍 Marcar entrada</button>`;
+    } else if(!ast.salida){
+      statusHtml=`<span class="badge" style="background:#D1FAE5;color:#065F46;font-weight:600;">⏱ En servicio · ${ast.entrada}</span>`;
+      btnHtml=`<button class="btn-sm" style="font-size:11px;padding:5px 12px;background:#B91C1C;border-color:#B91C1C;" onclick="marcarSalidaSV(${ps.id})">🏁 Marcar salida</button>`;
+    } else {
+      statusHtml=`<span class="badge" style="background:#D1FAE5;color:#065F46;font-weight:600;">✅ ${ast.entrada} → ${ast.salida} (${_fmtDur(ast.duracion)})</span>`;
+    }
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:.5px solid #E6F1FB;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:0;">
+        <p style="font-size:13px;font-weight:600;color:#042C53;margin:0;">${ps.folio||'INM'} — ${ps.tipo}</p>
+        <p style="font-size:11px;color:#185FA5;margin:2px 0 0;">${ps.cliente.nombre} · ${ps.inmueble.direccion}</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${statusHtml}${btnHtml}</div>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div class="card" style="margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <p class="ctitle" style="margin:0;">📋 Asistencia de hoy</p>
+      <span style="font-size:11px;color:#5C7A9A;">${fechaLabel}</span>
+    </div>${rows}
+  </div>`;
+}
+
 /* ── Renderizado supervisor: solo servicios activos ── */
 function renderSVInmuebles(){
+  renderSVAstHoy();
   const list=document.getElementById('sv-prop-list');
   if(!list)return;
   const mySvId=currentSupervisorRef?currentSupervisorRef.id:0;
@@ -5431,9 +5659,34 @@ function renderClienteInmAsistencias(){
   if(!el)return;
   if(!ps){el.innerHTML='<div class="card"><p class="ctitle">Sin contrato asignado</p></div>';return;}
 
+  /* ── Sección: asistencias del supervisor ── */
+  const svAsts=SUPERVISOR_ASISTENCIAS.filter(a=>a.servicioId===ps.id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const svSection=(()=>{
+    if(!svAsts.length) return `<div class="card" style="margin-bottom:12px;"><p class="ctitle">👔 Visitas del supervisor</p><p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem 0;">Sin visitas registradas aún.</p></div>`;
+    const _fmtDs=d=>{const dt=new Date(d+'T12:00:00');return dt.getDate()+'/'+(dt.getMonth()+1)+'/'+dt.getFullYear();};
+    const rows=svAsts.slice(0,15).map(a=>{
+      const done=a.entrada&&a.salida;
+      const inProg=a.entrada&&!a.salida;
+      return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid #E6F1FB;flex-wrap:wrap;gap:8px;">
+        <div><p style="font-size:13px;font-weight:600;color:#042C53;margin:0;">${_fmtDs(a.fecha)}</p>
+          <p style="font-size:11px;color:#185FA5;margin:2px 0 0;">${a.supervisorNombre}</p></div>
+        <div>${done
+          ?`<span class="badge" style="background:#D1FAE5;color:#065F46;font-weight:600;">✅ ${a.entrada} → ${a.salida} (${_fmtDur(a.duracion)})</span>`
+          :inProg
+            ?`<span class="badge" style="background:#FEF3C7;color:#92400E;">⏱ En servicio · ${a.entrada}</span>`
+            :`<span class="badge" style="background:#F3F4F6;color:#6B7280;">Sin registro</span>`
+        }</div>
+      </div>`;}).join('');
+    return`<div class="card" style="margin-bottom:12px;">
+      <p class="ctitle">👔 Visitas del supervisor</p>
+      <p class="csub" style="margin-bottom:10px;">Últimas ${Math.min(svAsts.length,15)} visitas registradas</p>
+      ${rows}
+    </div>`;
+  })();
+
   const personal=PERSONAL_INM.filter(p=>p.serviciosAsignados.includes(ps.id));
   if(!personal.length){
-    el.innerHTML='<div class="card"><p class="ctitle">Asistencias del personal</p><div style="text-align:center;padding:2.5rem 1rem;"><span style="font-size:36px;">👷</span><p style="font-size:13px;color:#185FA5;margin-top:10px;">Sin personal asignado a este contrato.</p></div></div>';
+    el.innerHTML=svSection+'<div class="card"><p class="ctitle">Asistencias del personal</p><div style="text-align:center;padding:2.5rem 1rem;"><span style="font-size:36px;">👷</span><p style="font-size:13px;color:#185FA5;margin-top:10px;">Sin personal asignado a este contrato.</p></div></div>';
     return;
   }
 
@@ -5441,7 +5694,7 @@ function renderClienteInmAsistencias(){
   if(_attTabId===null||!personal.find(p=>p.id===_attTabId)) _attTabId=personal[0].id;
 
   // Renderizar el contenedor con pestañas + panel
-  el.innerHTML=`
+  el.innerHTML=svSection+`
     <div class="card att-card" style="padding-bottom:8px;">
       <p class="ctitle" style="margin-bottom:12px;">🕐 Asistencias del personal</p>
       <div class="att-tabs" id="att-tab-bar">

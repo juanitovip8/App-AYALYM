@@ -87,6 +87,7 @@ let PERSONAL_INM=[];
 
 let SUPERVISORS=[];
 let SUPERVISOR_ASSIGNED=[];
+let SUPERVISOR_ASISTENCIAS=[]; /* {id,supervisorId,supervisorNombre,servicioId,servicioFolio,servicioTipo,clienteNombre,inmuebleDireccion,fecha,entrada,salida,duracion,notas} */
 
 let WORKERS=[];
 
