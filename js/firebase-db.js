@@ -41,14 +41,40 @@ async function _seedArr(colName, arr, idField) {
    1. Lee Firestore → variables JS globales.
    2. Si la colección está vacía → sube los datos de data.js
    ─────────────────────────────────────────────────────── */
+/* ── Elimina todos los documentos de una colección ─── */
+async function _purgeCol(colName) {
+  var snap = await _col(colName).get();
+  if (snap.empty) return;
+  var b = _db.batch();
+  snap.docs.forEach(function(d){ b.delete(d.ref); });
+  await b.commit();
+}
+
 async function loadAllData() {
+
+  /* ── Detectar cambio de versión → forzar reseed completo ── */
+  var storedVer = parseInt(localStorage.getItem('aya_data_ver') || '0', 10);
+  var forceReseed = (typeof DATA_VERSION !== 'undefined') && (storedVer !== DATA_VERSION);
+
+  if (forceReseed) {
+    console.log('[AYA] Reseed de datos v' + DATA_VERSION + ' — limpiando Firestore...');
+    await _purgeCol('usuarios');
+    await _purgeCol('trabajadores');
+    await _purgeCol('personal_inm');
+    await _purgeCol('clientes_inm');
+    await _purgeCol('servicios_prop');
+    await _purgeCol('promociones');
+    /* No purgamos 'zonas' ni 'config' para conservar configuración operativa */
+  }
 
   /* Preservar todayJobs (datos operativos en memoria) */
   var savedJobs = {};
   WORKERS.forEach(function(w){ savedJobs[w.id] = w.todayJobs || []; });
 
   /* 1. USERS */
-  if (!(await _loadInto('usuarios', USERS))) {
+  if (forceReseed || !(await _loadInto('usuarios', USERS))) {
+    USERS.length = 0;
+    USERS.push({id:0,nombre:'Carlos Mendoza',email:'admin@ayalym.com',rol:'admin',tel:'+52 55 1111 0001',activo:true,accesoRevocado:false,password:'ayalym123',rolProtegido:true});
     await _seedArr('usuarios', USERS, 'id');
   }
 
@@ -57,8 +83,10 @@ async function loadAllData() {
     await _seedArr('zonas', ZONAS, 'id');
   }
 
-  /* 3. WORKERS (sin todayJobs — datos operativos) */
-  if (!(await _loadInto('trabajadores', WORKERS))) {
+  /* 3. WORKERS */
+  if (forceReseed) {
+    WORKERS.length = 0; /* vaciar — se llenará cuando se registren trabajadores reales */
+  } else if (!(await _loadInto('trabajadores', WORKERS))) {
     await _seedArr('trabajadores',
       WORKERS.map(function(w){ var c = _clone(w); delete c.todayJobs; return c; }),
       'id');
@@ -90,25 +118,41 @@ async function loadAllData() {
   }
 
   /* 5. CLIENTS_INM */
-  if (!(await _loadInto('clientes_inm', CLIENTS_INM))) {
+  if (forceReseed) {
+    CLIENTS_INM.length = 0;
+  } else if (!(await _loadInto('clientes_inm', CLIENTS_INM))) {
     await _seedArr('clientes_inm', CLIENTS_INM, 'id');
   }
 
   /* 6. PERSONAL_INM */
-  if (!(await _loadInto('personal_inm', PERSONAL_INM))) {
+  if (forceReseed) {
+    PERSONAL_INM.length = 0;
+  } else if (!(await _loadInto('personal_inm', PERSONAL_INM))) {
     await _seedArr('personal_inm', PERSONAL_INM, 'id');
   }
 
   /* 7. PROPERTY_SERVICES */
-  if (!(await _loadInto('servicios_prop', PROPERTY_SERVICES))) {
+  if (forceReseed) {
+    PROPERTY_SERVICES.length = 0;
+  } else if (!(await _loadInto('servicios_prop', PROPERTY_SERVICES))) {
     await _seedArr('servicios_prop', PROPERTY_SERVICES, 'id');
   }
 
   /* 8. PROMOTIONS */
-  var promoSnap = await _col('promociones').get();
-  if (!promoSnap.empty) {
+  if (!forceReseed) {
+    var promoSnap = await _col('promociones').get();
+    if (!promoSnap.empty) {
+      PROMOTIONS.length = 0;
+      promoSnap.docs.forEach(function(d){ PROMOTIONS.push(d.data()); });
+    }
+  } else {
     PROMOTIONS.length = 0;
-    promoSnap.docs.forEach(function(d){ PROMOTIONS.push(d.data()); });
+  }
+
+  /* Marcar versión como aplicada */
+  if (forceReseed && typeof DATA_VERSION !== 'undefined') {
+    localStorage.setItem('aya_data_ver', String(DATA_VERSION));
+    console.log('[AYA] Reseed completado. Versión ' + DATA_VERSION + ' aplicada.');
   }
 }
 
