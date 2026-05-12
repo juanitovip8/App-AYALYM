@@ -6,7 +6,7 @@
   <title>AYALYM — Limpieza profesional a domicilio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=34">
+  <link rel="stylesheet" href="css/style.css?v=35">
   <link rel="stylesheet" href="css/theme-toggle.css?v=1">
   <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=5">
   <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
@@ -132,25 +132,27 @@
 <!-- APP -->
 <div id="screen-app" class="screen">
   <div class="header">
-    <div class="header-brand">
-      <img src="img/logo.png" alt="AYA" class="header-logo">
-      <span class="header-brand-name">AYA<span class="header-brand-lym">LYM</span></span>
-    </div>
-    <div class="header-right">
-      <div class="header-user-info" id="header-user-info">
-        <div class="header-av" id="header-av">AG</div>
-        <div class="header-user-text">
-          <span class="header-uname" id="header-uname">Ana García</span>
-          <span class="header-urole" id="header-urole">Cliente</span>
-        </div>
+    <div class="header-inner-wrap">
+      <div class="header-brand">
+        <img src="img/logo.png" alt="AYA" class="header-logo">
+        <span class="header-brand-name">AYA<span class="header-brand-lym">LYM</span></span>
       </div>
-      <a href="index.html" class="btn-site">🌐 Sitio web</a>
-      <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar a modo claro" aria-label="Cambiar tema">
-        <span class="tt-icon">☀️</span>
-        <span class="tt-label">Claro</span>
-      </button>
-      <div class="notif-bell" onclick="toggleNotifPanel()"><span style="font-size:16px;">🔔</span><span class="notif-badge" id="notif-badge">0</span></div>
-      <button class="btn-logout" onclick="doLogout()">✕ Salir</button>
+      <div class="header-right">
+        <div class="header-user-info" id="header-user-info">
+          <div class="header-av" id="header-av">AG</div>
+          <div class="header-user-text">
+            <span class="header-uname" id="header-uname">Ana García</span>
+            <span class="header-urole" id="header-urole">Cliente</span>
+          </div>
+        </div>
+        <a href="index.html" class="btn-site">🌐 Sitio web</a>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar a modo claro" aria-label="Cambiar tema">
+          <span class="tt-icon">☀️</span>
+          <span class="tt-label">Claro</span>
+        </button>
+        <div class="notif-bell" onclick="toggleNotifPanel()"><span style="font-size:16px;">🔔</span><span class="notif-badge" id="notif-badge">0</span></div>
+        <button class="btn-logout" onclick="doLogout()">✕ Salir</button>
+      </div>
     </div>
   </div>
   <div class="notif-panel" id="notif-panel"><div class="notif-header"><p>Notificaciones</p><span onclick="markAllRead()">Marcar todas como leídas</span></div><div id="notif-list"></div></div>
