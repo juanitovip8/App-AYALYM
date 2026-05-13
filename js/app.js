@@ -2539,7 +2539,7 @@ function openConfirmPanel(){
   const urgLabel=urgEl.options[urgEl.selectedIndex].text;
   // worker row
   const wrow=document.getElementById('confirm-worker-row');
-  if(selectedWorkerId!==null){const w=WORKERS.find(x=>x.id===selectedWorkerId);if(w){wrow.style.display='flex';wrow.innerHTML=`<div class="av" style="width:38px;height:38px;font-size:12px;flex-shrink:0;">${w.initials}</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p><p style="font-size:11px;color:#185FA5;">${s$(w.rating,11)} ${w.rating.toFixed(1)} · Trabajador seleccionado</p></div>`;}}else{wrow.style.display='none';}
+  if(selectedWorkerId!==null){const w=WORKERS.find(x=>x.id===selectedWorkerId);if(w){wrow.style.display='flex';wrow.innerHTML=`<div class="av" style="width:38px;height:38px;font-size:${w.photo?'0':'12px'};flex-shrink:0;">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p><p style="font-size:11px;color:#185FA5;">${s$(w.rating,11)} ${w.rating.toFixed(1)} · Trabajador seleccionado</p></div>`;}}else{wrow.style.display='none';}
   // summary rows
   const totalEl=document.getElementById('pr-total');
   const totalTxt=totalEl?totalEl.querySelector('span:last-child').textContent:'—';
@@ -2739,7 +2739,7 @@ function renderClientUbicacion(){
   }
 }
 function drawMap(svgId,workers){const svg=document.getElementById(svgId);if(!svg)return;setTimeout(()=>{const W=svg.clientWidth||640,H=parseInt(svg.getAttribute('height'))||200;let h=`<rect width="${W}" height="${H}" fill="#dce8f5"/>`;for(let x=0;x<W;x+=50)h+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}" stroke="#B5D4F4" stroke-width=".5"/>`;for(let y=0;y<H;y+=40)h+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#B5D4F4" stroke-width=".5"/>`;workers.forEach(w=>{const cx=Math.round(w.mapX/100*W),cy=Math.round(w.mapY/100*H),col=w.status==='inactive'?'#888780':w.status==='busy'?'#BA7517':'#1A56DB';h+=`<circle cx="${cx}" cy="${cy}" r="9" fill="${col}" stroke="#fff" stroke-width="2"/>`;h+=`<text x="${cx}" y="${cy+21}" text-anchor="middle" font-size="10" fill="#042C53" font-family="sans-serif">${w.initials}</text>`;});svg.innerHTML=h;},50);}
-function renderWorkerLocList(){const el=document.getElementById('worker-loc-list');if(!el)return;el.innerHTML=WORKERS.filter(w=>w.status!=='inactive').map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid #B5D4F4;"><div style="width:9px;height:9px;border-radius:50%;background:${w.status==='busy'?'#BA7517':'#1A56DB'};flex-shrink:0;"></div><div class="av" style="width:30px;height:30px;font-size:11px;">${w.initials}</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p></div><span class="badge ${w.status==='active'?'bok':'bwarn'}">${w.status==='active'?'Disponible':'En servicio'}</span></div>`).join('');}
+function renderWorkerLocList(){const el=document.getElementById('worker-loc-list');if(!el)return;el.innerHTML=WORKERS.filter(w=>w.status!=='inactive').map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid #B5D4F4;"><div style="width:9px;height:9px;border-radius:50%;background:${w.status==='busy'?'#BA7517':'#1A56DB'};flex-shrink:0;"></div><div class="av" style="width:30px;height:30px;font-size:${w.photo?'0':'11px'};">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p></div><span class="badge ${w.status==='active'?'bok':'bwarn'}">${w.status==='active'?'Disponible':'En servicio'}</span></div>`).join('');}
 function _svcTypeLabel(t){return({depto:'Depto',auto:'Autos',tapiceria:'Tapicería'}[t])||t;}
 function twSvcType(wid,svcId,checked){clearTimeout(window._twsTimer);window._twsTimer=setTimeout(fbSaveWorkers,1200);
   const w=WORKERS.find(x=>x.id===wid);if(!w)return;
@@ -2873,7 +2873,7 @@ function renderSVEval(){
     const revList=w.reviews.length?w.reviews.map(r=>`<div style="padding:8px 0;border-bottom:.5px solid #E6F1FB;"><div style="display:flex;gap:2px;margin-bottom:3px;">${s$(r.stars,12)}</div><p style="font-size:12px;color:#042C53;">"${r.comment}"</p><p style="font-size:11px;color:#185FA5;margin-top:2px;">${r.svc}${r.client?' · '+r.client:''}</p></div>`).join(''):`<p style="font-size:12px;color:#185FA5;padding:8px 0;">Sin reseñas aún.</p>`;
     return`<div style="border:.5px solid #B5D4F4;border-radius:10px;overflow:hidden;margin-bottom:10px;">
       <div style="padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff;" onclick="this.nextElementSibling.classList.toggle('open')">
-        <div class="av" style="width:40px;height:40px;font-size:13px;flex-shrink:0;">${w.initials}</div>
+        <div class="av" style="width:40px;height:40px;font-size:${w.photo?'0':'13px'};flex-shrink:0;">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div>
         <div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p><div style="display:flex;align-items:center;gap:4px;margin-top:2px;">${s$(wAvg,12)}<span style="font-size:12px;color:#185FA5;">${wRev?wAvg.toFixed(1):'Sin reseñas'} · ${wRev} reseña${wRev!==1?'s':''}</span></div></div>
         <span style="font-size:18px;color:#185FA5;">›</span>
       </div>
@@ -2884,7 +2884,7 @@ function renderSVEval(){
     </div>`;
   }).join('')||'<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin personal asignado.</p>';
 }
-function renderSVMap(){const assigned=WORKERS.filter(w=>SUPERVISOR_ASSIGNED.includes(w.id)&&w.status!=='inactive');drawMap('sv-map-svg',assigned);const el=document.getElementById('sv-worker-loc-list');if(!el)return;el.innerHTML=assigned.map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid #B5D4F4;"><div style="width:9px;height:9px;border-radius:50%;background:${w.status==='busy'?'#BA7517':'#1A56DB'};flex-shrink:0;"></div><div class="av" style="width:30px;height:30px;font-size:11px;">${w.initials}</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p></div><span class="badge ${w.status==='active'?'bok':'bwarn'}">${w.status==='active'?'Disponible':'En servicio'}</span></div>`).join('');}
+function renderSVMap(){const assigned=WORKERS.filter(w=>SUPERVISOR_ASSIGNED.includes(w.id)&&w.status!=='inactive');drawMap('sv-map-svg',assigned);const el=document.getElementById('sv-worker-loc-list');if(!el)return;el.innerHTML=assigned.map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid #B5D4F4;"><div style="width:9px;height:9px;border-radius:50%;background:${w.status==='busy'?'#BA7517':'#1A56DB'};flex-shrink:0;"></div><div class="av" style="width:30px;height:30px;font-size:${w.photo?'0':'11px'};">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p></div><span class="badge ${w.status==='active'?'bok':'bwarn'}">${w.status==='active'?'Disponible':'En servicio'}</span></div>`).join('');}
 function renderSVChatSelector(){
   const assigned=WORKERS.filter(w=>SUPERVISOR_ASSIGNED.includes(w.id));
   const sel=document.getElementById('sv-chat-selector');if(!sel)return;
@@ -2899,7 +2899,7 @@ function selectSVChat(wid,btn){
   // Show t-sv conversation + input for supervisor
   display.innerHTML=`
     <div class="chat-contact-bar">
-      <div class="av" style="width:34px;height:34px;font-size:11px;">${w.initials}</div>
+      <div class="av" style="width:34px;height:34px;font-size:${w.photo?'0':'11px'};">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div>
       <div><p>${w.name}</p><span>${w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tapicería'}[t])).join(' · ')}</span></div>
       <span class="badge ${w.status==='active'?'b-activo':w.status==='busy'?'bwarn':'b-inactivo'}">${w.status==='active'?'Disponible':w.status==='busy'?'En servicio':'Inactivo'}</span>
     </div>
@@ -3231,7 +3231,7 @@ function selectDashTab(tab, btn){
         const svc=w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tap.'}[t])).join(' · ');
         return`<div class="dash-rank-row">
           <span class="dash-rank-num">${i+1}</span>
-          <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div>
+          <div class="av" style="width:32px;height:32px;font-size:${w.photo?'0':'11px'};flex-shrink:0;">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div>
           <div class="dash-rank-info"><p>${w.name}</p><span>${svc} · desde ${w.since}</span></div>
           <div style="text-align:right;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.services}</p><span class="badge ${badge}" style="font-size:10px;">${w.status==='active'?'Activo':'En srv.'}</span></div>
         </div>`;
@@ -3266,7 +3266,7 @@ function selectDashTab(tab, btn){
         const avg=w.reviews.reduce((s,r)=>s+r.stars,0)/w.reviews.length;
         return`<div class="dash-rank-row">
           <span class="dash-rank-num">${i+1}</span>
-          <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div>
+          <div class="av" style="width:32px;height:32px;font-size:${w.photo?'0':'11px'};flex-shrink:0;">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div>
           <div class="dash-rank-info"><p>${w.name}</p><div style="display:flex;gap:2px;margin-top:2px;">${s$(avg,11)}</div></div>
           <div style="text-align:right;"><p style="font-size:15px;font-weight:500;color:#042C53;">${avg.toFixed(1)}</p><span style="font-size:11px;color:#185FA5;">${w.reviews.length} reseñas</span></div>
         </div>`;
@@ -3310,7 +3310,7 @@ function selectDashTab(tab, btn){
       ${piActivity.map(pi=>{
         const init=(pi.initials||pi.nombre?.split(' ').map(n=>n[0]).join('').slice(0,2)||'??').toUpperCase();
         return`<div class="dash-rank-row">
-          <div class="av" style="width:32px;height:32px;font-size:11px;background:#5B2C6F;color:#fff;flex-shrink:0;">${init}</div>
+          <div class="av" style="width:32px;height:32px;font-size:${pi.photo?'0':'11px'};background:#5B2C6F;color:#fff;flex-shrink:0;">${pi.photo?'<img src="'+pi.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':init}</div>
           <div class="dash-rank-info"><p>${pi.nombre}</p><span>${pi.contratos} contrato${pi.contratos!==1?'s':''} asignado${pi.contratos!==1?'s':''}</span></div>
           <div style="text-align:right;">
             <p style="font-size:13px;font-weight:500;color:#042C53;">${pi.diasTrabajados} día${pi.diasTrabajados!==1?'s':''}</p>
@@ -3328,7 +3328,7 @@ function selectDashTab(tab, btn){
         const svc=w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tap.'}[t])).join('·');
         return`<div class="dash-rank-row">
           <span class="dash-rank-num">${i+1}</span>
-          <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div>
+          <div class="av" style="width:32px;height:32px;font-size:${w.photo?'0':'11px'};flex-shrink:0;">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div>
           <div class="dash-rank-info"><p>${w.name}</p><span>${svc}${avg?` · ★${avg.toFixed(1)}`:''}</span></div>
           <div style="text-align:right;">
             <p style="font-size:13px;font-weight:500;color:#042C53;">${w.services} servicios</p>
@@ -3386,7 +3386,7 @@ function renderTopCards(){
     const svc=bestW.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tapicería'}[t])).join(' · ');
     rows.push(`<div class="top-card gold">
       <div class="top-card-badge">🏆</div>
-      <div class="av" style="width:40px;height:40px;font-size:13px;flex-shrink:0;">${bestW.initials}</div>
+      <div class="av" style="width:40px;height:40px;font-size:${bestW.photo?'0':'13px'};flex-shrink:0;">${bestW.photo?'<img src="'+bestW.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':bestW.initials}</div>
       <div class="top-card-body"><p>${bestW.name}</p><span>Mejor trabajador · ${svc}</span><div style="display:flex;gap:2px;margin-top:3px;">${s$(avg,11)}</div></div>
       <div class="top-card-score"><p>${avg.toFixed(1)}</p><span>${bestW.reviews.length} reseñas</span></div>
     </div>`);
@@ -3394,7 +3394,7 @@ function renderTopCards(){
   if(bestSV){
     rows.push(`<div class="top-card teal">
       <div class="top-card-badge">⭐</div>
-      <div class="av" style="width:40px;height:40px;font-size:13px;background:#085041;flex-shrink:0;">${bestSV.initials}</div>
+      <div class="av" style="width:40px;height:40px;font-size:${bestSV.photo?'0':'13px'};background:#085041;flex-shrink:0;">${bestSV.photo?'<img src="'+bestSV.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':bestSV.initials}</div>
       <div class="top-card-body"><p>${bestSV.name}</p><span>Mejor supervisor · ${bestSV.teamSize} trabajador${bestSV.teamSize!==1?'es':''}</span><div style="display:flex;gap:2px;margin-top:3px;">${s$(bestSV.avg,11)}</div></div>
       <div class="top-card-score"><p>${bestSV.avg.toFixed(1)}</p><span>${bestSV.totalRevs} reseñas</span></div>
     </div>`);
@@ -4736,7 +4736,7 @@ function renderPIPerfil(){
   if(!p){el.innerHTML='';return;}
   el.innerHTML=`
     <div class="pi-session-hdr">
-      <div class="av" style="width:52px;height:52px;font-size:18px;font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${p.initials}</div>
+      <div class="av" style="width:52px;height:52px;font-size:${p.photo?'0':'18px'};font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
       <div class="pi-session-info">
         <h2>${p.nombre}</h2>
         <span class="pi-role-badge">🏢 Personal de Inmuebles</span>
@@ -4843,7 +4843,7 @@ function renderPersonalInmAdmin(){
     return`<div class="pi-admin-card${isOn?'':' inactive'}">
       <div class="pi-admin-hdr">
         <div style="display:flex;align-items:center;gap:10px;">
-          <div class="av" style="width:38px;height:38px;font-size:13px;font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${p.initials}</div>
+          <div class="av" style="width:38px;height:38px;font-size:${p.photo?'0':'13px'};font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
           <div>
             <p style="font-size:13px;font-weight:600;color:#042C53;">${p.nombre}</p>
             <span style="font-size:11px;color:#185FA5;">${p.email}</span>
@@ -5154,7 +5154,7 @@ function buildSupervisorGroup(sv,services,showActions){
   return`<div class="inm-group">
     <div class="inm-group-hdr">
       <div style="display:flex;align-items:center;gap:10px;">
-        <div class="av" style="width:34px;height:34px;font-size:12px;background:rgba(255,255,255,.18);">${sv.initials||'??'}</div>
+        <div class="av" style="width:34px;height:34px;font-size:${sv.photo?'0':'12px'};background:rgba(255,255,255,.18);">${sv.photo?'<img src="'+sv.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':sv.initials||'??'}</div>
         <div>
           <p>${sv.name}</p>
           <span>${total} contrato${total!==1?'s':''}${activos?' &nbsp;·&nbsp; '+activos+' activo'+(activos!==1?'s':''):''}${vencidos?' &nbsp;·&nbsp; '+vencidos+' vencido'+(vencidos!==1?'s':''):''}</span>
@@ -5615,7 +5615,7 @@ function _buildSvAttHtml(k,ps){
     return`<div style="margin-bottom:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <div class="av" style="width:30px;height:30px;font-size:11px;background:#085041;color:#fff;flex-shrink:0;">${p.initials}</div>
+          <div class="av" style="width:30px;height:30px;font-size:${p.photo?'0':'11px'};background:#085041;color:#fff;flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
           <div>
             <p style="font-size:12px;font-weight:600;color:#042C53;">${p.nombre}</p>
             <p style="font-size:11px;color:#5C7A9A;">${filtered.length} registros · ${cmpl.length} completos</p>
@@ -6100,7 +6100,7 @@ function renderClienteInmInicio(){
   <div class="card">
     <p class="cinm-section-title">👁️ Supervisor a cargo</p>
     ${sv?`<div class="cinm-person-card">
-      <div class="av" style="width:44px;height:44px;font-size:14px;background:#185FA5;color:#fff;flex-shrink:0;">${sv.initials}</div>
+      <div class="av" style="width:44px;height:44px;font-size:${sv.photo?'0':'14px'};background:#185FA5;color:#fff;flex-shrink:0;">${sv.photo?'<img src="'+sv.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':sv.initials}</div>
       <div class="cinm-person-info"><p>${sv.name}</p><span>Supervisor · Zona ${sv.zonas.join(', ')}</span></div>
     </div>`:'<p class="csub">Sin supervisor asignado</p>'}
   </div>
@@ -6108,7 +6108,7 @@ function renderClienteInmInicio(){
   <div class="card">
     <p class="cinm-section-title">👷 Personal asignado</p>
     ${personal.length?personal.map(p=>`<div class="cinm-person-card">
-      <div class="av" style="width:44px;height:44px;font-size:14px;flex-shrink:0;">${p.initials}</div>
+      <div class="av" style="width:44px;height:44px;font-size:${p.photo?'0':'14px'};flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
       <div class="cinm-person-info"><p>${p.nombre}</p><span>Personal de inmuebles · ${p.tel}</span></div>
     </div>`).join(''):'<p class="csub">Sin personal asignado aún.</p>'}
   </div>

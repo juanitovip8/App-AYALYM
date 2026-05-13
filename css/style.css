@@ -70,6 +70,8 @@ input,select,textarea,a{-webkit-tap-highlight-color:transparent;}
 
 /* ── ROLE SECTIONS — full width con padding lateral ── */
 .role-section{width:100%;padding:1.25rem 2rem 5rem;}
+/* Admin no tiene bottom-nav fijo — eliminar padding innecesario */
+#role-admin.role-section{padding-bottom:1.25rem;}
 
 /* ── LOGIN ── */
 .login-wrap{display:flex;flex-direction:column;gap:10px;}
@@ -1042,7 +1044,7 @@ textarea{resize:vertical;min-height:60px;}
 /* ═══════════════════════════════════
    PERSONAL DE INMUEBLES — Panel sesión
 ═══════════════════════════════════ */
-#role-personal_inm{background:var(--blue-light);min-height:100vh;padding-bottom:32px;}
+#role-personal_inm{background:var(--blue-light);min-height:100vh;}
 .pi-session-hdr{display:flex;align-items:center;gap:14px;background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 1px 6px rgba(4,44,83,.08);}
 .pi-session-info h2{font-size:16px;font-weight:700;color:#042C53;margin-bottom:4px;}
 .pi-role-badge{display:inline-block;background:#E1F5EE;color:#085041;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
