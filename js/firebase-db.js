@@ -380,3 +380,51 @@ function fbListenUbicActivas(callback){
     },function(e){console.warn('fbListenUbicActivas',e);});
   }catch(e){console.warn('fbListenUbicActivas',e);return function(){};}
 }
+
+/* ══════════════════════════════════════════════════════════
+   NOTIFICACIONES PERSISTENTES
+   ══════════════════════════════════════════════════════════ */
+function fbPushNotif(data){
+  try{
+    _col('notificaciones').add(_clone(data))
+      .catch(function(e){console.warn('fbPushNotif',e);});
+  }catch(e){console.warn('fbPushNotif',e);}
+}
+
+function fbMarkNotifRead(docId){
+  try{
+    _col('notificaciones').doc(docId).update({read:true})
+      .catch(function(e){console.warn('fbMarkNotifRead',e);});
+  }catch(e){console.warn('fbMarkNotifRead',e);}
+}
+
+function fbMarkAllNotifsRead(role){
+  try{
+    _col('notificaciones')
+      .where('destinatario','==',role)
+      .where('read','==',false)
+      .get().then(function(snap){
+        var b=_db.batch();
+        snap.forEach(function(d){b.update(d.ref,{read:true});});
+        return b.commit();
+      }).catch(function(e){console.warn('fbMarkAllNotifsRead',e);});
+  }catch(e){console.warn('fbMarkAllNotifsRead',e);}
+}
+
+function fbListenNotifs(role,callback){
+  try{
+    return _col('notificaciones')
+      .where('destinatario','==',role)
+      .orderBy('createdAt','desc')
+      .limit(60)
+      .onSnapshot(function(snap){
+        var notifs=[];
+        snap.forEach(function(d){
+          var n=d.data();
+          n._docId=d.id;
+          notifs.push(n);
+        });
+        callback(notifs);
+      },function(e){console.warn('fbListenNotifs',e);});
+  }catch(e){console.warn('fbListenNotifs',e);return function(){};}
+}
