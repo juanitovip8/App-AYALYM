@@ -1425,6 +1425,7 @@ function renderUsersPanel(filter){
               ${wRef?`<button class="btn-light" onclick="adminUploadWorkerPhoto(${wRef.id})" title="Subir foto">📷</button>`:''}${svRef?`<button class="btn-light" onclick="adminUploadSupervisorPhoto(${svRef.id})" title="Subir foto">📷</button>`:''}${piRef?`<button class="btn-light" onclick="adminUploadPersonalInmPhoto(${piRef.id})" title="Subir foto">📷</button>`:''}
               ${(u.rol!=='cliente'&&u.rol!=='cliente_inm')?`<button class="btn-danger" onclick="toggleUser(${i})">${u.activo?'Desactivar':'Activar'}</button>`:''}
               <button class="${u.accesoRevocado?'btn-restore':'btn-revoke'}" onclick="revokeAccess(${i})">${u.accesoRevocado?'Restaurar acceso':'Revocar acceso'}</button>
+              <button class="btn-danger" style="background:#fff0f0;color:#c0392b;border-color:#f5c6c6;" onclick="deleteUser(${i})" title="Eliminar usuario">🗑️</button>
             </div>`}
         </div>
       </div>
@@ -1457,12 +1458,40 @@ function revokeAccess(i){
   showToast(USERS[i].accesoRevocado?'red':'green',USERS[i].accesoRevocado?'🔒':'✅',`Acceso ${action} para ${USERS[i].nombre}`);
   pushNotif('admin','🔑',USERS[i].accesoRevocado?'red':'green',`Acceso ${action}`,USERS[i].nombre+' — '+rolLabel(USERS[i].rol));updateNotifBadge();
 }
+function deleteUser(i){
+  const u=USERS[i];
+  if(!u)return;
+  if(u.rolProtegido){showToast('amber','⚠️','No puedes eliminar al administrador principal');return;}
+  if(!window.confirm('¿Eliminar a "'+u.nombre+'" permanentemente?\nEsta acción no se puede deshacer.')){return;}
+  /* Eliminar de array de dominio y de Firestore */
+  if(u.rol==='trabajador'){
+    const w=WORKERS.find(ww=>ww.name===u.nombre);
+    if(w){WORKERS.splice(WORKERS.indexOf(w),1);fbDeleteDoc('trabajadores',w.id);fbSaveWorkers();}
+  }else if(u.rol==='supervisor'){
+    const sv=SUPERVISORS.find(s=>s.name===u.nombre);
+    if(sv){SUPERVISORS.splice(SUPERVISORS.indexOf(sv),1);fbDeleteDoc('supervisores',sv.id);fbSaveSupervisors();renderSupervisorsPanel();}
+  }else if(u.rol==='personal_inm'){
+    const pi=PERSONAL_INM.find(p=>p.email===u.email);
+    if(pi){PERSONAL_INM.splice(PERSONAL_INM.indexOf(pi),1);fbDeleteDoc('personal_inm',pi.id);fbSavePersonalInm();}
+  }else if(u.rol==='cliente_inm'){
+    const ci=CLIENTS_INM.find(c=>c.email===u.email);
+    if(ci){CLIENTS_INM.splice(CLIENTS_INM.indexOf(ci),1);fbDeleteDoc('clientes_inm',ci.id);fbSaveClientsInm();}
+  }
+  /* Eliminar de USERS y de Firestore */
+  fbDeleteDoc('usuarios',u.id);
+  USERS.splice(i,1);
+  fbSaveUsers();
+  renderUsersPanel();
+  showToast('green','🗑️','"'+u.nombre+'" eliminado del sistema');
+}
 function filterUsers(role,btn){userRoleFilter=role;document.querySelectorAll('.urf-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderUsersPanel(role);}
 function toggleEditUser(i){const el=document.getElementById('uep-'+i);if(el)el.classList.toggle('open');}
 function saveUser(i){
   if(USERS[i].rolProtegido===true){showToast('amber','⚠️','El administrador principal no puede ser editado');return;}
   const nombre=document.getElementById('ue-nombre-'+i).value.trim(),email=document.getElementById('ue-email-'+i).value.trim(),tel=document.getElementById('ue-tel-'+i).value.trim(),rol=document.getElementById('ue-rol-'+i).value;
   if(!nombre||!email){showToast('amber','⚠️','Nombre y correo requeridos');return;}
+  if(USERS.find((u,idx)=>idx!==i&&u.email.toLowerCase()===email.toLowerCase())){showToast('red','❌','Este correo ya está en uso por otro usuario');return;}
+  if(tel&&USERS.find((u,idx)=>idx!==i&&u.tel&&u.tel.replace(/\s/g,'')===tel.replace(/\s/g,''))){showToast('amber','⚠️','Este teléfono ya está registrado en otro usuario');return;}
   const tmpPass=(document.getElementById('ue-tmppass-'+i)||{}).value||'';
   if(tmpPass){
     if(tmpPass.length<8){showToast('amber','⚠️','La contraseña temporal debe tener mínimo 8 caracteres');return;}
@@ -1524,6 +1553,7 @@ function saveAdminProfile(i){
 function addUser(){
   const nombre=document.getElementById('nu-nombre').value.trim(),email=document.getElementById('nu-email').value.trim(),pass=document.getElementById('nu-pass').value.trim(),rol=document.getElementById('nu-rol').value;
   if(!nombre||!email||!pass){showToast('amber','⚠️','Completa todos los campos');return;}
+  if(USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('red','❌','Este correo ya está registrado en el sistema');return;}
   USERS.push({id:USERS.length,nombre,email,rol,tel:'',activo:true,accesoRevocado:false,password:pass});
   /* ── Auto-crear entrada en WORKERS o SUPERVISORS según el rol ── */
   if(rol==='trabajador'){
@@ -1572,7 +1602,8 @@ function addSupervisorForm(){
   const pass=(document.getElementById('nsv-pass')||{}).value?.trim()||'';
   if(!nombre||!email||!pass){showToast('amber','⚠️','Nombre, correo y contraseña son obligatorios');return;}
   if(pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
-  if(USERS.find(u=>u.email===email)){showToast('red','❌','Este correo ya está registrado');return;}
+  if(USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('red','❌','Este correo ya está registrado');return;}
+  if(tel&&USERS.find(u=>u.tel&&u.tel.replace(/\s/g,'')===tel.replace(/\s/g,''))){showToast('amber','⚠️','Este teléfono ya está registrado en otro usuario');return;}
   /* Crear entrada en SUPERVISORS */
   const svInit=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   const svNewId=SUPERVISORS.length?Math.max(...SUPERVISORS.map(s=>s.id))+1:0;
@@ -3819,7 +3850,8 @@ function addNewWorker(){
   const pass=(document.getElementById('nw-pass')||{}).value?.trim()||'';
   const tel=(document.getElementById('nw-tel')||{}).value?.trim()||'';
   if(email&&pass&&pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
-  if(email&&USERS.find(u=>u.email===email)){showToast('red','❌','Este correo ya está registrado en el sistema');return;}
+  if(email&&USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('red','❌','Este correo ya está registrado en el sistema');return;}
+  if(tel&&USERS.find(u=>u.tel&&u.tel.replace(/\s/g,'')===tel.replace(/\s/g,''))){showToast('amber','⚠️','Este teléfono ya está registrado en otro usuario');return;}
   const since=parseInt(document.getElementById('nw-since').value)||new Date().getFullYear();
   const initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   const newWId=WORKERS.length?Math.max(...WORKERS.map(w=>w.id))+1:0;
@@ -4378,7 +4410,8 @@ function addPersonalInm(){
   const pass=document.getElementById('pi-pass').value;
   if(!nombre||!email){showToast('amber','⚠️','Nombre y correo son obligatorios');return;}
   if(pass&&pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
-  if(USERS.find(u=>u.email===email)){showToast('amber','⚠️','Este correo ya está registrado');return;}
+  if(USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('amber','⚠️','Este correo ya está registrado');return;}
+  if(tel&&USERS.find(u=>u.tel&&u.tel.replace(/\s/g,'')===tel.replace(/\s/g,''))){showToast('amber','⚠️','Este teléfono ya está registrado en otro usuario');return;}
   const newId=PERSONAL_INM.length?Math.max(...PERSONAL_INM.map(p=>p.id))+1:0;
   const newUserId=USERS.length?Math.max(...USERS.map(u=>u.id))+1:0;
   PERSONAL_INM.push({id:newId,nombre,initials,email,password:pass||'ayalym123',tel,activo:true,serviciosAsignados:[],asistencias:[]});
@@ -6063,7 +6096,8 @@ function addClienteInm(){
   const contratoId=contratoIdRaw!==''?parseInt(contratoIdRaw):null;
   if(!nombre||!email||!pass){showToast('amber','⚠️','Nombre, correo y contraseña son requeridos');return;}
   if(pass.length<6){showToast('amber','⚠️','La contraseña debe tener al menos 6 caracteres');return;}
-  if(USERS.find(u=>u.email===email)){showToast('red','❌','Este correo ya está registrado');return;}
+  if(USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('red','❌','Este correo ya está registrado');return;}
+  if(tel&&USERS.find(u=>u.tel&&u.tel.replace(/\s/g,'')===tel.replace(/\s/g,''))){showToast('amber','⚠️','Este teléfono ya está registrado en otro usuario');return;}
   const newId=CLIENTS_INM.length;
   CLIENTS_INM.push({id:newId,nombre,empresa,email,password:pass,tel,contratoId,activo:true});
   USERS.push({id:USERS.length,nombre,email,rol:'cliente_inm',tel,activo:true,accesoRevocado:false,password:pass});

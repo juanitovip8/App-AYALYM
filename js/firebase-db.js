@@ -52,8 +52,11 @@ async function _purgeCol(colName) {
 
 async function loadAllData() {
 
-  /* ── Detectar cambio de versión → forzar reseed completo ── */
-  var storedVer = parseInt(localStorage.getItem('aya_data_ver') || '0', 10);
+  /* ── Detectar cambio de versión → forzar reseed completo ──
+     Usamos Firestore (config/version) en lugar de localStorage para que
+     sea universal entre dispositivos y navegadores. ── */
+  var _verSnap = await _col('config').doc('version').get();
+  var storedVer = _verSnap.exists ? (_verSnap.data().v || 0) : 0;
   var forceReseed = (typeof DATA_VERSION !== 'undefined') && (storedVer !== DATA_VERSION);
 
   if (forceReseed) {
@@ -214,9 +217,9 @@ async function loadAllData() {
     svAstSnap.docs.forEach(function(d){ SUPERVISOR_ASISTENCIAS.push(d.data()); });
   }
 
-  /* Marcar versión como aplicada */
+  /* Marcar versión como aplicada en Firestore (persiste en todos los dispositivos) */
   if (forceReseed && typeof DATA_VERSION !== 'undefined') {
-    localStorage.setItem('aya_data_ver', String(DATA_VERSION));
+    await _col('config').doc('version').set({ v: DATA_VERSION });
     console.log('[AYA] Reseed completado. Versión ' + DATA_VERSION + ' aplicada.');
   }
 }
@@ -322,4 +325,12 @@ function fbSavePromotions() {
       b.commit().catch(function(e){ console.warn('fbSavePromotions batch', e); });
     }).catch(function(e){ console.warn('fbSavePromotions', e); });
   } catch(e) { console.warn('fbSavePromotions', e); }
+}
+
+/* ── Eliminar un documento individual de Firestore ── */
+function fbDeleteDoc(colName, docId) {
+  try {
+    _col(colName).doc(String(docId)).delete()
+      .catch(function(e){ console.warn('fbDeleteDoc', colName, docId, e); });
+  } catch(e) { console.warn('fbDeleteDoc', e); }
 }
