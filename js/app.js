@@ -5716,45 +5716,43 @@ function _haversineDistance(lat1,lng1,lat2,lng2){
    Aplica varias estrategias: primero simplifica la dirección (elimina Torre/Piso/Oficina),
    luego intenta con colonia + CP, y como último recurso solo el CP. */
 async function _geocodeInmueble(ps){
-  const GMAP_KEY='AIzaSyB09Mi1wxP_LSKMiM8un83M1OtnauG_vuE';
   const dir=(ps.inmueble.direccion||'').trim();
   const col=(ps.inmueble.colonia||'').trim();
 
-  /* Construir query completo con colonia y CDMX */
-  const query=[dir,col,'Ciudad de México','México'].filter(Boolean).join(', ');
+  /* Esperar a que cargue la API de Google Maps JS (hasta 9 seg) */
+  for(let i=0;i<30;i++){
+    if(window.google&&window.google.maps&&window.google.maps.Geocoder) break;
+    await new Promise(r=>setTimeout(r,300));
+  }
+  if(!window.google||!window.google.maps||!window.google.maps.Geocoder){
+    console.warn('[geo] Google Maps JS API no disponible');
+    return false;
+  }
 
-  async function _tryGoogle(q){
+  const geocoder=new google.maps.Geocoder();
+
+  async function _tryAddr(address){
     try{
-      const res=await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q)}&key=${GMAP_KEY}&language=es&region=MX`
-      );
-      const data=await res.json();
-      if(data.status==='OK'&&data.results&&data.results.length>0){
-        return data.results[0].geometry.location; /* {lat, lng} */
-      }
-      console.warn('[geo-google] status:',data.status,q);
+      const res=await geocoder.geocode({address,region:'MX'});
+      if(res.results&&res.results.length>0) return res.results[0].geometry.location;
       return null;
-    }catch(e){console.warn('[geo-google]',e);return null;}
+    }catch(e){
+      console.warn('[geo-gmaps]',e.code||e.message||e,address);
+      return null;
+    }
   }
 
   let loc=null;
-
   /* E1: dirección + colonia + CDMX */
-  loc=await _tryGoogle(query);
-
-  /* E2: solo dirección + CDMX (sin colonia) */
-  if(!loc&&dir){
-    loc=await _tryGoogle(`${dir}, Ciudad de México, México`);
-  }
-
-  /* E3: colonia + CDMX (ubica la zona si la calle no existe en Google) */
-  if(!loc&&col){
-    loc=await _tryGoogle(`${col}, Ciudad de México, México`);
-  }
+  loc=await _tryAddr([dir,col,'Ciudad de México','México'].filter(Boolean).join(', '));
+  /* E2: solo dirección + CDMX */
+  if(!loc&&dir) loc=await _tryAddr(`${dir}, Ciudad de México, México`);
+  /* E3: colonia + CDMX (al menos ubica la zona) */
+  if(!loc&&col) loc=await _tryAddr(`${col}, Ciudad de México, México`);
 
   if(loc){
-    ps.inmueble.lat=loc.lat;
-    ps.inmueble.lng=loc.lng;
+    ps.inmueble.lat=loc.lat();
+    ps.inmueble.lng=loc.lng();
     fbSavePropertyServices();
     return true;
   }
