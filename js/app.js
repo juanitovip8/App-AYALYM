@@ -176,8 +176,8 @@ function selectSlot(sl,btn){selectedTimeSlot=sl;document.querySelectorAll('#time
 
 /* FINANCIAL */
 function setDateFilter(mode,btn){dateFilterMode=mode;document.querySelectorAll('.df-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['dia','mes','año','rango'].forEach(m=>{const el=document.getElementById('di-'+m);if(el)el.classList.toggle('show',m===mode);});renderFinance();}
-/* ── Financiero con datos reales de PROPERTY_SERVICES ── */
-function getFinanceData(){
+/* ── Financiero: calcula rango de fechas según filtro activo ── */
+function _getFinanceDateRange(){
   const hoy=new Date().toISOString().split('T')[0];
   let label,desde,hasta;
   if(dateFilterMode==='dia'){
@@ -201,41 +201,82 @@ function getFinanceData(){
     const dias=Math.round((d2-d1)/864e5)+1;
     label=`${d1.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})} — ${d2.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})} (${dias} día${dias!==1?'s':''})`;
   }
-  /* Contratos activos durante el período: inicio ≤ hasta AND (sin fin OR fin ≥ desde) */
+  return{desde,hasta,label};
+}
+/* Compatibilidad: getFinanceData() sigue existiendo para otros usos */
+function getFinanceData(){
+  const r=_getFinanceDateRange();if(!r)return null;
+  const{desde,hasta,label}=r;
+  const contratos=PROPERTY_SERVICES.filter(ps=>{const fi=ps.fechaInicio||'';const ff=ps.fechaFin||'';return fi<=hasta&&(!ff||ff>=desde);});
+  const ingresos=contratos.reduce((a,ps)=>a+(parseFloat(ps.pago?.monto)||0),0);
+  return{ingresos,utilidad:Math.round(ingresos*.5),comisionNeta:Math.round(ingresos*.5),descuentos:0,servicios:contratos.length,label,contratos,desde,hasta};
+}
+
+function renderFinance(){
+  const r=_getFinanceDateRange();
+  if(!r){showToast('amber','⚠️','La fecha inicio debe ser anterior a la fecha fin');return;}
+  const{desde,hasta,label}=r;
+  document.getElementById('finance-period-label').textContent=label;
+
+  /* ── SECCIÓN 1: Contratos de inmuebles ── */
   const contratos=PROPERTY_SERVICES.filter(ps=>{
     const fi=ps.fechaInicio||'';const ff=ps.fechaFin||'';
     return fi<=hasta&&(!ff||ff>=desde);
   });
-  const ingresos=contratos.reduce((a,ps)=>a+(parseFloat(ps.pago?.monto)||0),0);
-  const comisionBruta=Math.round(ingresos*.5);
-  const comisionNeta=comisionBruta;
-  const utilidad=ingresos-comisionBruta;
-  return{ingresos,comisionBruta,comisionNeta,descuentos:0,utilidad,servicios:contratos.length,label,contratos,desde,hasta};
-}
-function renderFinance(){
-  const data=getFinanceData();
-  if(!data){showToast('amber','⚠️','La fecha inicio debe ser anterior a la fecha fin');return;}
-  document.getElementById('finance-period-label').textContent=data.label;
+  const ingresosInm=contratos.reduce((a,ps)=>a+(parseFloat(ps.pago?.monto)||0),0);
+  const utilidadInm=Math.round(ingresosInm*.5);
+  const pagoPersonalInm=Math.round(ingresosInm*.5);
+
+  /* ── SECCIÓN 2: Servicios a domicilio ── */
+  /* Fuente 1: SOLICITUDES_FACTURA — reservas con factura (tienen precio exacto) */
+  const _parseMonto=s=>parseFloat((s||'').replace(/[^0-9.]/g,''))||0;
+  const facturasEnPeriodo=(SOLICITUDES_FACTURA||[]).filter(f=>f.fecha>=desde&&f.fecha<=hasta);
+  const ingresosFacturas=facturasEnPeriodo.reduce((a,f)=>a+_parseMonto(f.total),0);
+  /* Fuente 2: servicios acumulados de trabajadores (sin precio exacto por servicio) */
+  const totalSvcsAcum=WORKERS.reduce((a,w)=>a+w.services,0);
+  const wActivos=WORKERS.filter(w=>w.status!=='inactive').length;
+
   document.getElementById('finance-grid').innerHTML=`
-    <div class="fc fc-income"><p>Ingresos contratos</p><span class="amount">$${data.ingresos.toLocaleString('es-MX')}</span><small>Suma de pagos de contratos activos</small></div>
-    <div class="fc fc-utility"><p>Utilidad AYALYM (50%)</p><span class="amount">$${data.utilidad.toLocaleString('es-MX')}</span><small>50% sobre ingresos de contratos</small></div>
-    <div class="fc fc-workers"><p>Pago a personal (50%)</p><span class="amount">$${data.comisionNeta.toLocaleString('es-MX')}</span><small>50% destinado a personal de inmuebles</small></div>
-    <div class="fc fc-discount"><p>Contratos activos</p><span class="amount">${data.servicios}</span><small>En el período seleccionado</small></div>`;
-  const rows=data.contratos.length
-    ?data.contratos.map(ps=>`
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;padding-bottom:4px;border-bottom:.5px solid #B5D4F4;margin-bottom:4px;">🏢 Contratos de inmuebles</div>
+    <div class="fc fc-income"><p>Ingresos contratos</p><span class="amount">$${ingresosInm.toLocaleString('es-MX')}</span><small>${contratos.length} contrato${contratos.length!==1?'s':''} vigente${contratos.length!==1?'s':''}</small></div>
+    <div class="fc fc-utility"><p>Utilidad AYALYM (50%)</p><span class="amount">$${utilidadInm.toLocaleString('es-MX')}</span><small>Margen de inmuebles</small></div>
+    <div class="fc fc-workers"><p>Pago personal (50%)</p><span class="amount">$${pagoPersonalInm.toLocaleString('es-MX')}</span><small>Destinado a personal Inm.</small></div>
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;padding:12px 0 4px;border-bottom:.5px solid #B5D4F4;margin-top:8px;">🧹 Servicios a domicilio</div>
+    <div class="fc fc-discount"><p>Reservas con factura</p><span class="amount">${facturasEnPeriodo.length}</span><small>En el período</small></div>
+    <div class="fc fc-income" style="background:linear-gradient(135deg,#065535,#0A8754);"><p>Facturado (servicios)</p><span class="amount">$${ingresosFacturas.toLocaleString('es-MX')}</span><small>Reservas con precio registrado</small></div>
+    <div class="fc" style="background:linear-gradient(135deg,#3C3489,#5B45D4);color:#fff;"><p>Servicios acumulados</p><span class="amount">${totalSvcsAcum.toLocaleString('es-MX')}</span><small>${wActivos} trabajador${wActivos!==1?'es':''} activo${wActivos!==1?'s':''}</small></div>`;
+
+  /* Detalle de contratos */
+  const rowsInm=contratos.length
+    ?contratos.map(ps=>`
       <div class="fin-detail-row">
         <span><strong style="font-size:11px;">${ps.folio}</strong> ${ps.cliente?.nombre||'—'}</span>
         <span style="text-align:right;white-space:nowrap;">${ps.pago?.monto?'$'+(parseFloat(ps.pago.monto)||0).toLocaleString('es-MX'):'—'}<span style="font-size:10px;color:#5C7A9A;margin-left:4px;">/${ps.pago?.periodicidad||'—'}</span></span>
       </div>`).join('')
-    :`<div style="padding:12px;text-align:center;font-size:13px;color:#185FA5;">Sin contratos en el período seleccionado</div>`;
+    :`<div style="padding:10px;text-align:center;font-size:13px;color:#185FA5;">Sin contratos activos en este período</div>`;
+
+  /* Detalle de servicios a domicilio */
+  const rowsSvcs=facturasEnPeriodo.length
+    ?facturasEnPeriodo.map(f=>`
+      <div class="fin-detail-row">
+        <span><strong style="font-size:11px;">${f.fecha}</strong> ${f.clienteNombre} · <em style="color:#5C7A9A;">${f.svc}</em></span>
+        <span style="text-align:right;white-space:nowrap;color:#065535;font-weight:500;">${f.total||'—'}</span>
+      </div>`).join('')
+    :`<div style="padding:10px;text-align:center;font-size:13px;color:#185FA5;">Sin servicios con factura en este período</div>`;
+
   document.getElementById('finance-detail').innerHTML=`
-    <div class="fin-detail-row" style="border-bottom:.5px solid #D1E4F6;padding-bottom:6px;margin-bottom:4px;">
-      <span style="font-weight:600;color:#042C53;">Contrato</span>
-      <span style="font-weight:600;color:#042C53;">Monto / periodicidad</span>
+    <p style="font-size:11px;font-weight:600;color:#042C53;margin-bottom:6px;">🏢 Detalle contratos de inmuebles</p>
+    <div class="fin-detail-row" style="border-bottom:.5px solid #D1E4F6;padding-bottom:4px;margin-bottom:4px;">
+      <span style="font-weight:600;color:#042C53;">Contrato</span><span style="font-weight:600;color:#042C53;">Monto / periodicidad</span>
     </div>
-    ${rows}
-    <div class="div"></div>
-    <div class="fin-detail-row green"><span style="font-weight:600;">Total acumulado del período</span><span style="font-weight:600;">$${data.ingresos.toLocaleString('es-MX')}</span></div>`;
+    ${rowsInm}
+    ${contratos.length?`<div class="fin-detail-row" style="margin-top:4px;"><span style="font-weight:600;">Total inmuebles</span><span style="font-weight:600;color:#065535;">$${ingresosInm.toLocaleString('es-MX')}</span></div>`:''}
+    <p style="font-size:11px;font-weight:600;color:#042C53;margin:14px 0 6px;">🧹 Detalle servicios a domicilio (facturados)</p>
+    <div class="fin-detail-row" style="border-bottom:.5px solid #D1E4F6;padding-bottom:4px;margin-bottom:4px;">
+      <span style="font-weight:600;color:#042C53;">Fecha · Cliente · Servicio</span><span style="font-weight:600;color:#042C53;">Total</span>
+    </div>
+    ${rowsSvcs}
+    ${facturasEnPeriodo.length?`<div class="fin-detail-row" style="margin-top:4px;"><span style="font-weight:600;">Total servicios facturados</span><span style="font-weight:600;color:#065535;">$${ingresosFacturas.toLocaleString('es-MX')}</span></div>`:''}`;
 }
 
 /* ── Tab Resumen — visión general del negocio con datos reales ── */
