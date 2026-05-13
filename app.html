@@ -16,6 +16,8 @@
   <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
   <script>!function(){var t=localStorage.getItem('ayalym-theme')||'dark';document.documentElement.classList.add(t+'-mode');if(t==='light'){document.addEventListener('DOMContentLoaded',function(){var l=document.getElementById('dark-css-link');if(l)l.disabled=true;});};}();</script>
   <link rel="icon" type="image/png" href="img/logo.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/logo.png">
 </head>
 <body>
 
@@ -143,6 +145,7 @@
           </div>
         </div>
         <a href="index.html" class="btn-site">🌐 Sitio web</a>
+        <button id="btn-install-pwa" class="btn-site" onclick="installPWA()" title="Agregar a pantalla de inicio" style="display:none;">📲 Instalar</button>
         <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar a modo claro" aria-label="Cambiar tema">
           <span class="tt-icon">☀️</span>
           <span class="tt-label">Claro</span>

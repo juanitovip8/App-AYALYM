@@ -349,6 +349,77 @@ function renderAdminResumen(){
 let _notifListener=null;
 let _fcmDeviceId=null;
 
+/* ═══════════════════════════════════════════════════════
+   PWA — Instalar en pantalla de inicio
+   ═══════════════════════════════════════════════════════ */
+let _pwaPrompt=null;
+
+/* Android/Chrome: captura el evento de instalación */
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _pwaPrompt=e;
+  const btn=document.getElementById('btn-install-pwa');
+  if(btn)btn.style.display='flex';
+});
+
+/* Ocultar botón si ya se instaló */
+window.addEventListener('appinstalled',()=>{
+  _pwaPrompt=null;
+  const btn=document.getElementById('btn-install-pwa');
+  if(btn)btn.style.display='none';
+});
+
+/* iOS: muestra modal con instrucciones de Safari */
+function _showIOSInstallModal(){
+  if(document.getElementById('ios-install-modal'))return;
+  const m=document.createElement('div');
+  m.id='ios-install-modal';
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:flex-end;';
+  m.innerHTML=`<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;text-align:center;">
+    <div style="width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 20px;"></div>
+    <p style="font-size:16px;font-weight:700;color:#042C53;margin-bottom:6px;">Agregar a pantalla de inicio</p>
+    <p style="font-size:13px;color:#5C7A9A;margin-bottom:18px;">Sigue estos pasos en Safari:</p>
+    <div style="text-align:left;background:#F4F8FF;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <p style="font-size:13px;color:#042C53;margin:0 0 10px;"><strong>1.</strong> Toca el botón <strong>Compartir</strong> ⬆️ en la barra inferior de Safari</p>
+      <p style="font-size:13px;color:#042C53;margin:0 0 10px;"><strong>2.</strong> Desliza y elige <strong>"Agregar a pantalla de inicio"</strong> 📲</p>
+      <p style="font-size:13px;color:#042C53;margin:0;"><strong>3.</strong> Toca <strong>"Agregar"</strong> arriba a la derecha</p>
+    </div>
+    <button onclick="document.getElementById('ios-install-modal').remove()" style="background:#185FA5;color:#fff;border:none;border-radius:10px;padding:13px 0;font-size:14px;font-weight:600;width:100%;cursor:pointer;">Entendido</button>
+  </div>`;
+  m.addEventListener('click',e=>{if(e.target===m)m.remove();});
+  document.body.appendChild(m);
+}
+
+/* Llamado al tocar "📲 Instalar" en el header */
+async function installPWA(){
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+  if(isStandalone){showToast('green','📱','La app ya está instalada');return;}
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){_showIOSInstallModal();return;}
+  if(_pwaPrompt){
+    _pwaPrompt.prompt();
+    const{outcome}=await _pwaPrompt.userChoice;
+    _pwaPrompt=null;
+    if(outcome==='accepted'){
+      showToast('green','📱','¡App instalada correctamente!');
+      const btn=document.getElementById('btn-install-pwa');
+      if(btn)btn.style.display='none';
+    }
+  }
+}
+
+/* Mostrar botón en iOS aunque no haya beforeinstallprompt */
+(function(){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone=window.navigator.standalone;
+  if(isIOS&&!isStandalone){
+    document.addEventListener('DOMContentLoaded',()=>{
+      const btn=document.getElementById('btn-install-pwa');
+      if(btn)btn.style.display='flex';
+    });
+  }
+})();
+
 /* VAPID public key (debe coincidir con la del servidor) */
 const _VAPID_PUBLIC='BODy9QBNnNx_TyTwD62uDqYfszR9dBtz_qO6umCLHcqUHPza6cuJIj_9enoiY-wdR2L6JLQWtjmbUsjL7mzHRZ8';
 
