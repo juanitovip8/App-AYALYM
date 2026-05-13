@@ -1471,9 +1471,10 @@ function renderSupervisorsPanel(){
     return`<div class="supervisor-card">
       <div class="sv-card-header">
         ${svAvHtml}
-        <div class="sv-card-info"><p>${sv.name}</p><span>Zonas: ${sv.zonas.join(', ')}</span></div>
-        <div style="text-align:right;">
-          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">${s$(avg||0,13)}<span style="font-size:15px;font-weight:500;color:#042C53;">${avgTxt}</span></div>
+        <div class="sv-card-info"><p>${sv.name}</p><span>Zonas: ${sv.zonas.join(', ')||'Sin asignar'}</span></div>
+        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+          <button class="btn-danger" style="background:#fff0f0;color:#c0392b;border-color:#f5c6c6;padding:2px 8px;font-size:11px;" onclick="deleteSupervisor(${si})" title="Eliminar supervisor">🗑️</button>
+          <div style="display:flex;align-items:center;gap:4px;">${s$(avg||0,13)}<span style="font-size:15px;font-weight:500;color:#042C53;">${avgTxt}</span></div>
           <span style="font-size:11px;color:#185FA5;">${allRevs.length} reseña${allRevs.length!==1?'s':''}</span>
         </div>
       </div>
@@ -1484,6 +1485,20 @@ function renderSupervisorsPanel(){
       <div class="sv-assign-panel" id="sv-ap-${si}"><p style="font-size:12px;font-weight:500;color:#042C53;margin-bottom:4px;">Seleccionar trabajador</p><p style="font-size:11px;color:#185FA5;margin-bottom:8px;">Los bloqueados 🔒 ya pertenecen a otro supervisor.</p>${buildWorkerOptions(si)}<div style="margin-top:10px;display:flex;gap:8px;"><button class="btn-sm" onclick="saveSVAssign(${si})">Guardar</button><button class="btn-sec" onclick="toggleSVAssignPanel(${si})">Cancelar</button></div></div>
     </div>`;
   }).join('');
+}
+function deleteSupervisor(si){
+  const sv=SUPERVISORS[si];if(!sv)return;
+  if(!window.confirm('¿Eliminar al supervisor "'+sv.name+'" permanentemente?\nSus trabajadores asignados quedarán sin supervisor.'))return;
+  /* Eliminar de Firestore y del array */
+  fbDeleteDoc('supervisores',sv.id);
+  SUPERVISORS.splice(si,1);
+  fbSaveSupervisors();
+  /* También eliminar de USERS si existe */
+  const uIdx=USERS.findIndex(u=>u.rol==='supervisor'&&u.nombre===sv.name);
+  if(uIdx>=0){fbDeleteDoc('usuarios',USERS[uIdx].id);USERS.splice(uIdx,1);fbSaveUsers();}
+  renderSupervisorsPanel();
+  renderUsersPanel();
+  showToast('green','🗑️','"'+sv.name+'" eliminado de supervisores');
 }
 function buildWorkerOptions(si){const used=getAllAssignedWorkers(si);return WORKERS.filter(w=>w.status!=='inactive').map(w=>{const mine=SUPERVISORS[si].assignedWorkers.includes(w.id);const locked=used.has(w.id);const whoHas=locked?SUPERVISORS.find((sv,i)=>i!==si&&sv.assignedWorkers.includes(w.id)):null;const svc=w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tapicería'}[t])).join(', ');if(locked)return`<div class="wkr-opt-row locked"><input type="checkbox" disabled><div class="wkr-opt-info"><p>🔒 ${w.name} <span class="locked-tag">→ ${whoHas?.name?.split(' ')[0]||'Otro sup.'}</span></p><span>${svc}</span></div></div>`;return`<div class="wkr-opt-row"><input type="checkbox" id="wck-${si}-${w.id}" ${mine?'checked':''} onchange="toggleWorkerToSV(${si},${w.id},this.checked)"><label for="wck-${si}-${w.id}" style="display:flex;flex:1;align-items:flex-start;flex-direction:column;cursor:pointer;margin:0;"><p style="font-size:13px;font-weight:500;color:#042C53;margin:0;">${w.name}</p><span style="font-size:11px;color:#185FA5;">${svc}</span></label></div>`;}).join('');}
 function toggleWorkerToSV(si,wid,checked){const used=getAllAssignedWorkers(si);if(checked&&used.has(wid)){showToast('red','🔒','Este trabajador ya está asignado a otro supervisor');setTimeout(()=>{const cb=document.getElementById('wck-'+si+'-'+wid);if(cb)cb.checked=false;},50);return;}if(checked&&!SUPERVISORS[si].assignedWorkers.includes(wid))SUPERVISORS[si].assignedWorkers.push(wid);if(!checked)SUPERVISORS[si].assignedWorkers=SUPERVISORS[si].assignedWorkers.filter(x=>x!==wid);}
@@ -1547,7 +1562,60 @@ function renderUsersPanel(filter){
             <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn-sm" style="flex:1;" onclick="saveUser(${i})">Guardar</button><button class="btn-sec" onclick="toggleEditUser(${i})">Cancelar</button></div>`}
       </div>
     </div>`;
-  }).join('')||'<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin usuarios en esta categoría</p>';
+  }).join('');
+  /* ── Trabajadores en WORKERS sin cuenta de sistema ── */
+  if(filter==='all'||filter==='trabajador'){
+    const inUsers=new Set(USERS.filter(u=>u.rol==='trabajador').map(u=>u.nombre));
+    const sinCuenta=WORKERS.filter(w=>!inUsers.has(w.name));
+    if(sinCuenta.length){
+      const extra=sinCuenta.map(w=>{
+        const photo=w.photo?`<img src="${w.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:w.initials;
+        const svc=w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tapicería'}[t]||t)).join(', ')||'Sin especialidad';
+        return`<div class="user-card" style="opacity:.85;">
+          <div class="user-card-top">
+            <div class="user-av" style="background:#FAEEDA;color:#633806;overflow:hidden;font-size:${w.photo?'0':'13px'};">${photo}</div>
+            <div class="user-info">
+              <p>${w.name} <span class="role-badge rb-trabajador">Trabajador</span> <span class="badge" style="background:#F4F4F4;color:#888;border:.5px solid #ddd;font-size:10px;">Sin acceso al sistema</span></p>
+              <span style="font-size:11px;color:#5C7A9A;">${svc}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <button class="btn-sm" style="font-size:11px;" onclick="openAssignWorkerAccess(${w.id})">🔑 Asignar acceso</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('users-list').innerHTML+= extra;
+    }
+  }
+  if(!document.getElementById('users-list').innerHTML)
+    document.getElementById('users-list').innerHTML='<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin usuarios en esta categoría</p>';
+}
+function openAssignWorkerAccess(wid){
+  const w=WORKERS.find(x=>x.id===wid);if(!w)return;
+  document.getElementById('admin-modal-title').textContent='🔑 Asignar acceso a '+w.name;
+  document.getElementById('admin-modal-body').innerHTML=`
+    <p style="font-size:12px;color:#185FA5;margin-bottom:12px;">Asigna un correo y contraseña para que ${w.name.split(' ')[0]} pueda iniciar sesión en la app.</p>
+    <div class="frow full"><label>Correo electrónico</label><input type="email" id="wac-email" placeholder="trabajador@email.com" autofocus></div>
+    <div class="frow full"><label>Contraseña</label><input type="password" id="wac-pass" placeholder="Mínimo 8 caracteres"></div>
+    <div class="admin-modal-btns">
+      <button class="btn-sm" onclick="doAssignWorkerAccess(${wid})">Guardar acceso</button>
+      <button class="btn-sec" onclick="_closeModal()">Cancelar</button>
+    </div>`;
+  document.getElementById('admin-modal-ov').classList.add('open');
+}
+function doAssignWorkerAccess(wid){
+  const w=WORKERS.find(x=>x.id===wid);if(!w)return;
+  const email=(document.getElementById('wac-email')||{}).value?.trim()||'';
+  const pass=(document.getElementById('wac-pass')||{}).value?.trim()||'';
+  if(!email||!email.includes('@')){showToast('amber','⚠️','Ingresa un correo válido');return;}
+  if(!pass||pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
+  if(USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('red','❌','Este correo ya está registrado');return;}
+  const newId=USERS.length?Math.max(...USERS.map(u=>u.id))+1:0;
+  USERS.push({id:newId,nombre:w.name,email,rol:'trabajador',tel:'',activo:true,accesoRevocado:false,password:pass});
+  fbSaveUsers();
+  _closeModal();
+  renderUsersPanel();
+  showToast('green','✅','Acceso asignado a '+w.name);
 }
 function revokeAccess(i){
   if(USERS[i].rolProtegido===true){showToast('amber','⚠️','No puedes modificar al administrador principal');return;}

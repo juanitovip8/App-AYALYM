@@ -105,15 +105,38 @@ async function loadAllData() {
     SUPERVISORS.length = 0;
     svSnap.docs.forEach(function(d){ SUPERVISORS.push(d.data()); });
   }
-  /* Reconciliación: crear entradas faltantes de SUPERVISORS basado en USERS */
+  /* Deduplicar SUPERVISORS por nombre (conservar el que tenga foto) */
   var svDirty = false;
+  var svSeenNames = {};
+  for (var _si = SUPERVISORS.length - 1; _si >= 0; _si--) {
+    var _sv = SUPERVISORS[_si];
+    if (svSeenNames[_sv.name]) {
+      var _prev = svSeenNames[_sv.name];
+      if (_sv.photo && !_prev.photo) {
+        /* Este tiene foto, eliminar el anterior */
+        SUPERVISORS.splice(SUPERVISORS.indexOf(_prev), 1);
+        svSeenNames[_sv.name] = _sv;
+      } else {
+        /* El anterior tiene foto o ninguno, eliminar este */
+        SUPERVISORS.splice(_si, 1);
+      }
+      svDirty = true;
+      console.log('[AYA] Supervisor duplicado eliminado: ' + _sv.name);
+    } else {
+      svSeenNames[_sv.name] = _sv;
+    }
+  }
+  /* Reconciliación: crear entradas faltantes de SUPERVISORS basado en USERS */
   USERS.forEach(function(u) {
     if (u.rol !== 'supervisor') return;
-    var exists = SUPERVISORS.find(function(s){ return s.name === u.nombre || s.name === u.email; });
+    var exists = SUPERVISORS.find(function(s){
+      return s.name === u.nombre || s.name === u.email ||
+             (s.email && s.email === u.email);
+    });
     if (!exists) {
       var svInit = u.nombre.split(' ').map(function(n){ return n[0]; }).join('').slice(0,2).toUpperCase();
       var svNewId = SUPERVISORS.length ? Math.max.apply(null, SUPERVISORS.map(function(s){ return s.id||0; })) + 1 : 0;
-      SUPERVISORS.push({id:svNewId, name:u.nombre, initials:svInit, zonas:[], assignedWorkers:[], photo:null});
+      SUPERVISORS.push({id:svNewId, name:u.nombre, initials:svInit, email:u.email||'', zonas:[], assignedWorkers:[], photo:null});
       svDirty = true;
       console.log('[AYA] Supervisor reconciliado: ' + u.nombre);
     }
