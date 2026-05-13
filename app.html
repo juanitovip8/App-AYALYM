@@ -10,7 +10,7 @@
   <title>AYALYM — Limpieza profesional a domicilio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=48">
+  <link rel="stylesheet" href="css/style.css?v=49">
   <link rel="stylesheet" href="css/theme-toggle.css?v=1">
   <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=12">
   <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
@@ -327,6 +327,14 @@
 
   <!-- CLIENTE -->
   <div id="role-cliente" class="role-section" style="display:none">
+    <!-- Nav superior -->
+    <div class="bottom-nav" id="nav-cliente">
+      <div class="bnav-btn active" onclick="navGo('cliente','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
+      <div class="bnav-btn" onclick="navGo('cliente','reserva',this)"><span class="bnav-icon">➕</span>Reservar</div>
+      <div class="bnav-btn" onclick="navGo('cliente','historial',this)"><span class="bnav-icon">🕐</span>Servicios</div>
+      <div class="bnav-btn" onclick="navGo('cliente','mensajes',this)"><span class="bnav-icon">💬</span>Mensajes</div>
+      <div class="bnav-btn" onclick="navGo('cliente','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
+    </div>
     <!-- BARRA DE PROMOCIONES ACTIVAS (solo para clientes registrados) -->
     <div id="client-promos-bar">
       <div class="cp-bar">
@@ -592,18 +600,18 @@
         </div>
       </div>
     </div>
-    <!-- Nav inferior -->
-    <div class="bottom-nav" id="nav-cliente">
-      <div class="bnav-btn active" onclick="navGo('cliente','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
-      <div class="bnav-btn" onclick="navGo('cliente','reserva',this)"><span class="bnav-icon">➕</span>Reservar</div>
-      <div class="bnav-btn" onclick="navGo('cliente','historial',this)"><span class="bnav-icon">🕐</span>Servicios</div>
-      <div class="bnav-btn" onclick="navGo('cliente','mensajes',this)"><span class="bnav-icon">💬</span>Mensajes</div>
-      <div class="bnav-btn" onclick="navGo('cliente','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
-    </div>
   </div>
 
   <!-- TRABAJADOR -->
   <div id="role-trabajador" class="role-section" style="display:none">
+    <!-- Nav superior -->
+    <div class="bottom-nav" id="nav-trabajador">
+      <div class="bnav-btn active" onclick="navGo('trabajador','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
+      <div class="bnav-btn" onclick="navGo('trabajador','solicitudes',this)"><span class="bnav-icon">📬</span>Solicitudes</div>
+      <div class="bnav-btn" onclick="navGo('trabajador','agenda',this)"><span class="bnav-icon">📅</span>Próximos</div>
+      <div class="bnav-btn" onclick="navGo('trabajador','realizados',this)"><span class="bnav-icon">✅</span>Realizados</div>
+      <div class="bnav-btn" onclick="navGo('trabajador','mensajes-t',this)"><span class="bnav-icon">💬</span>Mensajes</div>
+    </div>
     <!-- Tarjeta de perfil -->
     <div class="card role-profile-card">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
@@ -692,18 +700,19 @@
         </div>
       </div>
     </div>
-    <!-- Nav inferior -->
-    <div class="bottom-nav" id="nav-trabajador">
-      <div class="bnav-btn active" onclick="navGo('trabajador','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
-      <div class="bnav-btn" onclick="navGo('trabajador','solicitudes',this)"><span class="bnav-icon">📬</span>Solicitudes</div>
-      <div class="bnav-btn" onclick="navGo('trabajador','agenda',this)"><span class="bnav-icon">📅</span>Próximos</div>
-      <div class="bnav-btn" onclick="navGo('trabajador','realizados',this)"><span class="bnav-icon">✅</span>Realizados</div>
-      <div class="bnav-btn" onclick="navGo('trabajador','mensajes-t',this)"><span class="bnav-icon">💬</span>Mensajes</div>
-    </div>
   </div>
 
   <!-- SUPERVISOR -->
   <div id="role-supervisor" class="role-section" style="display:none">
+    <!-- Nav superior -->
+    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(6,1fr);">
+      <div class="bnav-btn active" onclick="navGo('supervisor','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','trabajadores',this)"><span class="bnav-icon">👥</span>Equipo</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','eval-sv',this)"><span class="bnav-icon">⭐</span>Evaluar</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','mensajes-sv',this)"><span class="bnav-icon">💬</span>Mensajes</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','mapa-sv',this)"><span class="bnav-icon">📍</span>Mapa</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','inmuebles-sv',this)"><span class="bnav-icon">🏢</span>Inmuebles</div>
+    </div>
     <!-- Tarjeta de perfil -->
     <div class="card role-profile-card" style="background:linear-gradient(135deg,#042C53,#185FA5);border:none;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
@@ -803,15 +812,6 @@
         <p class="csub">Servicios activos asignados a tu supervisión.</p>
         <div id="sv-prop-list"></div>
       </div>
-    </div>
-    <!-- Nav inferior -->
-    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(6,1fr);">
-      <div class="bnav-btn active" onclick="navGo('supervisor','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','trabajadores',this)"><span class="bnav-icon">👥</span>Equipo</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','eval-sv',this)"><span class="bnav-icon">⭐</span>Evaluar</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','mensajes-sv',this)"><span class="bnav-icon">💬</span>Mensajes</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','mapa-sv',this)"><span class="bnav-icon">📍</span>Mapa</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','inmuebles-sv',this)"><span class="bnav-icon">🏢</span>Inmuebles</div>
     </div>
   </div>
 
@@ -1240,27 +1240,22 @@
 
 <!-- ── PANEL: PERSONAL DE INMUEBLES ── -->
 <div id="role-personal_inm" class="role-section" style="display:none">
-  <div id="pi-inicio" class="sec active"><div id="pi-inicio-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="pi-servicios" class="sec"><div id="pi-servicios-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="pi-asistencias" class="sec"><div id="pi-asistencias-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <div id="pi-perfil" class="sec"><div id="pi-perfil-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
-  <!-- Nav inferior -->
+  <!-- Nav superior -->
   <div class="bottom-nav" id="nav-personal_inm" style="grid-template-columns:repeat(4,1fr)">
     <div class="bnav-btn active" onclick="navGo('personal_inm','inicio',this)"><span class="bnav-icon">🏠</span>Inicio</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','servicios',this)"><span class="bnav-icon">🏢</span>Servicios</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','asistencias',this)"><span class="bnav-icon">📋</span>Asistencias</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
   </div>
+  <div id="pi-inicio" class="sec active"><div id="pi-inicio-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
+  <div id="pi-servicios" class="sec"><div id="pi-servicios-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
+  <div id="pi-asistencias" class="sec"><div id="pi-asistencias-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
+  <div id="pi-perfil" class="sec"><div id="pi-perfil-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
 </div>
 
 <!-- ── PANEL: CLIENTE INMUEBLES ── -->
 <div id="role-cliente_inm" class="role-section" style="display:none">
-  <div id="cinm-inicio" class="sec active"><div id="cinm-inicio-content" style="padding:16px;"></div></div>
-  <div id="cinm-contrato" class="sec"><div id="cinm-contrato-content" style="padding:16px;"></div></div>
-  <div id="cinm-reportes" class="sec"><div id="cinm-reportes-content" style="padding:16px;"></div></div>
-  <div id="cinm-asistencias" class="sec"><div id="cinm-asistencias-content" style="padding:16px;"></div></div>
-  <div id="cinm-perfil" class="sec"><div id="cinm-perfil-content" style="padding:16px;"></div></div>
-  <!-- Nav inferior -->
+  <!-- Nav superior -->
   <div class="bottom-nav" id="nav-cliente_inm">
     <div class="bnav-btn active" onclick="navGo('cliente_inm','inicio',this)"><span class="bnav-icon">🏠</span>Inicio</div>
     <div class="bnav-btn" onclick="navGo('cliente_inm','contrato',this)"><span class="bnav-icon">📄</span>Contrato</div>
@@ -1268,6 +1263,11 @@
     <div class="bnav-btn" onclick="navGo('cliente_inm','asistencias',this)"><span class="bnav-icon">🕐</span>Asistencias</div>
     <div class="bnav-btn" onclick="navGo('cliente_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
   </div>
+  <div id="cinm-inicio" class="sec active"><div id="cinm-inicio-content" style="padding:16px;"></div></div>
+  <div id="cinm-contrato" class="sec"><div id="cinm-contrato-content" style="padding:16px;"></div></div>
+  <div id="cinm-reportes" class="sec"><div id="cinm-reportes-content" style="padding:16px;"></div></div>
+  <div id="cinm-asistencias" class="sec"><div id="cinm-asistencias-content" style="padding:16px;"></div></div>
+  <div id="cinm-perfil" class="sec"><div id="cinm-perfil-content" style="padding:16px;"></div></div>
 </div>
 
 <!-- OVERLAY: RESET CONTRASEÑA CLIENTE INM (admin) -->

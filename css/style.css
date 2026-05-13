@@ -69,9 +69,7 @@ input,select,textarea,a{-webkit-tap-highlight-color:transparent;}
 #screen-app{flex:1;display:flex;flex-direction:column;}
 
 /* ── ROLE SECTIONS — full width con padding lateral ── */
-.role-section{width:100%;padding:1.25rem 2rem 1.25rem;display:flex;flex-direction:column;min-height:100vh;}
-/* Admin no tiene bottom-nav — sin flex ni min-height forzado */
-#role-admin.role-section{display:block;min-height:unset;}
+.role-section{width:100%;padding:1.25rem 2rem 1.25rem;}
 
 /* ── LOGIN ── */
 .login-wrap{display:flex;flex-direction:column;gap:10px;}
@@ -605,8 +603,8 @@ textarea{resize:vertical;min-height:60px;}
 .header-uname{font-size:12px;font-weight:600;color:#fff;white-space:nowrap;}
 .header-urole{font-size:10px;color:rgba(255,255,255,.65);}
 
-/* ── BOTTOM NAVIGATION ── */
-.bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:.5px solid var(--blue-border);border-radius:0;overflow:hidden;margin-bottom:0;margin-top:auto;box-shadow:0 -2px 8px rgba(4,44,83,.06);position:sticky;bottom:0;z-index:90;}
+/* ── TOP NAVIGATION (roles no-admin) ── */
+.bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border:.5px solid var(--blue-border);border-radius:12px;overflow:hidden;margin-bottom:1rem;box-shadow:0 2px 8px rgba(4,44,83,.06);}
 .bnav-btn{padding:10px 4px 8px;text-align:center;cursor:pointer;font-size:11px;font-weight:500;color:var(--blue-mid);background:#fff;border:none;font-family:var(--font-sans);transition:background .15s,color .15s;border-right:.5px solid var(--blue-border);}
 .bnav-btn:last-child{border-right:none;}
 .bnav-btn:hover{background:var(--blue-light);}
@@ -847,8 +845,8 @@ textarea{resize:vertical;min-height:60px;}
   .btn-site{display:none;}
   .btn-logout{font-size:11px;padding:7px 10px;border-radius:8px;}
 
-  /* ── BOTTOM NAV — safe area iPhone home bar ── */
-  .bottom-nav{border-radius:0;padding-bottom:env(safe-area-inset-bottom,0px);}
+  /* ── TOP NAV móvil ── */
+  .bottom-nav{border-radius:8px;}
   .bnav-btn{font-size:10px;padding:10px 2px 8px;min-height:54px;}
   .bnav-icon{font-size:16px;margin-bottom:2px;}
 
