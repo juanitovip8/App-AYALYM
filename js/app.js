@@ -7169,6 +7169,9 @@ function restoreSession(){
         PROMOTIONS.filter(function(p){return p.activo;})
       ));
     }catch(e){}
+    /* Sincronizar PRICES a localStorage para landing page
+       (se hace en cada carga para restaurar datos si se borró caché) */
+    try{ savePricesToLanding(); }catch(e){}
   } catch(e) {
     console.warn('Firebase: usando datos locales.', e);
   } finally {
