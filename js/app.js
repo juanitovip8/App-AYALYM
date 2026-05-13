@@ -3437,6 +3437,13 @@ let _adminAstFechaA='';
 let _adminAstFechaB='';
 let _adminAstClientFiltro='';
 let _adminAstSvFiltro='';
+let _adminAstView='supervisores'; /* 'supervisores' | 'personal_inm' */
+
+/* Fecha local (no UTC) para evitar desfase de zona horaria México */
+function _localDateStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
 
 function switchRepTab(tab,btn){
   ['rendimiento','asistencias'].forEach(t=>{
@@ -3527,10 +3534,31 @@ function renderAdminAstReport(){
     <td>${a.entrada||'—'}</td>
     <td>${a.salida||'—'}</td>
     <td>${_fmtDur(a.duracion)}</td>
+    <td><button onclick="adminDeleteSVAst('${a.id}')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;color:#B91C1C;" title="Eliminar registro">🗑</button></td>
   </tr>`).join('')
-  :`<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
+  :`<tr><td colspan="9" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
+  /* ── Tabla Personal de Inmuebles ── */
+  const{from:fromPI,to:toPI}=_astDateRange();
+  const piRows=PERSONAL_INM.flatMap(pi=>
+    (pi.asistencias||[])
+      .filter(a=>a.fecha>=fromPI&&a.fecha<=toPI)
+      .map(a=>({...a,piId:pi.id,piNombre:pi.nombre}))
+  ).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.piNombre.localeCompare(b.piNombre));
+  const piTbodyHtml=piRows.length?piRows.map(a=>`<tr>
+    <td>${a.piNombre}</td>
+    <td>${a.fecha}</td>
+    <td>${a.entrada||'—'}</td>
+    <td>${a.salida||'—'}</td>
+    <td>${a.entrada&&a.salida?_fmtDur((()=>{const[eh,em]=(a.entrada||'0:0').split(':').map(Number);const[sh,sm]=(a.salida||'0:0').split(':').map(Number);return(sh*60+sm)-(eh*60+em);})()):'—'}</td>
+    <td><button onclick="adminDeletePIAst('${a.piId}','${a.fecha}')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;color:#B91C1C;" title="Eliminar registro">🗑</button></td>
+  </tr>`).join('')
+  :`<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
   const labelExtra=[_adminAstSvFiltro?`Supervisor: ${_adminAstSvFiltro}`:'',_adminAstClientFiltro?`Cliente: ${_adminAstClientFiltro}`:''].filter(Boolean).join(' · ');
-  el.innerHTML=`
+  const viewTabs=`<div class="user-role-filter" style="margin:0 0 12px;">
+    <button class="urf-btn${_adminAstView==='supervisores'?' active':''}" onclick="_adminAstView='supervisores';renderAdminAstReport()">🧑‍💼 Supervisores</button>
+    <button class="urf-btn${_adminAstView==='personal_inm'?' active':''}" onclick="_adminAstView='personal_inm';renderAdminAstReport()">🏢 Personal Inmuebles</button>
+  </div>`;
+  const svContent=`
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
       <div class="user-role-filter" style="margin:0;">${filtBtns}</div>
       ${rangoInps}
@@ -3547,11 +3575,48 @@ function renderAdminAstReport(){
       <table class="rep-table" id="ast-report-table">
         <thead><tr>
           <th>Supervisor</th><th>Folio</th><th>Cliente</th>
-          <th>Inmueble</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th>
+          <th>Inmueble</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th><th></th>
         </tr></thead>
         <tbody>${tbodyHtml}</tbody>
       </table>
     </div>`;
+  const piContent=`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+      <div class="user-role-filter" style="margin:0;">${filtBtns}</div>
+      ${rangoInps}
+    </div>
+    <p style="font-size:11px;color:#5C7A9A;margin-bottom:10px;">${piRows.length} registro${piRows.length!==1?'s':''} · ${label}</p>
+    <div style="overflow-x:auto;">
+      <table class="rep-table">
+        <thead><tr>
+          <th>Personal</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th><th></th>
+        </tr></thead>
+        <tbody>${piTbodyHtml}</tbody>
+      </table>
+    </div>`;
+  el.innerHTML=viewTabs+(_adminAstView==='personal_inm'?piContent:svContent);
+}
+
+function adminDeleteSVAst(id){
+  if(!confirm('¿Eliminar este registro de asistencia?'))return;
+  const idx=SUPERVISOR_ASISTENCIAS.findIndex(a=>a.id===id);
+  if(idx===-1)return;
+  SUPERVISOR_ASISTENCIAS.splice(idx,1);
+  fbSaveSupervisorAsistencias();
+  renderAdminAstReport();
+  showToast('green','🗑','Registro eliminado');
+}
+
+function adminDeletePIAst(piId,fecha){
+  if(!confirm('¿Eliminar este registro de asistencia?'))return;
+  const pi=PERSONAL_INM.find(p=>p.id===piId);
+  if(!pi)return;
+  const idx=(pi.asistencias||[]).findIndex(a=>a.fecha===fecha);
+  if(idx===-1)return;
+  pi.asistencias.splice(idx,1);
+  fbSavePersonalInm();
+  renderAdminAstReport();
+  showToast('green','🗑','Registro eliminado');
 }
 
 function exportAsistenciasPDF(){
@@ -4643,7 +4708,7 @@ function renderPIInicio(){
   const el=document.getElementById('pi-inicio-content');if(!el)return;
   const p=_getPIData();
   if(!p){el.innerHTML='<p style="text-align:center;color:#5C7A9A;padding:40px 0;">Sesión no encontrada.</p>';return;}
-  const today=new Date().toISOString().split('T')[0];
+  const today=_localDateStr();
   const todayAsis=p.asistencias.find(a=>a.fecha===today)||null;
   const hoyCaps=new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const yaEntrada=!!(todayAsis?.entrada);
@@ -4768,7 +4833,7 @@ function _piSvcLabel(p){
 
 function registrarEntrada(){
   const p=PERSONAL_INM.find(x=>x.id===currentPersonalId);if(!p)return;
-  const today=new Date().toISOString().split('T')[0];
+  const today=_localDateStr();
   if(p.asistencias.find(a=>a.fecha===today)){showToast('amber','⚠️','Entrada ya registrada hoy');return;}
   /* Recopilar coords de todos los inmuebles asignados */
   const myCoords=PROPERTY_SERVICES
@@ -4798,7 +4863,7 @@ function registrarEntrada(){
 
 function registrarSalida(){
   const p=PERSONAL_INM.find(x=>x.id===currentPersonalId);if(!p)return;
-  const today=new Date().toISOString().split('T')[0];
+  const today=_localDateStr();
   const asis=p.asistencias.find(a=>a.fecha===today);
   if(!asis||!asis.entrada){showToast('amber','⚠️','Primero registra tu entrada');return;}
   if(asis.salida){showToast('amber','⚠️','Salida ya registrada hoy');return;}
@@ -5683,7 +5748,7 @@ function buildInmRowSV(ps){
    SUPERVISOR — ASISTENCIAS (entrada / salida por servicio)
    ══════════════════════════════════════════════════════ */
 function _todaySVAst(servicioId){
-  const today=new Date().toISOString().split('T')[0];
+  const today=_localDateStr();
   const svId=currentSupervisorRef?currentSupervisorRef.id:-1;
   return SUPERVISOR_ASISTENCIAS.find(a=>a.supervisorId===svId&&a.servicioId===servicioId&&a.fecha===today)||null;
 }
@@ -5788,7 +5853,7 @@ function marcarEntradaSV(servicioId){
   _checkGeoFence(
     [{lat:ps.inmueble.lat,lng:ps.inmueble.lng}],
     (info)=>{
-      const hora=_nowHM(),today=new Date().toISOString().split('T')[0];
+      const hora=_nowHM(),today=_localDateStr();
       SUPERVISOR_ASISTENCIAS.push({
         id:'ast'+Date.now(),
         supervisorId:currentSupervisorRef.id,supervisorNombre:currentSupervisorRef.name,
@@ -5811,7 +5876,7 @@ function marcarEntradaSV(servicioId){
 
 function marcarSalidaSV(servicioId){
   if(!currentSupervisorRef)return;
-  const today=new Date().toISOString().split('T')[0];
+  const today=_localDateStr();
   const ast=SUPERVISOR_ASISTENCIAS.find(a=>a.supervisorId===currentSupervisorRef.id&&a.servicioId===servicioId&&a.fecha===today);
   if(!ast){showToast('amber','⚠️','No hay entrada registrada hoy');return;}
   if(ast.salida){showToast('amber','⚠️','Ya registraste tu salida hoy');return;}
@@ -5842,7 +5907,7 @@ function renderSVAstHoy(){
   const el=document.getElementById('sv-ast-today');
   if(!el||!currentSupervisorRef)return;
   const svId=currentSupervisorRef.id;
-  const today=new Date().toISOString().split('T')[0];
+  const today=_localDateStr();
   const mine=PROPERTY_SERVICES.filter(ps=>ps.supervisorId===svId&&ps.status==='activo');
   if(!mine.length){el.innerHTML='';return;}
   const dt=new Date(today+'T12:00:00');
