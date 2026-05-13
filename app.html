@@ -834,7 +834,8 @@
         <div class="nav-btn" onclick="navGo('admin','notas-admin',this)"><span class="nav-icon">📝</span>Notas</div>
         <div class="nav-btn" onclick="navGo('admin','soporte-admin',this)"><span class="nav-icon">💬</span>Mensajes</div>
       </div>
-      <div class="admin-nav-row anr-1">
+      <div class="admin-nav-row anr-2">
+        <div class="nav-btn" onclick="navGo('admin','mapa',this)"><span class="nav-icon">🗺️</span>Mapa en vivo</div>
         <div class="nav-btn nav-btn-promo" onclick="navGo('admin','promociones',this);renderAdminPromociones()"><span class="nav-icon">🎁</span>Promociones &amp; Campañas</div>
       </div>
     </div>
@@ -866,6 +867,7 @@
     </div>
     <div id="a-usuarios" class="sec"><div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><p class="ctitle" style="margin:0;">Gestión de usuarios</p><button class="btn-sm" onclick="openAdminModal('usuario')">+ Registrar usuario</button></div><div class="user-role-filter"><button class="urf-btn active" onclick="filterUsers('all',this)">Todos</button><button class="urf-btn" onclick="filterUsers('admin',this)">Admins</button><button class="urf-btn" onclick="filterUsers('supervisor',this)">Supervisores</button><button class="urf-btn" onclick="filterUsers('trabajador',this)">Trabajadores</button><button class="urf-btn" onclick="filterUsers('cliente',this)">Clientes</button></div><p class="csub">🔒 Revocar acceso bloquea el inicio de sesión sin eliminar la cuenta.</p><div id="users-list"></div></div></div>
     <div id="a-reportes" class="sec"></div>
+    <div id="a-mapa" class="sec"></div>
     <div id="a-quincenas" class="sec"><div class="card"><p class="ctitle">Reporte quincenas</p><div class="frow full" style="margin-bottom:12px;"><label>Período</label><select id="q-period" onchange="renderQReport()"></select></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem;" id="q-summary"></div><div id="q-worker-list"></div></div></div>
     <div id="a-servicios" class="sec">
       <div class="card">
@@ -1291,8 +1293,8 @@
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="js/firebase-db.js?v=1"></script>
-<script src="js/app.js?v=81"></script>
+<script src="js/firebase-db.js?v=2"></script>
+<script src="js/app.js?v=82"></script>
 <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB09Mi1wxP_LSKMiM8un83M1OtnauG_vuE&loading=async"></script>
 <script src="js/theme.js?v=1"></script>
 

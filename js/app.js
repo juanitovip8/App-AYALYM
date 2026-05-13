@@ -995,6 +995,8 @@ function navGo(role,sec,btn){
   if(role==='supervisor'&&sec==='mapa-sv'){setTimeout(()=>renderSVMap(),50);}
   if(role==='supervisor'&&sec==='eval-sv')renderSVEval();
   if(role==='supervisor'&&sec==='mensajes-sv'){renderSVChatSelector();renderChatBox('sv-a','sv','chat-sv-a');renderChatBox('c-t','sv','chat-sv-ct');renderChatBox('c-a','sv','chat-sv-ca');}
+  if(role==='admin'&&sec==='mapa'){setTimeout(()=>renderAdminMapa(),50);}
+  else if(_adminMapListener&&role==='admin'){_stopAdminMapListener();}
   if(role==='admin'&&sec==='notas-admin')renderAdminNotes();
   if(role==='admin'&&sec==='soporte-admin'){renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');}
   if(role==='admin'&&sec==='resumen'){renderTopCards();renderAdminKPIs();}
@@ -3704,6 +3706,115 @@ function exportAsistenciasPDF(){
   else{showToast('amber','⚠️','Permite ventanas emergentes para exportar PDF');}
 }
 
+/* ══════════════════════════════════════════════════════════
+   MAPA EN TIEMPO REAL — Admin
+   ══════════════════════════════════════════════════════════ */
+let _adminMapInstance=null;
+let _adminMapMarkers={};
+let _adminMapListener=null;
+
+async function _waitForGoogleMaps(){
+  for(let i=0;i<30;i++){
+    if(window.google&&window.google.maps&&window.google.maps.Map)break;
+    await new Promise(r=>setTimeout(r,300));
+  }
+}
+
+function renderAdminMapa(){
+  const el=document.getElementById('a-mapa');if(!el)return;
+  el.innerHTML=`
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 20px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <p class="ctitle" style="margin:0;">🗺️ Ubicaciones en tiempo real</p>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:11px;color:#5C7A9A;display:flex;align-items:center;gap:5px;">
+            <span style="width:11px;height:11px;border-radius:50%;background:#065041;display:inline-block;border:2px solid #fff;box-shadow:0 0 0 1px #065041;"></span>Personal Inmuebles
+          </span>
+          <span style="font-size:11px;color:#5C7A9A;display:flex;align-items:center;gap:5px;">
+            <span style="width:11px;height:11px;border-radius:50%;background:#185FA5;display:inline-block;border:2px solid #fff;box-shadow:0 0 0 1px #185FA5;"></span>Supervisores
+          </span>
+        </div>
+      </div>
+      <div id="admin-map-div" style="width:100%;height:520px;"></div>
+      <div id="admin-map-status" style="padding:10px 16px;font-size:11px;color:#5C7A9A;border-top:.5px solid #E6F1FB;background:#F4F8FD;">
+        Conectando…
+      </div>
+    </div>`;
+  _waitForGoogleMaps().then(()=>{
+    const mapDiv=document.getElementById('admin-map-div');
+    if(!mapDiv)return;
+    _adminMapInstance=new google.maps.Map(mapDiv,{
+      center:{lat:19.4326,lng:-99.1332},
+      zoom:12,
+      mapTypeId:'roadmap',
+      streetViewControl:false,
+      mapTypeControl:false,
+      fullscreenControl:true,
+    });
+    _adminMapMarkers={};
+    if(_adminMapListener){_adminMapListener();_adminMapListener=null;}
+    _adminMapListener=fbListenUbicActivas(_updateAdminMapMarkers);
+  });
+}
+
+function _stopAdminMapListener(){
+  if(_adminMapListener){_adminMapListener();_adminMapListener=null;}
+  _adminMapMarkers={};
+  _adminMapInstance=null;
+}
+
+function _updateAdminMapMarkers(locs){
+  if(!_adminMapInstance)return;
+  const statusEl=document.getElementById('admin-map-status');
+  /* Eliminar marcadores que ya no están activos */
+  const locIds=new Set(locs.map(l=>String(l.id)));
+  Object.keys(_adminMapMarkers).forEach(id=>{
+    if(!locIds.has(id)){
+      _adminMapMarkers[id].marker.setMap(null);
+      delete _adminMapMarkers[id];
+    }
+  });
+  /* Agregar o actualizar marcadores */
+  locs.forEach(loc=>{
+    const id=String(loc.id);
+    const pos={lat:parseFloat(loc.lat),lng:parseFloat(loc.lng)};
+    const color=loc.rol==='personal_inm'?'#065041':'#185FA5';
+    const infoHtml=`<div style="font-family:system-ui,sans-serif;min-width:175px;padding:2px 0;">
+      <p style="font-weight:700;font-size:13px;color:#042C53;margin:0 0 4px;">${loc.nombre}</p>
+      <p style="font-size:11px;color:#5C7A9A;margin:0 0 3px;">${loc.rol==='personal_inm'?'🏢 Personal de Inmuebles':'🧑‍💼 Supervisor'}</p>
+      ${loc.contratoNombre?`<p style="font-size:11px;color:#185FA5;margin:0 0 3px;">📄 ${loc.contratoNombre}</p>`:''}
+      <p style="font-size:11px;color:#065041;margin:0;">⏱ Entrada: <strong>${loc.entrada||'—'}</strong></p>
+    </div>`;
+    if(_adminMapMarkers[id]){
+      _adminMapMarkers[id].marker.setPosition(pos);
+      _adminMapMarkers[id].infoWindow.setContent(infoHtml);
+    }else{
+      const marker=new google.maps.Marker({
+        position:pos,map:_adminMapInstance,title:loc.nombre,
+        icon:{
+          path:google.maps.SymbolPath.CIRCLE,
+          scale:11,fillColor:color,fillOpacity:1,
+          strokeColor:'#ffffff',strokeWeight:2.5
+        },
+        animation:google.maps.Animation.DROP
+      });
+      const infoWindow=new google.maps.InfoWindow({content:infoHtml});
+      marker.addListener('click',()=>{
+        Object.values(_adminMapMarkers).forEach(m=>m.infoWindow.close());
+        infoWindow.open(_adminMapInstance,marker);
+      });
+      _adminMapMarkers[id]={marker,infoWindow};
+    }
+  });
+  /* Actualizar status */
+  if(statusEl){
+    const now=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    statusEl.textContent=locs.length
+      ?`${locs.length} persona${locs.length>1?'s':''} activa${locs.length>1?'s':''} · Actualizado ${now}`
+      :'Sin personal activo en este momento';
+  }
+}
+
 function renderAdminReportes(){
   const el=document.getElementById('a-reportes');if(!el)return;
   // ── KPIs globales ──
@@ -4863,7 +4974,7 @@ function registrarEntrada(){
   showToast('blue','📍','Verificando ubicación…');
   _checkGeoFence(
     myCoords,
-    (info)=>{
+    (info,uLat,uLng)=>{
       const hora=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
       p.asistencias.push({fecha:today,entrada:hora,salida:null});
       const svcLabel=_piSvcLabel(p);
@@ -4871,6 +4982,11 @@ function registrarEntrada(){
       pushNotif('admin','🟢','green','Entrada registrada',`${p.nombre} (Personal Inm.) registró entrada a las ${hora}${svcLabel}`);
       renderPIInicio();
       fbSavePersonalInm();
+      /* Guardar ubicación activa para mapa admin */
+      if(uLat&&uLng){
+        fbSaveUbicActiva({id:'pi_'+p.id,nombre:p.nombre,rol:'personal_inm',
+          lat:uLat,lng:uLng,entrada:hora,contratoNombre:svcLabel.replace(/^ · /,'')});
+      }
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
       showToast('green','✅','Entrada registrada: '+hora+dtxt);
     },
@@ -4902,6 +5018,7 @@ function registrarSalida(){
       pushNotif('admin','🔴','blue','Salida registrada',`${p.nombre} (Personal Inm.) registró salida a las ${hora}${svcLabel}`);
       renderPIInicio();
       fbSavePersonalInm();
+      fbDeleteUbicActiva('pi_'+p.id); /* quitar del mapa */
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
       showToast('green','✅','Salida registrada: '+hora+dtxt);
     },
@@ -5858,7 +5975,7 @@ function _checkGeoFence(coordsList,onOk,onFar,onError){
     pos=>{
       const{latitude:uLat,longitude:uLng}=pos.coords;
       const dist=Math.min(...valid.map(c=>_haversineDistance(uLat,uLng,c.lat,c.lng)));
-      if(dist<=GEO_RADIO_M)onOk(dist);
+      if(dist<=GEO_RADIO_M)onOk(dist,uLat,uLng);
       else onFar(dist);
     },
     err=>onError(err),
@@ -5873,7 +5990,7 @@ function marcarEntradaSV(servicioId){
   showToast('blue','📍','Verificando ubicación…');
   _checkGeoFence(
     [{lat:ps.inmueble.lat,lng:ps.inmueble.lng}],
-    (info)=>{
+    (info,uLat,uLng)=>{
       const hora=_nowHM(),today=_localDateStr();
       SUPERVISOR_ASISTENCIAS.push({
         id:'ast'+Date.now(),
@@ -5883,6 +6000,12 @@ function marcarEntradaSV(servicioId){
         fecha:today,entrada:hora,salida:null,duracion:null,notas:'',
       });
       fbSaveSupervisorAsistencias();
+      /* Guardar ubicación activa para mapa admin */
+      if(uLat&&uLng){
+        fbSaveUbicActiva({id:'sv_'+currentSupervisorRef.id,nombre:currentSupervisorRef.name,
+          rol:'supervisor',lat:uLat,lng:uLng,entrada:hora,
+          contratoNombre:`${ps.folio||'INM'} — ${ps.cliente.nombre}`});
+      }
       renderSVAstHoy();
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
       showToast('green','📍','Entrada registrada: '+hora+dtxt);
@@ -5912,6 +6035,7 @@ function marcarSalidaSV(servicioId){
       const[sh,sm]=hora.split(':').map(Number);
       ast.duracion=(sh*60+sm)-(eh*60+em);
       fbSaveSupervisorAsistencias();
+      fbDeleteUbicActiva('sv_'+currentSupervisorRef.id); /* quitar del mapa */
       renderSVAstHoy();
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
       showToast('green','🏁','Salida registrada: '+hora+dtxt);

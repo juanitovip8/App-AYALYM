@@ -617,6 +617,7 @@ textarea{resize:vertical;min-height:60px;}
 .admin-nav-row.anr-5{grid-template-columns:repeat(5,1fr);}
 .admin-nav-row.anr-6{grid-template-columns:repeat(6,1fr);}
 .admin-nav-row.anr-1{grid-template-columns:1fr;}
+.admin-nav-row.anr-2{grid-template-columns:1fr 2fr;}
 .admin-nav-row.anr-6 .nav-btn{font-size:10px;}
 .admin-nav-row:last-child{border-bottom:none;}
 .admin-nav-wrap .nav-btn{border-radius:0;border-right:.5px solid var(--blue-border);background:#fff;}

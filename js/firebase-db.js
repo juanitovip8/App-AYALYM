@@ -357,3 +357,26 @@ function fbDeleteDoc(colName, docId) {
       .catch(function(e){ console.warn('fbDeleteDoc', colName, docId, e); });
   } catch(e) { console.warn('fbDeleteDoc', e); }
 }
+
+/* ── Ubicaciones activas (mapa en tiempo real) ── */
+function fbSaveUbicActiva(data){
+  try{
+    _col('ubicaciones_activas').doc(String(data.id)).set(_clone(data))
+      .catch(function(e){console.warn('fbSaveUbicActiva',e);});
+  }catch(e){console.warn('fbSaveUbicActiva',e);}
+}
+function fbDeleteUbicActiva(id){
+  try{
+    _col('ubicaciones_activas').doc(String(id)).delete()
+      .catch(function(e){console.warn('fbDeleteUbicActiva',e);});
+  }catch(e){console.warn('fbDeleteUbicActiva',e);}
+}
+function fbListenUbicActivas(callback){
+  try{
+    return _col('ubicaciones_activas').onSnapshot(function(snap){
+      var locs=[];
+      snap.forEach(function(d){locs.push(d.data());});
+      callback(locs);
+    },function(e){console.warn('fbListenUbicActivas',e);});
+  }catch(e){console.warn('fbListenUbicActivas',e);return function(){};}
+}
