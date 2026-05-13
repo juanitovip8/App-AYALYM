@@ -428,3 +428,32 @@ function fbListenNotifs(role,callback){
       },function(e){console.warn('fbListenNotifs',e);});
   }catch(e){console.warn('fbListenNotifs',e);return function(){};}
 }
+
+/* ── FCM Push Tokens ────────────────────────────────────────────── */
+
+/* Guarda el token FCM de este dispositivo asociado al rol */
+function fbSaveFCMToken(role,deviceId,token){
+  try{
+    _col('fcm_tokens').doc(deviceId).set({role:role,token:token,updatedAt:Date.now()})
+      .catch(function(e){console.warn('fbSaveFCMToken',e);});
+  }catch(e){console.warn('fbSaveFCMToken',e);}
+}
+
+/* Lee todos los tokens FCM registrados para un rol (para enviar push) */
+async function fbGetFCMTokens(role){
+  try{
+    var snap=await _col('fcm_tokens').where('role','==',role).get();
+    return snap.docs.map(function(d){return d.data().token;}).filter(Boolean);
+  }catch(e){
+    console.warn('fbGetFCMTokens',e);
+    return [];
+  }
+}
+
+/* Elimina el token FCM de este dispositivo (al cerrar sesión) */
+function fbDeleteFCMToken(deviceId){
+  try{
+    _col('fcm_tokens').doc(deviceId).delete()
+      .catch(function(e){console.warn('fbDeleteFCMToken',e);});
+  }catch(e){console.warn('fbDeleteFCMToken',e);}
+}

@@ -347,6 +347,36 @@ function renderAdminResumen(){
 
 /* NOTIFICATIONS */
 let _notifListener=null;
+let _fcmDeviceId=null;
+
+/* ── Inicializa Firebase Cloud Messaging para push en background ── */
+async function _initFCMPush(role){
+  try{
+    if(!('Notification' in window)||!('serviceWorker' in navigator))return;
+    /* ID único del dispositivo para identificar el token en Firestore */
+    _fcmDeviceId=localStorage.getItem('_ayalym_did');
+    if(!_fcmDeviceId){
+      _fcmDeviceId='dev_'+Math.random().toString(36).slice(2)+Date.now();
+      localStorage.setItem('_ayalym_did',_fcmDeviceId);
+    }
+    /* Registrar el service worker de FCM */
+    const reg=await navigator.serviceWorker.register('/firebase-messaging-sw.js',{scope:'/'});
+    /* Pedir permiso de notificaciones */
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){console.log('[FCM] permiso denegado');return;}
+    /* Obtener token FCM (necesita la VAPID key de Firebase Console) */
+    const messaging=firebase.messaging();
+    const vapidKey=window._AYALYM_VAPID||'';
+    if(!vapidKey){console.warn('[FCM] VAPID key no configurada');return;}
+    const token=await messaging.getToken({vapidKey,serviceWorkerRegistration:reg});
+    if(token){
+      fbSaveFCMToken(role,_fcmDeviceId,token);
+      console.log('[FCM] token registrado para rol:',role);
+    }
+    /* Manejar mensajes en foreground (la app está abierta) — ya los maneja el listener de Firestore */
+    messaging.onMessage(()=>{});
+  }catch(e){console.warn('[FCM] init failed:',e.message);}
+}
 
 function updateNotifBadge(){
   const list=NOTIFICATIONS[currentRole]||[];
@@ -418,6 +448,15 @@ function pushNotif(role,icon,type,title,body,reqId=null){
   if(!NOTIFICATIONS[role])NOTIFICATIONS[role]=[];
   NOTIFICATIONS[role].unshift({...n,_docId:'_tmp_'+Date.now()});
   if(role===currentRole){updateNotifBadge();if(notifPanelOpen)renderNotifications();}
+  /* Push en background: leer tokens FCM del rol y enviar vía servidor */
+  fbGetFCMTokens(role).then(function(tokens){
+    if(!tokens.length)return;
+    fetch('/api/push',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tokens,title,body})
+    }).catch(function(){});
+  }).catch(function(){});
 }
 
 function _startNotifListener(role){
@@ -891,6 +930,7 @@ function launchApp(role,nombre,zona){
   window.scrollTo({top:0,behavior:'instant'});
   currentRole=role;
   _startNotifListener(role);
+  _initFCMPush(role);
   // ── Header: nombre + rol + avatar ──
   const init=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   const avBg={cliente:'#0C447C',trabajador:'#633806',supervisor:'#085041',admin:'#3C3489',cliente_inm:'#065535',personal_inm:'#5B2C6F'}[role]||'#042C53';
@@ -1031,6 +1071,7 @@ function doLogout(){
   if(typeof _stopAdminMapListener==='function')_stopAdminMapListener();
   if(typeof _stopSVMapListener==='function')_stopSVMapListener();
   _stopNotifListener();
+  if(_fcmDeviceId)fbDeleteFCMToken(_fcmDeviceId);
   ['prev-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   facturaOn=false;const ft=document.getElementById('ftoggle');if(ft)ft.classList.remove('on');const ff=document.getElementById('ffields');if(ff)ff.classList.remove('show');
   document.getElementById('ficha-ov').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');notifPanelOpen=false;
