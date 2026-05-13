@@ -512,6 +512,14 @@ function doClientRegister(){
 function regNext(step){if(step===1){if(!document.getElementById('r-nombre').value.trim()||!document.getElementById('r-email').value.trim()){showToast('amber','⚠️','Completa nombre y correo');return;}document.getElementById('reg-step-1').style.display='none';document.getElementById('reg-step-2').style.display='block';document.getElementById('sd-2').classList.add('done');renderRegisterZoneSelect();}else if(step===2){const p=document.getElementById('r-pass').value,p2=document.getElementById('r-pass2').value;if(p.length<8){showToast('amber','⚠️','Mínimo 8 caracteres');return;}if(p!==p2){showToast('red','❌','Las contraseñas no coinciden');return;}const zEl=document.getElementById('r-zona');const zNombre=zEl.options[zEl.selectedIndex]?zEl.options[zEl.selectedIndex].text:'No seleccionada';document.getElementById('r-summary').innerHTML=`Nombre: <strong>${document.getElementById('r-nombre').value+' '+document.getElementById('r-apellido').value}</strong><br>Correo: <strong>${document.getElementById('r-email').value}</strong><br>Zona: <strong>${zNombre}</strong>`;document.getElementById('reg-step-2').style.display='none';document.getElementById('reg-step-3').style.display='block';document.getElementById('sd-3').classList.add('done');}}
 function regBack(step){if(step===2){document.getElementById('reg-step-2').style.display='none';document.getElementById('reg-step-1').style.display='block';document.getElementById('sd-2').classList.remove('done');}if(step===3){document.getElementById('reg-step-3').style.display='none';document.getElementById('reg-step-2').style.display='block';document.getElementById('sd-3').classList.remove('done');}}
 
+/* ── Persiste direcciones del cliente en su entrada de USERS/Firestore ── */
+function _saveClientDirs(){
+  const u=USERS.find(u=>u.email===currentUserEmail&&(u.rol==='cliente'||u.rol==='cliente_inm'));
+  if(!u)return;
+  u.direcciones=clientDirecciones.slice();
+  fbSaveUsers();
+}
+
 /* ── DIRECCIONES DEL CLIENTE ── */
 function renderClientDirs(){
   const el=document.getElementById('client-dirs-list');if(!el)return;
@@ -572,12 +580,14 @@ function addClientDir(){
   clientDirecciones.push({id:maxId+1,alias,calle,colonia,cp,ref});
   ['nd-alias','nd-calle','nd-colonia','nd-cp','nd-ref'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   const form=document.getElementById('add-dir-form');if(form)form.style.display='none';
+  _saveClientDirs();
   renderClientDirs();
   showToast('green','✅','Dirección guardada');
 }
 function deleteClientDir(id){
   clientDirecciones=clientDirecciones.filter(d=>d.id!==id);
   if(selectedDirId===id)selectedDirId=null;
+  _saveClientDirs();
   renderClientDirs();
   showToast('green','✅','Dirección eliminada');
 }
@@ -610,6 +620,31 @@ function handleWorkerPhotoFile(input){
   };
   reader.readAsDataURL(file);
 }
+/* ── Foto de perfil del cliente ── */
+function clientUploadPhoto(){
+  const inp=document.getElementById('perfil-photo-input');if(inp)inp.click();
+}
+function handleClientPhotoChange(e){
+  const file=e.target.files[0];if(!file)return;
+  if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');e.target.value='';return;}
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const b64=ev.target.result;
+    /* Actualizar avatar en perfil y header */
+    ['perfil-av','c-user-av','header-av'].forEach(id=>{
+      const el=document.getElementById(id);if(!el)return;
+      el.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+      el.style.fontSize='0';
+    });
+    /* Guardar en USERS y Firestore */
+    const u=USERS.find(u=>u.email===currentUserEmail&&(u.rol==='cliente'||u.rol==='cliente_inm'));
+    if(u){u.photo=b64;fbSaveUsers();}
+    showToast('green','📷','Foto de perfil actualizada');
+    e.target.value='';
+  };
+  reader.readAsDataURL(file);
+}
+
 /* Admin sube foto de un trabajador */
 function adminUploadWorkerPhoto(wid){
   let inp=document.getElementById('admin-photo-input-'+wid);
@@ -800,26 +835,29 @@ function launchApp(role,nombre,zona){
   document.getElementById('role-'+role).style.display='block';
   updateNotifBadge();
   if(role==='cliente'){
-    ['c-user-av','perfil-av'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=init;});
+    // Avatar e iniciales
+    const cUser=USERS.find(u=>u.email===currentUserEmail&&(u.rol==='cliente'||u.rol==='cliente_inm'));
+    const cPhoto=cUser?.photo||null;
+    ['c-user-av','perfil-av'].forEach(id=>{
+      const el=document.getElementById(id);if(!el)return;
+      if(cPhoto){el.innerHTML=`<img src="${cPhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;el.style.fontSize='0';}
+      else{el.textContent=init;el.style.fontSize=id==='perfil-av'?'18px':'13px';}
+    });
     ['c-user-name','perfil-name'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=nombre;});
+    const emailEl=document.getElementById('perfil-email');if(emailEl)emailEl.textContent=currentUserEmail;
     const uz=document.getElementById('c-user-zona');if(uz)uz.textContent=zona;
     // Sincronizar panel de zona en perfil
     const zonaData=ZONAS.find(z=>z.id===clientZoneId&&z.activo!==false)||ZONAS.find(z=>z.activo!==false);
     if(zonaData){const zn=document.getElementById('zone-current-name'),zc=document.getElementById('zone-current-cols');if(zn)zn.textContent=zonaData.nombre;if(zc)zc.textContent=zonaData.colonias;if(uz)uz.textContent=zonaData.nombre;}
+    // Cargar direcciones guardadas de Firestore
+    clientDirecciones=cUser?.direcciones||[];
     const todayStr=new Date().toISOString().split('T')[0];
     const fechaEl=document.getElementById('fecha');if(fechaEl){fechaEl.value=todayStr;fechaEl.min=todayStr;}
     renderSvcSelect();renderUrgenciaSelect();
     resetReserva();renderClientHistorial();updateClientAvg();renderClientUbicacion();
     renderChatBox('c-t','c','chat-c-t');renderChatBox('c-a','c','chat-c-a');
-    renderClientPromos();
-    /* Demo: cargar datos de muestra solo para la cuenta de demo (ana@cliente.com) */
-    if(currentUserEmail==='ana@cliente.com'){
-      clientReviews=[{stars:5,comment:'Excelente servicio',svc:'Limpieza profunda · Depto',fecha:'12 abr',precio:1036},{stars:4,comment:'Muy puntual',svc:'Lavado auto SUV + interior',fecha:'3 abr',precio:1624}];
-      clientDirecciones=[{id:1,alias:'Casa',calle:'Insurgentes Sur 1450, Int. 3B',colonia:'Narvarte Poniente',cp:'03020',ref:'Portón azul, timbre 3B'},{id:2,alias:'Trabajo',calle:'Álvaro Obregón 200, Piso 4',colonia:'Roma Norte',cp:'06700',ref:'Edificio gris, recepción'}];
-      setTimeout(()=>{setClientDiscount(200,'Compensación por servicio anterior');renderClienteResumen();renderClientHistorial();},600);
-    }else{
-      setTimeout(()=>renderClienteResumen(),600);
-    }
+    renderClientPromos();renderClientDirs();
+    setTimeout(()=>renderClienteResumen(),600);
   }
   if(role==='trabajador'){
     // Inicializar estado activo/inactivo desde USERS
