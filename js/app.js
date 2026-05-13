@@ -815,7 +815,12 @@ function launchApp(role,nombre,zona){
     const pill=document.getElementById('sp'),label=document.getElementById('wsl');
     if(label)label.innerHTML=workerActive?'Estatus: <strong style="color:#1A56DB;">Activo</strong>':'Estatus: <strong style="color:#E02020;">Inactivo — el admin te ha desactivado</strong>';
     if(pill){pill.textContent=workerActive?'Inactivarme':'Activarme';pill.className=workerActive?'status-pill sp-inactivar':'status-pill sp-activar';}
-    ss('w-avg-stars',4.8,15);renderWorkerQuincena();renderWorkerNotes();renderTrabajadorResumen();
+    const _wRating=wRef?wRef.rating||0:0;
+    const _wReviews=wRef?(wRef.reviews||[]).length:0;
+    ss('w-avg-stars',_wRating,15);
+    const _sc=document.getElementById('w-avg-score');if(_sc)_sc.textContent=_wRating.toFixed(1);
+    const _rv=document.getElementById('w-avg-reviews');if(_rv)_rv.textContent=_wReviews+' reseña'+(_wReviews===1?'':'s');
+    renderWorkerQuincena();renderWorkerNotes();renderTrabajadorResumen();
     renderSolicitudes();renderWorkerAgenda();renderWorkerHistorial();
     renderChatBox('c-t','t','chat-t-c');renderChatBox('t-sv','t','chat-t-sv');renderChatBox('t-a','t','chat-t-a');
   }
@@ -3772,7 +3777,7 @@ function selectTrabajadorTab(tab,btn){
         </div>
         <div class="tw-kpi amber">
           <span class="tw-kpi-label">Solicitudes</span>
-          <span class="tw-kpi-val">2</span>
+          <span class="tw-kpi-val">${PENDING_REQUESTS.filter(r=>r.workerId===worker.id&&!r.accepted&&!r.rejected).length}</span>
           <span class="tw-kpi-sub">Por confirmar</span>
         </div>
         <div class="tw-kpi green">
@@ -3799,14 +3804,17 @@ function selectTrabajadorTab(tab,btn){
           </div>`).join('')
         : `<div class="tw-empty">Sin servicios pendientes hoy</div>`}
       <p class="tw-section">Solicitudes pendientes</p>
-      <div class="tw-pending-item">
-        <div class="tw-pending-info"><p>Lavado auto Sedán</p><span>28 abr · 09:00 · Condesa</span></div>
-        <span class="badge bwarn">Pendiente</span>
-      </div>
-      <div class="tw-pending-item">
-        <div class="tw-pending-info"><p>Auto SUV + interior</p><span>29 abr · 11:00 · Roma</span></div>
-        <span class="badge bwarn">Pendiente</span>
-      </div>`;
+      ${(()=>{
+        const pending=PENDING_REQUESTS.filter(r=>r.workerId===worker.id&&!r.accepted&&!r.rejected);
+        if(!pending.length)return`<div class="tw-empty">Sin solicitudes pendientes</div>`;
+        return pending.map(r=>{
+          const fechaTxt=new Date(r.fecha+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+          return`<div class="tw-pending-item">
+            <div class="tw-pending-info"><p>${r.svc}</p><span>${fechaTxt} · ${r.hora} · ${r.zona}</span></div>
+            <span class="badge bwarn">Pendiente</span>
+          </div>`;
+        }).join('');
+      })()}`;
 
   } else if(tab==='quincena'){
     const period=Q_PERIODS[0];
