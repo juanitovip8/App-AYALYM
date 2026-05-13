@@ -176,38 +176,137 @@ function selectSlot(sl,btn){selectedTimeSlot=sl;document.querySelectorAll('#time
 
 /* FINANCIAL */
 function setDateFilter(mode,btn){dateFilterMode=mode;document.querySelectorAll('.df-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');['dia','mes','año','rango'].forEach(m=>{const el=document.getElementById('di-'+m);if(el)el.classList.toggle('show',m===mode);});renderFinance();}
+/* ── Financiero con datos reales de PROPERTY_SERVICES ── */
 function getFinanceData(){
-  let ingresos,label;
-  if(dateFilterMode==='dia'){const v=document.getElementById('fi-dia').value||'2026-04-27';const d=new Date(v+'T12:00:00');ingresos=Math.round(300+Math.abs(Math.sin(d.getDate()*7+d.getMonth()*31))*1800);label=d.toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
-  else if(dateFilterMode==='mes'){const m=parseInt(document.getElementById('fi-mes').value)||4,a=parseInt(document.getElementById('fi-mes-año').value)||2026;ingresos=Math.round(18000+Math.abs(Math.sin(m*17+a))*35000);label=MESES[m-1]+' '+a;}
-  else if(dateFilterMode==='año'){const a=parseInt(document.getElementById('fi-año').value)||2026;ingresos={2024:312000,2025:428000,2026:187400}[a]||200000;label='Año '+a;}
-  else{const d1=new Date((document.getElementById('fi-rango-inicio').value||'2026-04-01')+'T12:00:00'),d2=new Date((document.getElementById('fi-rango-fin').value||'2026-04-30')+'T12:00:00');if(d2<d1)return null;const dias=Math.round((d2-d1)/864e5)+1;ingresos=Math.round(dias*420+Math.abs(Math.sin(dias*13))*dias*300);const f1=d1.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}),f2=d2.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'});label=`${f1} — ${f2} (${dias} días)`;}
-  // Utilidad neta AYALYM = siempre 50% de ingresos brutos (fijo)
-  // Descuentos por eval. bajas → se cargan al trabajador, no afectan la utilidad de AYALYM
-  const comisionBruta=Math.round(ingresos*.5);          // 50% bruto al trabajador
-  const descuentos=Math.round(ingresos*.015);            // descuentos cubiertos por el trabajador
-  const comisionNeta=comisionBruta-descuentos;           // lo que el trabajador recibe en realidad
-  const utilidad=ingresos-comisionBruta;                 // utilidad neta AYALYM = 50% fijo
-  const servicios=Math.max(1,Math.round(ingresos/580));
-  return{ingresos,comisionBruta,comisionNeta,descuentos,utilidad,servicios,label};
+  const hoy=new Date().toISOString().split('T')[0];
+  let label,desde,hasta;
+  if(dateFilterMode==='dia'){
+    const v=(document.getElementById('fi-dia')||{}).value||hoy;
+    desde=hasta=v;
+    label=new Date(v+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  }else if(dateFilterMode==='mes'){
+    const m=parseInt((document.getElementById('fi-mes')||{}).value||new Date().getMonth()+1);
+    const a=parseInt((document.getElementById('fi-mes-año')||{}).value||new Date().getFullYear());
+    desde=`${a}-${String(m).padStart(2,'0')}-01`;
+    hasta=`${a}-${String(m).padStart(2,'0')}-${new Date(a,m,0).getDate()}`;
+    label=MESES[m-1]+' '+a;
+  }else if(dateFilterMode==='año'){
+    const a=parseInt((document.getElementById('fi-año')||{}).value||new Date().getFullYear());
+    desde=`${a}-01-01`;hasta=`${a}-12-31`;label='Año '+a;
+  }else{
+    desde=(document.getElementById('fi-rango-inicio')||{}).value||hoy.slice(0,8)+'01';
+    hasta=(document.getElementById('fi-rango-fin')||{}).value||hoy;
+    if(hasta<desde)return null;
+    const d1=new Date(desde+'T12:00:00'),d2=new Date(hasta+'T12:00:00');
+    const dias=Math.round((d2-d1)/864e5)+1;
+    label=`${d1.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})} — ${d2.toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})} (${dias} día${dias!==1?'s':''})`;
+  }
+  /* Contratos activos durante el período: inicio ≤ hasta AND (sin fin OR fin ≥ desde) */
+  const contratos=PROPERTY_SERVICES.filter(ps=>{
+    const fi=ps.fechaInicio||'';const ff=ps.fechaFin||'';
+    return fi<=hasta&&(!ff||ff>=desde);
+  });
+  const ingresos=contratos.reduce((a,ps)=>a+(parseFloat(ps.pago?.monto)||0),0);
+  const comisionBruta=Math.round(ingresos*.5);
+  const comisionNeta=comisionBruta;
+  const utilidad=ingresos-comisionBruta;
+  return{ingresos,comisionBruta,comisionNeta,descuentos:0,utilidad,servicios:contratos.length,label,contratos,desde,hasta};
 }
 function renderFinance(){
-  const data=getFinanceData();if(!data){showToast('amber','⚠️','La fecha inicio debe ser anterior a la fecha fin');return;}
+  const data=getFinanceData();
+  if(!data){showToast('amber','⚠️','La fecha inicio debe ser anterior a la fecha fin');return;}
   document.getElementById('finance-period-label').textContent=data.label;
   document.getElementById('finance-grid').innerHTML=`
-    <div class="fc fc-income"><p>Ingresos brutos</p><span class="amount">$${data.ingresos.toLocaleString('es-MX')}</span><small>Total cobrado a clientes</small></div>
-    <div class="fc fc-utility"><p>Utilidad neta AYALYM</p><span class="amount">$${data.utilidad.toLocaleString('es-MX')}</span><small>50% fijo sobre ingresos</small></div>
-    <div class="fc fc-workers"><p>Pago a trabajadores</p><span class="amount">$${data.comisionNeta.toLocaleString('es-MX')}</span><small>50% − descuento por eval. baja</small></div>
-    <div class="fc fc-discount"><p>Descuentos aplicados</p><span class="amount">$${data.descuentos.toLocaleString('es-MX')}</span><small>Cargo al trabajador con eval. baja</small></div>`;
+    <div class="fc fc-income"><p>Ingresos contratos</p><span class="amount">$${data.ingresos.toLocaleString('es-MX')}</span><small>Suma de pagos de contratos activos</small></div>
+    <div class="fc fc-utility"><p>Utilidad AYALYM (50%)</p><span class="amount">$${data.utilidad.toLocaleString('es-MX')}</span><small>50% sobre ingresos de contratos</small></div>
+    <div class="fc fc-workers"><p>Pago a personal (50%)</p><span class="amount">$${data.comisionNeta.toLocaleString('es-MX')}</span><small>50% destinado a personal de inmuebles</small></div>
+    <div class="fc fc-discount"><p>Contratos activos</p><span class="amount">${data.servicios}</span><small>En el período seleccionado</small></div>`;
+  const rows=data.contratos.length
+    ?data.contratos.map(ps=>`
+      <div class="fin-detail-row">
+        <span><strong style="font-size:11px;">${ps.folio}</strong> ${ps.cliente?.nombre||'—'}</span>
+        <span style="text-align:right;white-space:nowrap;">${ps.pago?.monto?'$'+(parseFloat(ps.pago.monto)||0).toLocaleString('es-MX'):'—'}<span style="font-size:10px;color:#5C7A9A;margin-left:4px;">/${ps.pago?.periodicidad||'—'}</span></span>
+      </div>`).join('')
+    :`<div style="padding:12px;text-align:center;font-size:13px;color:#185FA5;">Sin contratos en el período seleccionado</div>`;
   document.getElementById('finance-detail').innerHTML=`
-    <div class="fin-detail-row"><span>Servicios realizados</span><span>${data.servicios}</span></div>
-    <div class="fin-detail-row"><span>Ticket promedio</span><span>$${Math.round(data.ingresos/data.servicios).toLocaleString('es-MX')}</span></div>
+    <div class="fin-detail-row" style="border-bottom:.5px solid #D1E4F6;padding-bottom:6px;margin-bottom:4px;">
+      <span style="font-weight:600;color:#042C53;">Contrato</span>
+      <span style="font-weight:600;color:#042C53;">Monto / periodicidad</span>
+    </div>
+    ${rows}
     <div class="div"></div>
-    <div class="fin-detail-row red"><span>Pago bruto a trabajadores (50%)</span><span>$${data.comisionBruta.toLocaleString('es-MX')}</span></div>
-    <div class="fin-detail-row amber"><span>⬇ Descuento por eval. baja (se resta al trabajador)</span><span>− $${data.descuentos.toLocaleString('es-MX')}</span></div>
-    <div class="fin-detail-row red" style="border-top:.5px solid #F5C6CB;"><span style="font-weight:600;">Pago neto a trabajadores</span><span style="font-weight:600;">$${data.comisionNeta.toLocaleString('es-MX')}</span></div>
-    <div class="div"></div>
-    <div class="fin-detail-row green"><span style="font-weight:600;color:#042C53;">Utilidad neta AYALYM (50%)</span><span style="font-weight:600;">$${data.utilidad.toLocaleString('es-MX')}</span></div>`;
+    <div class="fin-detail-row green"><span style="font-weight:600;">Total acumulado del período</span><span style="font-weight:600;">$${data.ingresos.toLocaleString('es-MX')}</span></div>`;
+}
+
+/* ── Tab Resumen — visión general del negocio con datos reales ── */
+function renderAdminResumen(){
+  const panel=document.getElementById('dash-panel');if(!panel)return;
+  const hoy=new Date().toISOString().split('T')[0];
+  const wActivos=WORKERS.filter(w=>w.status==='active').length;
+  const wOcupados=WORKERS.filter(w=>w.status==='busy').length;
+  const wInactivos=WORKERS.filter(w=>w.status==='inactive').length;
+  const totalSvcs=WORKERS.reduce((a,w)=>a+w.services,0);
+  const allRevs=WORKERS.flatMap(w=>w.reviews);
+  const avgRating=allRevs.length?(allRevs.reduce((a,r)=>a+r.stars,0)/allRevs.length):0;
+  const cActivos=PROPERTY_SERVICES.filter(p=>p.status==='activo');
+  const cPendientes=PROPERTY_SERVICES.filter(p=>p.status==='pendiente');
+  /* Ingreso mensual estimado de contratos activos (normalizando periodicidad a mensual) */
+  const ingresoMensual=cActivos.reduce((a,ps)=>{
+    const m=parseFloat(ps.pago?.monto)||0;
+    const p=ps.pago?.periodicidad||'mensual';
+    if(p==='quincenal')return a+m*2;
+    if(p==='semanal')return a+m*4;
+    if(p==='única')return a+m;
+    return a+m; /* mensual por defecto */
+  },0);
+  /* Contratos que vencen pronto (próximos 30 días) */
+  const limite=new Date();limite.setDate(limite.getDate()+30);
+  const limitStr=limite.toISOString().split('T')[0];
+  const porVencer=cActivos.filter(p=>p.fechaFin&&p.fechaFin>=hoy&&p.fechaFin<=limitStr);
+  /* Asistencias hoy (personal_inm) */
+  const conEntrada=PERSONAL_INM.filter(p=>p.asistencias?.find(a=>a.fecha===hoy&&a.entrada));
+  const recientes=[...PROPERTY_SERVICES].sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')).slice(0,4);
+  panel.innerHTML=`
+    <p class="dash-section-title" style="margin-top:0;">👥 Equipo de trabajo</p>
+    <div class="dash-kpi-grid">
+      <div class="dash-kpi green"><p>Trabajadores activos</p><span>${wActivos}</span></div>
+      <div class="dash-kpi" style="background:#FAEEDA;"><p>En servicio ahora</p><span style="color:#633806;">${wOcupados}</span></div>
+      <div class="dash-kpi red"><p>Inactivos</p><span>${wInactivos}</span></div>
+      <div class="dash-kpi"><p>Supervisores</p><span>${SUPERVISORS.length}</span></div>
+      <div class="dash-kpi"><p>Personal Inmuebles</p><span>${PERSONAL_INM.length}</span></div>
+      <div class="dash-kpi${conEntrada.length?'':' red'}"><p>Entrada registrada hoy</p><span>${conEntrada.length}/${PERSONAL_INM.length}</span></div>
+    </div>
+    <p class="dash-section-title">🏢 Contratos de inmuebles</p>
+    <div class="dash-kpi-grid">
+      <div class="dash-kpi accent"><p>Contratos activos</p><span>${cActivos.length}</span></div>
+      <div class="dash-kpi" style="background:#FAEEDA;"><p>Pendientes firma</p><span style="color:#633806;">${cPendientes.length}</span></div>
+      <div class="dash-kpi green"><p>Ingreso mensual est.</p><span style="font-size:${ingresoMensual>0?'14px':'20px'};">${ingresoMensual>0?'$'+Math.round(ingresoMensual).toLocaleString('es-MX'):'$0'}</span></div>
+      <div class="dash-kpi${porVencer.length?'':''}" style="${porVencer.length?'background:#FAEEDA;':''}"><p>Vencen en 30 días</p><span style="${porVencer.length?'color:#633806;':''}">${porVencer.length}</span></div>
+    </div>
+    <p class="dash-section-title">📊 Actividad de limpieza</p>
+    <div class="dash-kpi-grid">
+      <div class="dash-kpi accent"><p>Servicios acumulados</p><span>${totalSvcs.toLocaleString('es-MX')}</span></div>
+      <div class="dash-kpi green"><p>Calificación promedio</p><span>${avgRating?avgRating.toFixed(1)+' ★':'—'}</span></div>
+      <div class="dash-kpi"><p>Total reseñas</p><span>${allRevs.length}</span></div>
+      <div class="dash-kpi"><p>Clientes registrados</p><span>${USERS.filter(u=>u.rol==='cliente'||u.rol==='cliente_inm').length}</span></div>
+    </div>
+    ${recientes.length?`
+    <p class="dash-section-title">🕐 Contratos recientes</p>
+    ${recientes.map(ps=>{
+      const sc=ps.status==='activo'?'b-activo':ps.status==='pendiente'?'bwarn':'b-inactivo';
+      const sl={activo:'Activo',pendiente:'Pendiente',completado:'Completado',cancelado:'Cancelado'}[ps.status]||ps.status||'—';
+      return`<div class="dash-rank-row">
+        <div style="width:34px;height:34px;border-radius:8px;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🏢</div>
+        <div class="dash-rank-info">
+          <p>${ps.folio} — ${ps.cliente?.nombre||'—'}</p>
+          <span>${ps.tipo||'—'} · ${(ps.inmueble?.direccion||'—').split(',')[0]}</span>
+        </div>
+        <div style="text-align:right;min-width:80px;">
+          <p style="font-size:12px;font-weight:600;color:#042C53;">${ps.pago?.monto?'$'+(parseFloat(ps.pago.monto)||0).toLocaleString('es-MX'):'—'}</p>
+          <span class="badge ${sc}" style="font-size:10px;">${sl}</span>
+        </div>
+      </div>`;
+    }).join('')}`:''}`;
 }
 
 /* NOTIFICATIONS */
@@ -750,7 +849,7 @@ function launchApp(role,nombre,zona){
   if(role==='admin'){
     renderZonasAdmin();renderStaffList('all');renderLowReviews();renderRevBreakdown();renderUrgencias();
     renderSvcDurationList();renderCleaningTypesAdmin();drawMap('admin-map-svg',WORKERS);renderWorkerLocList();
-    renderUsersPanel('all');renderQReport();renderConvs();renderSupervisorsPanel();renderFinance();
+    renderUsersPanel('all');renderQReport();renderConvs();renderSupervisorsPanel();renderAdminResumen();
     renderAdminNotes();renderTopCards();renderAdminKPIs();renderPropServices('activo');
     renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');
     populatePropSupervisorSelect();
@@ -2832,15 +2931,22 @@ function renderQReport(){
 }
 function selectDashTab(tab, btn){
   document.querySelectorAll('.dash-tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
+  if(btn)btn.classList.add('active');
   const panel=document.getElementById('dash-panel');
-  if(tab==='financiero'){
+  if(tab==='resumen'){
+    renderAdminResumen();
+  } else if(tab==='financiero'){
+    const hoy=new Date().toISOString().split('T')[0];
+    const cm=new Date().getMonth()+1,cy=new Date().getFullYear();
+    const p1m=hoy.slice(0,8)+'01';
+    const mesOpts=MESES.map((n,i)=>`<option value="${i+1}"${i+1===cm?' selected':''}>${n}</option>`).join('');
+    const yrOpts=[cy-1,cy,cy+1].map(y=>`<option value="${y}"${y===cy?' selected':''}>${y}</option>`).join('');
     panel.innerHTML=`
       <div class="date-filter-row"><button class="df-btn active" id="df-dia" onclick="setDateFilter('dia',this)">Día</button><button class="df-btn" id="df-mes" onclick="setDateFilter('mes',this)">Mes</button><button class="df-btn" id="df-año" onclick="setDateFilter('año',this)">Año</button><button class="df-btn" id="df-rango" onclick="setDateFilter('rango',this)">Rango</button></div>
-      <div class="date-input-section show" id="di-dia"><div class="frow full"><label>Día</label><input type="date" id="fi-dia" value="2026-04-27" onchange="renderFinance()"></div></div>
-      <div class="date-input-section" id="di-mes"><div class="frow"><div><label>Mes</label><select id="fi-mes" onchange="renderFinance()"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4" selected>Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div><div><label>Año</label><select id="fi-mes-año" onchange="renderFinance()"><option value="2025">2025</option><option value="2026" selected>2026</option></select></div></div></div>
-      <div class="date-input-section" id="di-año"><div class="frow full"><label>Año</label><select id="fi-año" onchange="renderFinance()"><option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option></select></div></div>
-      <div class="date-input-section" id="di-rango"><div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;"><div style="flex:1;min-width:120px;"><label>Inicio</label><input type="date" id="fi-rango-inicio" value="2026-04-01" onchange="renderFinance()"></div><div style="flex:1;min-width:120px;"><label>Fin</label><input type="date" id="fi-rango-fin" value="2026-04-30" onchange="renderFinance()"></div><button class="btn-sm" onclick="renderFinance()">Aplicar</button></div></div>
+      <div class="date-input-section show" id="di-dia"><div class="frow full"><label>Día</label><input type="date" id="fi-dia" value="${hoy}" onchange="renderFinance()"></div></div>
+      <div class="date-input-section" id="di-mes"><div class="frow"><div><label>Mes</label><select id="fi-mes" onchange="renderFinance()">${mesOpts}</select></div><div><label>Año</label><select id="fi-mes-año" onchange="renderFinance()">${yrOpts}</select></div></div></div>
+      <div class="date-input-section" id="di-año"><div class="frow full"><label>Año</label><select id="fi-año" onchange="renderFinance()">${yrOpts}</select></div></div>
+      <div class="date-input-section" id="di-rango"><div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;"><div style="flex:1;min-width:120px;"><label>Inicio</label><input type="date" id="fi-rango-inicio" value="${p1m}" onchange="renderFinance()"></div><div style="flex:1;min-width:120px;"><label>Fin</label><input type="date" id="fi-rango-fin" value="${hoy}" onchange="renderFinance()"></div><button class="btn-sm" onclick="renderFinance()">Aplicar</button></div></div>
       <div class="period-badge" id="finance-period-label"></div>
       <div class="finance-grid" id="finance-grid"></div>
       <div id="finance-detail"></div>`;
@@ -2908,39 +3014,69 @@ function selectDashTab(tab, btn){
         </div>`;
       }).join('')}`;
   } else if(tab==='quincenas'){
-    const period=Q_PERIODS[0];
+    /* ── Quincenas con datos reales ──
+       Ingresos: contratos activos de PROPERTY_SERVICES (50% a personal inm + 50% AYALYM)
+       Trabajadores: servicios acumulados desde WORKERS ── */
+    const hoy=new Date();
+    const iniQ=new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate()<=15?1:16);
+    const finQ=new Date(hoy.getFullYear(),hoy.getMonth(),hoy.getDate()<=15?15:new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate());
+    const fmtQ=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+    const labelQ=`Quincena ${fmtQ(iniQ)} – ${fmtQ(finQ)}`;
+    /* Ingresos de contratos activos = base de ingresos de inmuebles */
+    const contActivos=PROPERTY_SERVICES.filter(p=>p.status==='activo');
+    const ingresosInm=contActivos.reduce((a,p)=>a+(parseFloat(p.pago?.monto)||0),0);
     const comPct=0.5;
-    const totalGen=period.workers.reduce((a,w)=>a+w.total,0);
-    const totalDesc=period.workers.reduce((a,w)=>{
-      const s=(w.deductions||[]).reduce((x,d)=>x+d.amount,0);
-      const l=workerDeductions.filter(d=>d.workerId===w.id).reduce((x,d)=>x+d.amount,0);
-      return a+s+l;
-    },0);
-    const totalCom=Math.round(totalGen*comPct);
-    const netoPagar=totalCom-totalDesc;
+    const comInm=Math.round(ingresosInm*comPct);
+    /* Personal INM: actividad del período */
+    const iniStr=iniQ.toISOString().split('T')[0];
+    const finStr=finQ.toISOString().split('T')[0];
+    const piActivity=PERSONAL_INM.map(pi=>{
+      const asis=(pi.asistencias||[]).filter(a=>a.fecha>=iniStr&&a.fecha<=finStr);
+      const dias=asis.filter(a=>a.entrada).length;
+      const contratosPI=PROPERTY_SERVICES.filter(p=>p.personalAsignado?.includes(pi.id)||p.personalIds?.includes(pi.id)||(PROPERTY_SERVICES.find(pp=>pp.id===p.id)&&pi.serviciosAsignados?.includes(p.id)));
+      return{...pi,diasTrabajados:dias,contratos:pi.serviciosAsignados?.length||0};
+    }).filter(pi=>pi.activo!==false);
+    /* Trabajadores de limpieza */
+    const wsActivos=WORKERS.filter(w=>w.status!=='inactive'&&w.services>0).sort((a,b)=>b.services-a.services);
+    const totalSvcsW=wsActivos.reduce((a,w)=>a+w.services,0);
     panel.innerHTML=`
-      <p class="dash-section-title" style="margin-top:0;">${period.label}</p>
+      <p class="dash-section-title" style="margin-top:0;">${labelQ}</p>
       <div class="dash-kpi-grid">
-        <div class="dash-kpi accent"><p>Total generado</p><span>$${totalGen.toLocaleString('es-MX')}</span></div>
-        <div class="dash-kpi"><p>Comisiones (50%)</p><span>$${totalCom.toLocaleString('es-MX')}</span></div>
-        <div class="dash-kpi red"><p>Descuentos aplicados</p><span>-$${totalDesc.toLocaleString('es-MX')}</span></div>
-        <div class="dash-kpi green"><p>Neto a pagar</p><span>$${netoPagar.toLocaleString('es-MX')}</span></div>
+        <div class="dash-kpi accent"><p>Ingresos contratos</p><span>$${ingresosInm.toLocaleString('es-MX')}</span></div>
+        <div class="dash-kpi green"><p>Utilidad AYALYM (50%)</p><span>$${comInm.toLocaleString('es-MX')}</span></div>
+        <div class="dash-kpi"><p>Pago personal Inm. (50%)</p><span>$${comInm.toLocaleString('es-MX')}</span></div>
+        <div class="dash-kpi"><p>Contratos activos</p><span>${contActivos.length}</span></div>
       </div>
-      <p class="dash-section-title">Por trabajador</p>
-      ${period.workers.map(w=>{
-        const sd=(w.deductions||[]).reduce((a,d)=>a+d.amount,0);
-        const ld=workerDeductions.filter(d=>d.workerId===w.id).reduce((a,d)=>a+d.amount,0);
-        const desc=sd+ld;
-        const com=Math.round(w.total*comPct)-desc;
+      ${piActivity.length?`
+      <p class="dash-section-title">Personal de inmuebles — asistencia en el período</p>
+      ${piActivity.map(pi=>{
+        const init=(pi.initials||pi.nombre?.split(' ').map(n=>n[0]).join('').slice(0,2)||'??').toUpperCase();
         return`<div class="dash-rank-row">
-          <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div>
-          <div class="dash-rank-info"><p>${w.name}</p><span>${w.svcs} servicios · generó $${w.total.toLocaleString('es-MX')}</span></div>
+          <div class="av" style="width:32px;height:32px;font-size:11px;background:#5B2C6F;color:#fff;flex-shrink:0;">${init}</div>
+          <div class="dash-rank-info"><p>${pi.nombre}</p><span>${pi.contratos} contrato${pi.contratos!==1?'s':''} asignado${pi.contratos!==1?'s':''}</span></div>
           <div style="text-align:right;">
-            <p style="font-size:13px;font-weight:500;color:#042C53;">$${com.toLocaleString('es-MX')}</p>
-            ${desc?`<span style="font-size:11px;color:#E24B4A;">-$${desc.toLocaleString('es-MX')} desc.</span>`:''}
+            <p style="font-size:13px;font-weight:500;color:#042C53;">${pi.diasTrabajados} día${pi.diasTrabajados!==1?'s':''}</p>
+            <span class="badge ${pi.activo?'b-activo':'b-inactivo'}" style="font-size:10px;">${pi.activo?'Activo':'Inactivo'}</span>
           </div>
-        </div>`;
-      }).join('')}`;
+        </div>`;}).join('')}`:`<p style="font-size:12px;color:#185FA5;text-align:center;padding:8px;">Sin personal de inmuebles registrado</p>`}
+      ${wsActivos.length?`
+      <p class="dash-section-title">Trabajadores de limpieza — servicios acumulados</p>
+      <div class="dash-kpi-grid" style="margin-bottom:12px;">
+        <div class="dash-kpi"><p>Servicios acumulados</p><span>${totalSvcsW.toLocaleString('es-MX')}</span></div>
+        <div class="dash-kpi"><p>Trabajadores con actividad</p><span>${wsActivos.length}</span></div>
+      </div>
+      ${wsActivos.slice(0,8).map((w,i)=>{
+        const avg=w.reviews.length?w.reviews.reduce((s,r)=>s+r.stars,0)/w.reviews.length:0;
+        const svc=w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tap.'}[t])).join('·');
+        return`<div class="dash-rank-row">
+          <span class="dash-rank-num">${i+1}</span>
+          <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div>
+          <div class="dash-rank-info"><p>${w.name}</p><span>${svc}${avg?` · ★${avg.toFixed(1)}`:''}</span></div>
+          <div style="text-align:right;">
+            <p style="font-size:13px;font-weight:500;color:#042C53;">${w.services} servicios</p>
+            <span class="badge b-activo" style="font-size:10px;">Activo</span>
+          </div>
+        </div>`;}).join('')}`:`<p style="font-size:12px;color:#185FA5;text-align:center;padding:8px;">Sin trabajadores con servicios registrados</p>`}`;
   } else if(tab==='zonas'){
     panel.innerHTML=`
       <div class="dash-kpi-grid">

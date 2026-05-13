@@ -832,22 +832,14 @@
       <div class="card" id="top-cards-card"><p class="ctitle">🏆 Destacados del mes</p><div id="top-cards-list"></div></div>
       <div class="card"><p class="ctitle">📈 Análisis</p>
         <div class="dash-tabs">
-          <div class="dash-tab active" onclick="selectDashTab('financiero',this)">💰 Financiero</div>
+          <div class="dash-tab active" onclick="selectDashTab('resumen',this)">📊 Resumen</div>
+          <div class="dash-tab" onclick="selectDashTab('financiero',this)">💰 Financiero</div>
           <div class="dash-tab" onclick="selectDashTab('personal',this)">👥 Personal</div>
           <div class="dash-tab" onclick="selectDashTab('evaluaciones',this)">⭐ Evaluaciones</div>
           <div class="dash-tab" onclick="selectDashTab('quincenas',this)">📋 Quincenas</div>
           <div class="dash-tab" onclick="selectDashTab('zonas',this)">📍 Zonas</div>
         </div>
-        <div id="dash-panel">
-          <div class="date-filter-row"><button class="df-btn active" id="df-dia" onclick="setDateFilter('dia',this)">Día</button><button class="df-btn" id="df-mes" onclick="setDateFilter('mes',this)">Mes</button><button class="df-btn" id="df-año" onclick="setDateFilter('año',this)">Año</button><button class="df-btn" id="df-rango" onclick="setDateFilter('rango',this)">Rango</button></div>
-          <div class="date-input-section show" id="di-dia"><div class="frow full"><label>Día</label><input type="date" id="fi-dia" value="2026-04-27" onchange="renderFinance()"></div></div>
-          <div class="date-input-section" id="di-mes"><div class="frow"><div><label>Mes</label><select id="fi-mes" onchange="renderFinance()"><option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option><option value="4" selected>Abril</option><option value="5">Mayo</option><option value="6">Junio</option><option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option><option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option></select></div><div><label>Año</label><select id="fi-mes-año" onchange="renderFinance()"><option value="2025">2025</option><option value="2026" selected>2026</option></select></div></div></div>
-          <div class="date-input-section" id="di-año"><div class="frow full"><label>Año</label><select id="fi-año" onchange="renderFinance()"><option value="2024">2024</option><option value="2025">2025</option><option value="2026" selected>2026</option></select></div></div>
-          <div class="date-input-section" id="di-rango"><div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;"><div style="flex:1;min-width:120px;"><label>Fecha inicio</label><input type="date" id="fi-rango-inicio" value="2026-04-01" onchange="renderFinance()"></div><div style="flex:1;min-width:120px;"><label>Fecha fin</label><input type="date" id="fi-rango-fin" value="2026-04-30" onchange="renderFinance()"></div><button class="btn-sm" onclick="renderFinance()">Aplicar</button></div></div>
-          <div class="period-badge" id="finance-period-label">27 de abril 2026</div>
-          <div class="finance-grid" id="finance-grid"></div>
-          <div id="finance-detail"></div>
-        </div>
+        <div id="dash-panel"></div>
       </div>
     </div>
     <div id="a-personal" class="sec"><div class="card"><p class="ctitle">Trabajadores</p><div class="svc-tabs"><div class="svc-tab active" onclick="filterStaff('all',this)">Todos</div><div class="svc-tab" onclick="filterStaff('auto',this)">Autos</div><div class="svc-tab" onclick="filterStaff('depto',this)">Depto</div><div class="svc-tab" onclick="filterStaff('tapiceria',this)">Tapicería</div></div><div id="staff-list"></div><div class="div"></div><button class="btn-sm" onclick="navGo('admin','agregar',null)">+ Agregar trabajador</button></div></div>
