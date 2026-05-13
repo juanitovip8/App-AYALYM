@@ -3438,6 +3438,7 @@ let _adminAstFechaB='';
 let _adminAstClientFiltro='';
 let _adminAstSvFiltro='';
 let _adminAstView='supervisores'; /* 'supervisores' | 'personal_inm' */
+let _adminAstPIContratoFiltro=''; /* filtro contrato para personal_inm */
 
 /* Fecha local (no UTC) para evitar desfase de zona horaria México */
 function _localDateStr(){
@@ -3484,6 +3485,7 @@ function _setAstFiltro(f){
   if(f!=='rango'){_adminAstFechaA='';_adminAstFechaB='';}
   _adminAstClientFiltro=''; /* resetear filtros al cambiar período */
   _adminAstSvFiltro='';
+  _adminAstPIContratoFiltro='';
   renderAdminAstReport();
 }
 
@@ -3539,20 +3541,34 @@ function renderAdminAstReport(){
   :`<tr><td colspan="9" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
   /* ── Tabla Personal de Inmuebles ── */
   const{from:fromPI,to:toPI}=_astDateRange();
-  const piRows=PERSONAL_INM.flatMap(pi=>
-    (pi.asistencias||[])
+  /* Enriquecer filas con contratos asignados */
+  const piRowsAll=PERSONAL_INM.flatMap(pi=>{
+    const contratos=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
+    const contratoLabel=contratos.length?contratos.map(ps=>`${ps.folio||'INM'} — ${ps.cliente.nombre}`).join(', '):'Sin contrato';
+    const contratoKeys=contratos.map(ps=>ps.folio||String(ps.id));
+    return(pi.asistencias||[])
       .filter(a=>a.fecha>=fromPI&&a.fecha<=toPI)
-      .map(a=>({...a,piId:pi.id,piNombre:pi.nombre}))
-  ).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.piNombre.localeCompare(b.piNombre));
+      .map(a=>({...a,piId:pi.id,piNombre:pi.nombre,contratoLabel,contratoKeys}));
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.piNombre.localeCompare(b.piNombre));
+  /* Lista única de contratos para el dropdown */
+  const piContratos=[...new Set(piRowsAll.map(r=>r.contratoLabel))].sort();
+  if(_adminAstPIContratoFiltro&&!piContratos.includes(_adminAstPIContratoFiltro))_adminAstPIContratoFiltro='';
+  const piRows=piRowsAll.filter(r=>!_adminAstPIContratoFiltro||r.contratoLabel===_adminAstPIContratoFiltro);
+  const piContratoOpts=['<option value="">— Todos los contratos —</option>',
+    ...piContratos.map(c=>`<option value="${c}"${_adminAstPIContratoFiltro===c?' selected':''}>${c}</option>`)
+  ].join('');
+  const piContratoSel=`<select style="font-size:12px;padding:5px 8px;border-radius:6px;border:.5px solid #B5D4F4;color:#042C53;background:#fff;max-width:260px;"
+    onchange="_adminAstPIContratoFiltro=this.value;renderAdminAstReport()">${piContratoOpts}</select>`;
   const piTbodyHtml=piRows.length?piRows.map(a=>`<tr>
     <td>${a.piNombre}</td>
+    <td style="font-size:11px;color:#5C7A9A;">${a.contratoLabel}</td>
     <td>${a.fecha}</td>
     <td>${a.entrada||'—'}</td>
     <td>${a.salida||'—'}</td>
     <td>${a.entrada&&a.salida?_fmtDur((()=>{const[eh,em]=(a.entrada||'0:0').split(':').map(Number);const[sh,sm]=(a.salida||'0:0').split(':').map(Number);return(sh*60+sm)-(eh*60+em);})()):'—'}</td>
     <td><button onclick="adminDeletePIAst('${a.piId}','${a.fecha}')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;color:#B91C1C;" title="Eliminar registro">🗑</button></td>
   </tr>`).join('')
-  :`<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
+  :`<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
   const labelExtra=[_adminAstSvFiltro?`Supervisor: ${_adminAstSvFiltro}`:'',_adminAstClientFiltro?`Cliente: ${_adminAstClientFiltro}`:''].filter(Boolean).join(' · ');
   const viewTabs=`<div class="user-role-filter" style="margin:0 0 12px;">
     <button class="urf-btn${_adminAstView==='supervisores'?' active':''}" onclick="_adminAstView='supervisores';renderAdminAstReport()">🧑‍💼 Supervisores</button>
@@ -3585,11 +3601,15 @@ function renderAdminAstReport(){
       <div class="user-role-filter" style="margin:0;">${filtBtns}</div>
       ${rangoInps}
     </div>
-    <p style="font-size:11px;color:#5C7A9A;margin-bottom:10px;">${piRows.length} registro${piRows.length!==1?'s':''} · ${label}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+      <span style="font-size:12px;color:#185FA5;font-weight:500;">📄 Contrato:</span>
+      ${piContratoSel}
+    </div>
+    <p style="font-size:11px;color:#5C7A9A;margin-bottom:10px;">${piRows.length} registro${piRows.length!==1?'s':''} · ${label}${_adminAstPIContratoFiltro?' · '+_adminAstPIContratoFiltro:''}</p>
     <div style="overflow-x:auto;">
       <table class="rep-table">
         <thead><tr>
-          <th>Personal</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th><th></th>
+          <th>Personal</th><th>Contrato</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th><th></th>
         </tr></thead>
         <tbody>${piTbodyHtml}</tbody>
       </table>
@@ -3750,11 +3770,11 @@ function renderAdminReportes(){
   el.innerHTML=`
     <div class="msg-tabs" style="margin-bottom:14px;">
       <button class="msg-tab active" onclick="switchRepTab('rendimiento',this)">📊 Rendimiento</button>
-      <button class="msg-tab" onclick="switchRepTab('asistencias',this)">📋 Asistencias supervisores</button>
+      <button class="msg-tab" onclick="switchRepTab('asistencias',this)">📋 Asistencias</button>
     </div>
     <div id="rep-panel-rendimiento">${rendimientoHtml}</div>
     <div id="rep-panel-asistencias" style="display:none;">
-      <div class="card"><p class="ctitle">📋 Asistencias de supervisores</p>
+      <div class="card"><p class="ctitle">📋 Asistencias</p>
         <div id="ast-report-body"></div>
       </div>
     </div>`;
