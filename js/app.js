@@ -5084,9 +5084,10 @@ function buildInmDetail(ps,showActions){
 
   const reportesHtml=buildReportesSection(ps,true); // ambos roles pueden crear y ver reportes
   /* Mini mapa OSM — solo cuando hay coordenadas */
+  const _GMKEY='AIzaSyAlohdtB-IJ03j8MblL2nfml_m99yFQW-U';
   const mapHtml=geoOk
     ?`<div style="margin:10px 0 4px;border-radius:10px;overflow:hidden;border:.5px solid var(--blue-border);">
-        <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${ps.inmueble.lng-0.003},${ps.inmueble.lat-0.003},${ps.inmueble.lng+0.003},${ps.inmueble.lat+0.003}&layer=mapnik&marker=${ps.inmueble.lat},${ps.inmueble.lng}" style="width:100%;height:185px;border:none;display:block;" loading="lazy" title="Ubicación del inmueble"></iframe>
+        <iframe src="https://www.google.com/maps/embed/v1/view?key=${_GMKEY}&center=${ps.inmueble.lat},${ps.inmueble.lng}&zoom=17&maptype=roadmap" style="width:100%;height:185px;border:none;display:block;" loading="lazy" title="Ubicación del inmueble" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
         <a href="https://www.google.com/maps?q=${ps.inmueble.lat},${ps.inmueble.lng}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#185FA5;display:flex;align-items:center;gap:4px;justify-content:flex-end;padding:5px 10px;background:#F4F8FD;">🗺️ Abrir en Google Maps</a>
       </div>`
     :'';
@@ -5715,110 +5716,45 @@ function _haversineDistance(lat1,lng1,lat2,lng2){
    Aplica varias estrategias: primero simplifica la dirección (elimina Torre/Piso/Oficina),
    luego intenta con colonia + CP, y como último recurso solo el CP. */
 async function _geocodeInmueble(ps){
+  const GMAP_KEY='AIzaSyAlohdtB-IJ03j8MblL2nfml_m99yFQW-U';
   const dir=(ps.inmueble.direccion||'').trim();
   const col=(ps.inmueble.colonia||'').trim();
 
-  /* Limpiar detalles internos de edificio que Nominatim no entiende */
-  const cleanDir=dir
-    .replace(/,?\s*(Torre|Piso|Oficina|Ofna|Depto|Departamento|Int\.?|Interior|Local|Módulo|Bodega|Nivel|Suite)\s+[^,]*/gi,'')
-    .replace(/,?\s*Col\.?\s+[^,]*/i,'')
-    .replace(/,?\s*Alcald[ií]a\s+[^,]*/i,'')
-    .replace(/,?\s*C\.?P\.?\s*\d{5}/i,'')
-    .replace(/,?\s*(CDMX|Ciudad de México|Cd\. de México)/gi,'')
-    .replace(/\s{2,}/g,' ').replace(/^\s*,|,\s*$/g,'').trim();
+  /* Construir query completo con colonia y CDMX */
+  const query=[dir,col,'Ciudad de México','México'].filter(Boolean).join(', ');
 
-  /* Extraer solo el nombre de la calle (sin número) */
-  const streetOnly=cleanDir.replace(/\s+\d[\d\w-]*\s*$/, '').trim();
-
-  /* Extraer código postal de la dirección completa */
-  const cpMatch=dir.match(/\b(\d{5})\b/);
-  const cp=cpMatch?cpMatch[1]:'';
-
-  /* Búsqueda texto libre */
-  async function _tryQ(q){
+  async function _tryGoogle(q){
     try{
       const res=await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${encodeURIComponent(q)}`,
-        {headers:{'Accept-Language':'es-MX','User-Agent':'AYALYM-App/1.0'}}
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q)}&key=${GMAP_KEY}&language=es&region=MX`
       );
-      const [hit]=await res.json();
-      return hit||null;
-    }catch(e){console.warn('[geo]',e);return null;}
+      const data=await res.json();
+      if(data.status==='OK'&&data.results&&data.results.length>0){
+        return data.results[0].geometry.location; /* {lat, lng} */
+      }
+      console.warn('[geo-google] status:',data.status,q);
+      return null;
+    }catch(e){console.warn('[geo-google]',e);return null;}
   }
 
-  /* Búsqueda estructurada (más precisa para calles cortas) */
-  async function _tryStructured(params){
-    try{
-      const base='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx';
-      const qs=Object.entries(params).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
-      const res=await fetch(`${base}&${qs}`,
-        {headers:{'Accept-Language':'es-MX','User-Agent':'AYALYM-App/1.0'}}
-      );
-      const [hit]=await res.json();
-      return hit||null;
-    }catch(e){console.warn('[geo-s]',e);return null;}
+  let loc=null;
+
+  /* E1: dirección + colonia + CDMX */
+  loc=await _tryGoogle(query);
+
+  /* E2: solo dirección + CDMX (sin colonia) */
+  if(!loc&&dir){
+    loc=await _tryGoogle(`${dir}, Ciudad de México, México`);
   }
 
-  let hit=null;
-
-  /* E1: Estructurada — calle + CDMX (más efectiva para direcciones cortas) */
-  if(cleanDir){
-    hit=await _tryStructured({street:cleanDir,city:'Ciudad de México',country:'México'});
+  /* E3: colonia + CDMX (ubica la zona si la calle no existe en Google) */
+  if(!loc&&col){
+    loc=await _tryGoogle(`${col}, Ciudad de México, México`);
   }
 
-  /* E2: Estructurada — calle + colonia como suburb */
-  if(!hit&&cleanDir&&col){
-    hit=await _tryStructured({street:cleanDir,suburb:col,city:'Ciudad de México',country:'México'});
-  }
-
-  /* E3: Estructurada — solo nombre de calle (sin número) + colonia */
-  if(!hit&&streetOnly&&streetOnly!==cleanDir&&col){
-    hit=await _tryStructured({street:streetOnly,suburb:col,city:'Ciudad de México',country:'México'});
-  }
-
-  /* E4: Texto libre — dirección limpia + colonia + CDMX */
-  if(!hit&&cleanDir){
-    hit=await _tryQ([cleanDir,col,'Ciudad de México','México'].filter(Boolean).join(', '));
-  }
-
-  /* E5: Texto libre — dirección limpia + código postal */
-  if(!hit&&cleanDir&&cp){
-    hit=await _tryQ(`${cleanDir}, ${cp}, México`);
-  }
-
-  /* E6: Estructurada — calle + código postal */
-  if(!hit&&cleanDir&&cp){
-    hit=await _tryStructured({street:cleanDir,postalcode:cp,country:'México'});
-  }
-
-  /* E7: Texto libre — solo nombre de calle + colonia (sin número, sin CDMX) */
-  if(!hit&&streetOnly&&streetOnly!==cleanDir){
-    hit=await _tryQ([streetOnly,col,'Ciudad de México','México'].filter(Boolean).join(', '));
-  }
-
-  /* E8: Colonia como barrio en CDMX (ubica la zona aunque no la calle exacta) */
-  if(!hit&&col){
-    hit=await _tryQ(`${col}, Ciudad de México, México`);
-  }
-
-  /* E9: Colonia + código postal */
-  if(!hit&&col&&cp){
-    hit=await _tryQ(`${col}, ${cp}, México`);
-  }
-
-  /* E10: Solo código postal */
-  if(!hit&&cp){
-    hit=await _tryQ(`${cp}, México`);
-  }
-
-  /* E11: Dirección completa original sin procesar (último recurso) */
-  if(!hit){
-    hit=await _tryQ([dir,col,'México'].filter(Boolean).join(', '));
-  }
-
-  if(hit){
-    ps.inmueble.lat=parseFloat(hit.lat);
-    ps.inmueble.lng=parseFloat(hit.lon);
+  if(loc){
+    ps.inmueble.lat=loc.lat;
+    ps.inmueble.lng=loc.lng;
     fbSavePropertyServices();
     return true;
   }
