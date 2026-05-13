@@ -995,3 +995,14 @@ select option {
 
 /* ── inm-field strong (labels in contract detail) ── */
 .inm-field strong       { color: var(--dk-text) !important; }
+
+/* ── Google Maps InfoWindow — forzar fondo blanco y texto oscuro en dark mode ── */
+.gm-style .gm-style-iw,
+.gm-style .gm-style-iw-d,
+.gm-style .gm-style-iw-c,
+.gm-style .gm-style-iw-t { background: #ffffff !important; }
+.gm-style .gm-style-iw *,
+.gm-style .gm-style-iw-d *,
+.gm-style .gm-style-iw-d p,
+.gm-style .gm-style-iw-d strong,
+.gm-style .gm-style-iw-d span { color: #042C53 !important; background: transparent !important; }
