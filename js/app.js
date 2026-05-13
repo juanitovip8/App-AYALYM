@@ -5727,10 +5727,14 @@ async function _geocodeInmueble(ps){
     .replace(/,?\s*(CDMX|Ciudad de México|Cd\. de México)/gi,'')
     .replace(/\s{2,}/g,' ').replace(/^\s*,|,\s*$/g,'').trim();
 
+  /* Extraer solo el nombre de la calle (sin número) */
+  const streetOnly=cleanDir.replace(/\s+\d[\d\w-]*\s*$/, '').trim();
+
   /* Extraer código postal de la dirección completa */
   const cpMatch=dir.match(/\b(\d{5})\b/);
   const cp=cpMatch?cpMatch[1]:'';
 
+  /* Búsqueda texto libre */
   async function _tryQ(q){
     try{
       const res=await fetch(
@@ -5742,29 +5746,72 @@ async function _geocodeInmueble(ps){
     }catch(e){console.warn('[geo]',e);return null;}
   }
 
+  /* Búsqueda estructurada (más precisa para calles cortas) */
+  async function _tryStructured(params){
+    try{
+      const base='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx';
+      const qs=Object.entries(params).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+      const res=await fetch(`${base}&${qs}`,
+        {headers:{'Accept-Language':'es-MX','User-Agent':'AYALYM-App/1.0'}}
+      );
+      const [hit]=await res.json();
+      return hit||null;
+    }catch(e){console.warn('[geo-s]',e);return null;}
+  }
+
   let hit=null;
 
-  /* Estrategia 1: dirección limpia + colonia + Ciudad de México */
+  /* E1: Estructurada — calle + CDMX (más efectiva para direcciones cortas) */
   if(cleanDir){
+    hit=await _tryStructured({street:cleanDir,city:'Ciudad de México',country:'México'});
+  }
+
+  /* E2: Estructurada — calle + colonia como suburb */
+  if(!hit&&cleanDir&&col){
+    hit=await _tryStructured({street:cleanDir,suburb:col,city:'Ciudad de México',country:'México'});
+  }
+
+  /* E3: Estructurada — solo nombre de calle (sin número) + colonia */
+  if(!hit&&streetOnly&&streetOnly!==cleanDir&&col){
+    hit=await _tryStructured({street:streetOnly,suburb:col,city:'Ciudad de México',country:'México'});
+  }
+
+  /* E4: Texto libre — dirección limpia + colonia + CDMX */
+  if(!hit&&cleanDir){
     hit=await _tryQ([cleanDir,col,'Ciudad de México','México'].filter(Boolean).join(', '));
   }
 
-  /* Estrategia 2: dirección limpia + código postal */
+  /* E5: Texto libre — dirección limpia + código postal */
   if(!hit&&cleanDir&&cp){
     hit=await _tryQ(`${cleanDir}, ${cp}, México`);
   }
 
-  /* Estrategia 3: colonia + código postal */
+  /* E6: Estructurada — calle + código postal */
+  if(!hit&&cleanDir&&cp){
+    hit=await _tryStructured({street:cleanDir,postalcode:cp,country:'México'});
+  }
+
+  /* E7: Texto libre — solo nombre de calle + colonia (sin número, sin CDMX) */
+  if(!hit&&streetOnly&&streetOnly!==cleanDir){
+    hit=await _tryQ([streetOnly,col,'Ciudad de México','México'].filter(Boolean).join(', '));
+  }
+
+  /* E8: Colonia como barrio en CDMX (ubica la zona aunque no la calle exacta) */
+  if(!hit&&col){
+    hit=await _tryQ(`${col}, Ciudad de México, México`);
+  }
+
+  /* E9: Colonia + código postal */
   if(!hit&&col&&cp){
     hit=await _tryQ(`${col}, ${cp}, México`);
   }
 
-  /* Estrategia 4: solo código postal */
+  /* E10: Solo código postal */
   if(!hit&&cp){
     hit=await _tryQ(`${cp}, México`);
   }
 
-  /* Estrategia 5: dirección completa original (último recurso) */
+  /* E11: Dirección completa original sin procesar (último recurso) */
   if(!hit){
     hit=await _tryQ([dir,col,'México'].filter(Boolean).join(', '));
   }
