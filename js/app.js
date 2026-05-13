@@ -860,9 +860,8 @@ function launchApp(role,nombre,zona){
     setTimeout(()=>renderClienteResumen(),600);
   }
   if(role==='trabajador'){
-    // Inicializar estado activo/inactivo desde USERS
-    const uW=USERS.find(u=>u.nombre===nombre&&u.rol==='trabajador');
-    workerActive=uW?uW.activo!==false:true;
+    // Inicializar estado desde WORKERS.status (independiente de USERS.activo)
+    // USERS.activo controla el login; WORKERS.status controla disponibilidad para reservas
     let wRef=WORKERS.find(x=>x.name===nombre);
     if(!wRef){
       const init2=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
@@ -872,7 +871,7 @@ function launchApp(role,nombre,zona){
       fbSaveWorkers();
     }
     currentWorkerRef=wRef; /* fijar referencia global al trabajador logueado */
-    if(wRef)wRef.status=workerActive?'active':'inactive';
+    workerActive=wRef?wRef.status!=='inactive':true; /* leer disponibilidad de WORKERS, no de USERS */
     // ── Actualizar tarjeta de perfil del trabajador ──
     const tProfName=document.getElementById('t-profile-name');if(tProfName)tProfName.textContent=nombre;
     const tProfType=document.getElementById('t-profile-type');
@@ -892,7 +891,7 @@ function launchApp(role,nombre,zona){
     const tSvAv=document.getElementById('t-sv-contact-av');if(tSvAv)tSvAv.textContent=svInit2;
     const tSvNm=document.getElementById('t-sv-contact-name');if(tSvNm)tSvNm.textContent=mySv?mySv.name:'Supervisor';
     const pill=document.getElementById('sp'),label=document.getElementById('wsl');
-    if(label)label.innerHTML=workerActive?'Estatus: <strong style="color:#1A56DB;">Activo</strong>':'Estatus: <strong style="color:#E02020;">Inactivo — el admin te ha desactivado</strong>';
+    if(label)label.innerHTML=workerActive?'Estatus: <strong style="color:#1A56DB;">Activo</strong>':'Estatus: <strong style="color:#888780;">Inactivo — no apareces disponible para reservas</strong>';
     if(pill){pill.textContent=workerActive?'Inactivarme':'Activarme';pill.className=workerActive?'status-pill sp-inactivar':'status-pill sp-activar';}
     const _wRating=wRef?wRef.rating||0:0;
     const _wReviews=wRef?(wRef.reviews||[]).length:0;
@@ -4335,22 +4334,20 @@ function addNewWorker(){
 }
 function toggleWStatus(){
   workerActive=!workerActive;
-  // Sync status to WORKERS array so client, supervisor & admin views reflect the change
+  // Actualizar WORKERS.status (disponibilidad) — NO tocar USERS.activo (acceso al sistema)
   const w=currentWorkerRef||WORKERS[0];
   if(w) w.status=workerActive?'active':'inactive';
+  fbSaveWorkers(); /* persistir disponibilidad en Firestore */
   const pill=document.getElementById('sp'),label=document.getElementById('wsl');
   if(workerActive){
     label.innerHTML='Estatus: <strong style="color:#1A56DB;">Activo</strong>';
     pill.textContent='Inactivarme';
     pill.className='status-pill sp-inactivar';
   }else{
-    label.innerHTML='Estatus: <strong style="color:#888780;">Inactivo</strong>';
+    label.innerHTML='Estatus: <strong style="color:#888780;">Inactivo — no apareces disponible para reservas</strong>';
     pill.textContent='Activarme';
     pill.className='status-pill sp-activar';
   }
-  // Sincronizar USERS.activo para que el panel admin refleje el cambio
-  const uSync=USERS.find(u=>u.nombre===w.name&&u.rol==='trabajador');
-  if(uSync)uSync.activo=workerActive;
   // Re-render views that depend on worker status
   if(typeof renderWorkersByZone==='function') renderWorkersByZone();
   if(typeof renderTimeSlots==='function') renderTimeSlots();
