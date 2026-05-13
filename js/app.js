@@ -3436,6 +3436,8 @@ function renderAdminKPIs(){
 let _adminAstFiltro='dia';
 let _adminAstFechaA='';
 let _adminAstFechaB='';
+let _adminAstClientFiltro='';
+let _adminAstSvFiltro='';
 
 function switchRepTab(tab,btn){
   ['rendimiento','asistencias'].forEach(t=>{
@@ -3474,6 +3476,8 @@ function _astDateRange(){
 function _setAstFiltro(f){
   _adminAstFiltro=f;
   if(f!=='rango'){_adminAstFechaA='';_adminAstFechaB='';}
+  _adminAstClientFiltro=''; /* resetear filtros al cambiar período */
+  _adminAstSvFiltro='';
   renderAdminAstReport();
 }
 
@@ -3481,8 +3485,19 @@ function renderAdminAstReport(){
   /* El contenido va dentro del card, en ast-report-body o en rep-panel-asistencias */
   const el=document.getElementById('ast-report-body')||document.getElementById('rep-panel-asistencias');if(!el)return;
   const{from,to,label}=_astDateRange();
-  const filtered=SUPERVISOR_ASISTENCIAS.filter(a=>a.fecha>=from&&a.fecha<=to)
+  /* Filtramos por fecha primero para construir las listas disponibles */
+  const byDate=SUPERVISOR_ASISTENCIAS.filter(a=>a.fecha>=from&&a.fecha<=to);
+  /* Listas únicas de supervisores y clientes en el período */
+  const supervisores=[...new Set(byDate.map(a=>a.supervisorNombre).filter(Boolean))].sort();
+  const clientes=[...new Set(byDate.map(a=>a.clienteNombre).filter(Boolean))].sort();
+  /* Si el valor seleccionado ya no existe en el rango, lo limpiamos */
+  if(_adminAstSvFiltro&&!supervisores.includes(_adminAstSvFiltro))_adminAstSvFiltro='';
+  if(_adminAstClientFiltro&&!clientes.includes(_adminAstClientFiltro))_adminAstClientFiltro='';
+  /* Filtro final: fecha + supervisor + cliente */
+  const filtered=byDate
+    .filter(a=>(!_adminAstSvFiltro||a.supervisorNombre===_adminAstSvFiltro)&&(!_adminAstClientFiltro||a.clienteNombre===_adminAstClientFiltro))
     .sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.supervisorNombre.localeCompare(b.supervisorNombre));
+
   const filtBtns=['dia','quincena','mes','año','rango'].map(f=>
     `<button class="urf-btn${_adminAstFiltro===f?' active':''}" onclick="_setAstFiltro('${f}')">${{dia:'Hoy',quincena:'Quincena',mes:'Mes',año:'Año',rango:'Rango'}[f]}</button>`
   ).join('');
@@ -3491,6 +3506,19 @@ function renderAdminAstReport(){
     <span style="font-size:12px;color:#5C7A9A;">—</span>
     <input type="date" value="${_adminAstFechaB}" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #B5D4F4;" onchange="_adminAstFechaB=this.value;renderAdminAstReport()">
   `:'';
+  /* Dropdown de supervisor */
+  const svOpts=['<option value="">— Todos los supervisores —</option>',
+    ...supervisores.map(s=>`<option value="${s}"${_adminAstSvFiltro===s?' selected':''}>${s}</option>`)
+  ].join('');
+  const svSel=`<select style="font-size:12px;padding:5px 8px;border-radius:6px;border:.5px solid #B5D4F4;color:#042C53;background:#fff;max-width:190px;"
+    onchange="_adminAstSvFiltro=this.value;renderAdminAstReport()">${svOpts}</select>`;
+  /* Dropdown de cliente */
+  const clienteOpts=['<option value="">— Todos los clientes —</option>',
+    ...clientes.map(c=>`<option value="${c}"${_adminAstClientFiltro===c?' selected':''}>${c}</option>`)
+  ].join('');
+  const clienteSel=`<select style="font-size:12px;padding:5px 8px;border-radius:6px;border:.5px solid #B5D4F4;color:#042C53;background:#fff;max-width:190px;"
+    onchange="_adminAstClientFiltro=this.value;renderAdminAstReport()">${clienteOpts}</select>`;
+
   const tbodyHtml=filtered.length?filtered.map(a=>`<tr>
     <td>${a.supervisorNombre}</td>
     <td>${a.servicioFolio}</td>
@@ -3502,13 +3530,20 @@ function renderAdminAstReport(){
     <td>${_fmtDur(a.duracion)}</td>
   </tr>`).join('')
   :`<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
+  const labelExtra=[_adminAstSvFiltro?`Supervisor: ${_adminAstSvFiltro}`:'',_adminAstClientFiltro?`Cliente: ${_adminAstClientFiltro}`:''].filter(Boolean).join(' · ');
   el.innerHTML=`
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
       <div class="user-role-filter" style="margin:0;">${filtBtns}</div>
       ${rangoInps}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+      <span style="font-size:12px;color:#185FA5;font-weight:500;">🧑‍💼 Supervisor:</span>
+      ${svSel}
+      <span style="font-size:12px;color:#185FA5;font-weight:500;">👤 Cliente:</span>
+      ${clienteSel}
       <button class="btn-sm" style="margin-left:auto;font-size:11px;" onclick="exportAsistenciasPDF()">⬇ Exportar PDF</button>
     </div>
-    <p style="font-size:11px;color:#5C7A9A;margin-bottom:10px;">${filtered.length} registro${filtered.length!==1?'s':''} · ${label}</p>
+    <p style="font-size:11px;color:#5C7A9A;margin-bottom:10px;">${filtered.length} registro${filtered.length!==1?'s':''} · ${label}${labelExtra?' · '+labelExtra:''}</p>
     <div style="overflow-x:auto;">
       <table class="rep-table" id="ast-report-table">
         <thead><tr>
@@ -3522,8 +3557,11 @@ function renderAdminAstReport(){
 
 function exportAsistenciasPDF(){
   const{from,to,label}=_astDateRange();
-  const filtered=SUPERVISOR_ASISTENCIAS.filter(a=>a.fecha>=from&&a.fecha<=to)
+  const filtered=SUPERVISOR_ASISTENCIAS.filter(a=>a.fecha>=from&&a.fecha<=to&&(!_adminAstSvFiltro||a.supervisorNombre===_adminAstSvFiltro)&&(!_adminAstClientFiltro||a.clienteNombre===_adminAstClientFiltro))
     .sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const badges=[_adminAstSvFiltro?`🧑‍💼 ${_adminAstSvFiltro}`:'',_adminAstClientFiltro?`👤 ${_adminAstClientFiltro}`:''].filter(Boolean);
+  const labelExtra=badges.join(' · ');
+  const logoSrc=new URL('img/logo.png',window.location.href).href;
   const rows=filtered.map(a=>`<tr>
     <td>${a.supervisorNombre}</td><td>${a.servicioFolio}</td><td>${a.clienteNombre}</td>
     <td>${a.inmuebleDireccion||'—'}</td><td>${a.fecha}</td>
@@ -3533,21 +3571,36 @@ function exportAsistenciasPDF(){
 <title>Asistencias AYALYM — ${label}</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a2e;padding:20px;}
-  .logo{font-size:22px;font-weight:800;color:#042C53;letter-spacing:-0.5px;}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a2e;padding:24px;}
+  .header{display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:2px solid #042C53;margin-bottom:14px;}
+  .header img{width:52px;height:52px;object-fit:contain;border-radius:10px;}
+  .header-text{}
+  .logo{font-size:22px;font-weight:800;color:#042C53;letter-spacing:-0.5px;line-height:1;}
   .logo span{color:#185FA5;}
-  h2{font-size:13px;color:#042C53;margin:10px 0 2px;}
-  p.sub{font-size:10px;color:#666;margin-bottom:14px;}
-  table{width:100%;border-collapse:collapse;}
+  .logo-tag{font-size:9px;color:#5C7A9A;margin-top:2px;letter-spacing:.5px;}
+  h2{font-size:13px;color:#042C53;margin:0 0 3px;}
+  p.sub{font-size:10px;color:#666;margin-bottom:0;}
+  .filter-badge{display:inline-block;background:#E6F1FB;color:#0C447C;border-radius:4px;padding:2px 8px;font-size:9px;font-weight:600;margin-top:4px;}
+  table{width:100%;border-collapse:collapse;margin-top:4px;}
   th{background:#042C53;color:#fff;padding:7px 9px;text-align:left;font-size:10px;}
   td{padding:6px 9px;border-bottom:1px solid #e0e7ef;font-size:10px;}
   tr:nth-child(even) td{background:#f4f8fc;}
-  .footer{margin-top:14px;font-size:9px;color:#999;text-align:right;}
-  @media print{@page{margin:15mm;} button{display:none;}}
+  .footer{margin-top:14px;font-size:9px;color:#999;display:flex;justify-content:space-between;border-top:1px solid #e0e7ef;padding-top:8px;}
+  @media print{@page{margin:12mm 15mm;} button{display:none;}}
 </style></head><body>
-  <div class="logo">AYA<span>LYM</span></div>
-  <h2>Reporte de Asistencias de Supervisores</h2>
-  <p class="sub">Período: ${label} &nbsp;·&nbsp; Generado el ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</p>
+  <div class="header">
+    <img src="${logoSrc}" alt="AYA Limpieza y Mantenimiento">
+    <div class="header-text">
+      <div class="logo">AYA<span>LYM</span></div>
+      <div class="logo-tag">Limpieza y Mantenimiento Profesional</div>
+    </div>
+    <div style="margin-left:auto;text-align:right;">
+      <h2>Reporte de Asistencias de Supervisores</h2>
+      <p class="sub">Período: ${label}</p>
+      ${badges.map(b=>`<span class="filter-badge">${b}</span>`).join(' ')}
+      <p class="sub" style="margin-top:4px;">Generado el ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</p>
+    </div>
+  </div>
   <table>
     <thead><tr>
       <th>Supervisor</th><th>Folio</th><th>Cliente</th>
@@ -3555,7 +3608,10 @@ function exportAsistenciasPDF(){
     </tr></thead>
     <tbody>${rows||'<tr><td colspan="8" style="text-align:center;padding:1rem;color:#666;">Sin registros en este período</td></tr>'}</tbody>
   </table>
-  <div class="footer">Total: ${filtered.length} registro${filtered.length!==1?'s':''}. AYALYM © ${new Date().getFullYear()}</div>
+  <div class="footer">
+    <span>Total: ${filtered.length} registro${filtered.length!==1?'s':''}${labelExtra?' · '+labelExtra:''}</span>
+    <span>AYALYM © ${new Date().getFullYear()}</span>
+  </div>
   <script>window.onload=function(){window.print();}<\/script>
 </body></html>`;
   const w=window.open('','_blank','width=960,height=720');
