@@ -3609,7 +3609,7 @@ function adminDeleteSVAst(id){
 
 function adminDeletePIAst(piId,fecha){
   if(!confirm('¿Eliminar este registro de asistencia?'))return;
-  const pi=PERSONAL_INM.find(p=>p.id===piId);
+  const pi=PERSONAL_INM.find(p=>String(p.id)===String(piId));
   if(!pi)return;
   const idx=(pi.asistencias||[]).findIndex(a=>a.fecha===fecha);
   if(idx===-1)return;
