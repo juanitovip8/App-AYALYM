@@ -6274,8 +6274,8 @@ function renderSVAstHoy(){
     }
     return`<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:.5px solid #E6F1FB;gap:10px;flex-wrap:wrap;">
       <div style="flex:1;min-width:0;">
-        <p style="font-size:13px;font-weight:600;color:#042C53;margin:0;">${ps.folio||'INM'} — ${ps.tipo}</p>
-        <p style="font-size:11px;color:#185FA5;margin:2px 0 0;">${ps.cliente.nombre} · ${ps.inmueble.direccion}</p>
+        <p style="font-size:13px;font-weight:600;color:#042C53;margin:0;">${ps.folio||'INM'} — ${ps.cliente.nombre} · ${ps.inmueble.direccion}</p>
+        <p style="font-size:11px;color:#185FA5;margin:2px 0 0;">${ps.tipo}</p>
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${statusHtml}${btnHtml}</div>
     </div>`;
