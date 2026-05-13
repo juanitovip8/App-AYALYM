@@ -69,9 +69,9 @@ input,select,textarea,a{-webkit-tap-highlight-color:transparent;}
 #screen-app{flex:1;display:flex;flex-direction:column;}
 
 /* ── ROLE SECTIONS — full width con padding lateral ── */
-.role-section{width:100%;padding:1.25rem 2rem 5rem;}
-/* Admin no tiene bottom-nav fijo — eliminar padding innecesario */
-#role-admin.role-section{padding-bottom:1.25rem;}
+.role-section{width:100%;padding:1.25rem 2rem 1.25rem;display:flex;flex-direction:column;min-height:100vh;}
+/* Admin no tiene bottom-nav — sin flex ni min-height forzado */
+#role-admin.role-section{display:block;min-height:unset;}
 
 /* ── LOGIN ── */
 .login-wrap{display:flex;flex-direction:column;gap:10px;}
@@ -606,7 +606,7 @@ textarea{resize:vertical;min-height:60px;}
 .header-urole{font-size:10px;color:rgba(255,255,255,.65);}
 
 /* ── BOTTOM NAVIGATION ── */
-.bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:.5px solid var(--blue-border);border-radius:0;overflow:hidden;margin-bottom:0;box-shadow:0 -2px 8px rgba(4,44,83,.06);position:fixed;bottom:0;left:0;right:0;width:100%;z-index:90;}
+.bottom-nav{display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:.5px solid var(--blue-border);border-radius:0;overflow:hidden;margin-bottom:0;margin-top:auto;box-shadow:0 -2px 8px rgba(4,44,83,.06);position:sticky;bottom:0;z-index:90;}
 .bnav-btn{padding:10px 4px 8px;text-align:center;cursor:pointer;font-size:11px;font-weight:500;color:var(--blue-mid);background:#fff;border:none;font-family:var(--font-sans);transition:background .15s,color .15s;border-right:.5px solid var(--blue-border);}
 .bnav-btn:last-child{border-right:none;}
 .bnav-btn:hover{background:var(--blue-light);}
@@ -781,7 +781,7 @@ textarea{resize:vertical;min-height:60px;}
    RESPONSIVE — TABLET  (601px – 900px)
    ══════════════════════════════════════════════ */
 @media (min-width:601px) and (max-width:900px){
-  .role-section{padding:1rem 1.25rem 4rem;}
+  .role-section{padding:1rem 1.25rem 1rem;}
   .admin-kpi-bar{grid-template-columns:repeat(4,1fr);}
   .dash-kpi-grid{grid-template-columns:repeat(3,1fr);}
   .header{padding:.75rem 1.5rem;}
@@ -819,8 +819,8 @@ textarea{resize:vertical;min-height:60px;}
   .qa-card{padding:6px 8px;gap:7px;}
   .qa-btn{padding:4px 10px;font-size:10px;}
 
-  /* ── ROLE SECTION — extra pb para bottom-nav + safe area iPhone ── */
-  .role-section{padding:.75rem .875rem calc(5.25rem + env(safe-area-inset-bottom,0px));}
+  /* ── ROLE SECTION — padding compacto en móvil ── */
+  .role-section{padding:.75rem .875rem .75rem;}
 
   /* ── INPUTS — font-size 16px evita zoom automático en iOS ── */
   select,input[type=number],input[type=date],input[type=time],
