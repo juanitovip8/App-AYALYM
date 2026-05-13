@@ -2062,7 +2062,7 @@ function _safeCalcPrice(){try{if(document.getElementById('svc'))calcPrice();}cat
 function _prow(lbl,val,onch){
   return`<div class="svc-price-row">
     <span class="svc-price-lbl">${lbl}</span>
-    <label class="svc-price-inp"><span>$</span><input type="number" value="${val}" min="0" step="10" onchange="${onch};_safeCalcPrice();" style="width:80px;"></label>
+    <label class="svc-price-inp"><span>$</span><input type="number" value="${val}" min="0" step="10" onchange="${onch};_safeCalcPrice();fbSaveConfig();" style="width:80px;"></label>
   </div>`;
 }
 
@@ -2274,10 +2274,10 @@ function renderSvcDurationList(){
         <div class="stc-sec-body stc-sec-open">
           <div class="svc-dur-row">
             <span>Mínima</span>
-            <label class="svc-price-inp"><input type="number" value="${s.durMin}" min="15" step="15" onchange="SVC_TYPES[${i}].durMin=parseInt(this.value);updateDurationBanner();renderTimeSlots();" style="width:60px;text-align:center;"></label>
+            <label class="svc-price-inp"><input type="number" value="${s.durMin}" min="15" step="15" onchange="SVC_TYPES[${i}].durMin=parseInt(this.value);updateDurationBanner();renderTimeSlots();fbSaveConfig();" style="width:60px;text-align:center;"></label>
             <span>—</span>
             <span>Máxima</span>
-            <label class="svc-price-inp"><input type="number" value="${s.durMax}" min="15" step="15" onchange="SVC_TYPES[${i}].durMax=parseInt(this.value);updateDurationBanner();renderTimeSlots();" style="width:60px;text-align:center;"></label>
+            <label class="svc-price-inp"><input type="number" value="${s.durMax}" min="15" step="15" onchange="SVC_TYPES[${i}].durMax=parseInt(this.value);updateDurationBanner();renderTimeSlots();fbSaveConfig();" style="width:60px;text-align:center;"></label>
             <span style="color:#5C7A9A;">min</span>
           </div>
         </div>
@@ -2289,7 +2289,7 @@ function renderSvcDurationList(){
 
 function toggleSvcType(i){SVC_TYPES[i].activo=!(SVC_TYPES[i].activo!==false);renderSvcDurationList();renderSvcSelect();savePricesToLanding();fbSaveConfig();showToast(SVC_TYPES[i].activo!==false?'green':'blue',SVC_TYPES[i].activo!==false?'✅':'⚪','"'+SVC_TYPES[i].nombre+'" '+(SVC_TYPES[i].activo!==false?'activado':'desactivado'));}
 function addSvcType(){const n=document.getElementById('ns-name').value.trim(),p=parseInt(document.getElementById('ns-price').value)||500,dMin=parseInt(document.getElementById('ns-dur-min').value)||30,dMax=parseInt(document.getElementById('ns-dur-max').value)||60;if(!n){showToast('amber','⚠️','Escribe el nombre');return;}SVC_TYPES.push({id:'s'+Date.now(),nombre:n,precio:p,durMin:dMin,durMax:dMax,activo:true});_closeModal();renderSvcDurationList();renderSvcSelect();savePricesToLanding();fbSaveConfig();showToast('green','✅','"'+n+'" agregado');}
-function removeSvcType(i){const n=SVC_TYPES[i].nombre;SVC_TYPES.splice(i,1);renderSvcDurationList();renderSvcSelect();showToast('blue','🗑️','"'+n+'" eliminado');}
+function removeSvcType(i){const n=SVC_TYPES[i].nombre;SVC_TYPES.splice(i,1);renderSvcDurationList();renderSvcSelect();fbSaveConfig();showToast('blue','🗑️','"'+n+'" eliminado');}
 
 /* extras CRUD */
 function addSvcExtra(svcId){
@@ -3904,8 +3904,13 @@ function renderClientPromos(){
   var track=document.getElementById('cp-track');
   if(!bar||!track)return;
   var hoy=new Date().toISOString().split('T')[0];
+  /* Leer directamente de PROMOTIONS (Firestore) — fallback a localStorage */
   var promos=[];
-  try{var raw=localStorage.getItem('ayalym-promos');if(raw)promos=JSON.parse(raw);}catch(e){}
+  if(typeof PROMOTIONS!=='undefined'&&PROMOTIONS.length){
+    promos=PROMOTIONS.filter(function(p){return p.activo;});
+  }else{
+    try{var raw=localStorage.getItem('ayalym-promos');if(raw)promos=JSON.parse(raw);}catch(e){}
+  }
   promos=promos.filter(function(p){
     if(p.fechaFin&&p.fechaFin<hoy)return false;
     if(p.fechaInicio&&p.fechaInicio>hoy)return false;
@@ -6005,6 +6010,7 @@ function deletePropService(id){
   const idx=PROPERTY_SERVICES.findIndex(p=>p.id===id);
   if(idx===-1)return;
   const nm=PROPERTY_SERVICES[idx].folio;
+  fbDeleteDoc('servicios_prop',id); /* eliminar documento de Firestore */
   PROPERTY_SERVICES.splice(idx,1);
   fbSavePropertyServices();
   showToast('amber','🗑',`Contrato ${nm} eliminado`);
@@ -7102,6 +7108,12 @@ function restoreSession(){
   var overlay = document.getElementById('fb-loading');
   try {
     await loadAllData();
+    /* Sincronizar PROMOTIONS a localStorage para landing page */
+    try{
+      localStorage.setItem('ayalym-promos',JSON.stringify(
+        PROMOTIONS.filter(function(p){return p.activo;})
+      ));
+    }catch(e){}
   } catch(e) {
     console.warn('Firebase: usando datos locales.', e);
   } finally {
