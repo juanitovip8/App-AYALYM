@@ -359,23 +359,9 @@ function _vapidToUint8(base64String){
   return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
 }
 
-/* ── Inicializa Web Push (sin depender de FCM legacy) ── */
-async function _initFCMPush(role){
+/* ── Web Push: suscribir este dispositivo al rol ── */
+async function _subscribePush(role,reg){
   try{
-    if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window))return;
-    /* ID único del dispositivo */
-    _fcmDeviceId=localStorage.getItem('_ayalym_did');
-    if(!_fcmDeviceId){
-      _fcmDeviceId='dev_'+Math.random().toString(36).slice(2)+Date.now();
-      localStorage.setItem('_ayalym_did',_fcmDeviceId);
-    }
-    /* Registrar service worker */
-    const reg=await navigator.serviceWorker.register('/firebase-messaging-sw.js',{scope:'/'});
-    await navigator.serviceWorker.ready;
-    /* Pedir permiso */
-    const perm=await Notification.requestPermission();
-    if(perm!=='granted'){console.log('[push] permiso denegado');return;}
-    /* Suscribir al push con VAPID */
     let sub=await reg.pushManager.getSubscription();
     if(!sub){
       sub=await reg.pushManager.subscribe({
@@ -383,9 +369,62 @@ async function _initFCMPush(role){
         applicationServerKey:_vapidToUint8(_VAPID_PUBLIC)
       });
     }
-    /* Guardar suscripción en Firestore con el rol del usuario */
     fbSavePushSub(role,_fcmDeviceId,sub);
     console.log('[push] suscripción registrada para rol:',role);
+  }catch(e){console.warn('[push] subscribe failed:',e.message);}
+}
+
+/* ── Banner flotante que pide activar notificaciones (requiere gesto del usuario) ── */
+function _showPushBanner(role){
+  if(document.getElementById('push-banner'))return;
+  const b=document.createElement('div');
+  b.id='push-banner';
+  b.innerHTML=`<div style="position:fixed;bottom:80px;left:12px;right:12px;background:#185FA5;color:#fff;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;z-index:9999;box-shadow:0 4px 24px rgba(0,0,0,.35);">
+    <span style="font-size:24px;flex-shrink:0;">🔔</span>
+    <div style="flex:1;min-width:0;">
+      <p style="font-size:13px;font-weight:600;margin:0 0 2px;">Activar notificaciones</p>
+      <p style="font-size:11px;margin:0;opacity:.85;">Recibe alertas aunque la app esté cerrada</p>
+    </div>
+    <button onclick="_enablePushFromBanner('${role}')" style="background:#fff;color:#185FA5;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">Activar</button>
+    <button onclick="document.getElementById('push-banner').remove()" style="background:none;border:none;color:rgba(255,255,255,.7);font-size:20px;cursor:pointer;line-height:1;padding:0 2px;flex-shrink:0;">✕</button>
+  </div>`;
+  document.body.appendChild(b);
+}
+
+/* Llamado al tocar "Activar" en el banner — ya tiene gesto del usuario */
+async function _enablePushFromBanner(role){
+  const b=document.getElementById('push-banner');if(b)b.remove();
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){showToast('amber','🔔','Notificaciones no activadas');return;}
+    const reg=await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+    if(!reg)return;
+    await _subscribePush(role,reg);
+    showToast('green','🔔','¡Notificaciones activadas!');
+  }catch(e){console.warn('[push] enable failed:',e.message);}
+}
+
+/* ── Inicializa push al login: automático si ya hay permiso, banner si no ── */
+async function _initFCMPush(role){
+  try{
+    if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
+    /* ID único del dispositivo */
+    _fcmDeviceId=localStorage.getItem('_ayalym_did');
+    if(!_fcmDeviceId){
+      _fcmDeviceId='dev_'+Math.random().toString(36).slice(2)+Date.now();
+      localStorage.setItem('_ayalym_did',_fcmDeviceId);
+    }
+    /* Registrar service worker (no necesita permiso) */
+    const reg=await navigator.serviceWorker.register('/firebase-messaging-sw.js',{scope:'/'});
+    await navigator.serviceWorker.ready;
+    if(Notification.permission==='granted'){
+      /* Ya tiene permiso → suscribir directamente */
+      await _subscribePush(role,reg);
+    }else if(Notification.permission==='default'){
+      /* Sin respuesta → mostrar banner (requiere toque en móvil) */
+      setTimeout(()=>_showPushBanner(role),2000);
+    }
+    /* Si es 'denied' → no hacer nada */
   }catch(e){console.warn('[push] init failed:',e.message);}
 }
 
