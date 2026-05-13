@@ -349,33 +349,44 @@ function renderAdminResumen(){
 let _notifListener=null;
 let _fcmDeviceId=null;
 
-/* ── Inicializa Firebase Cloud Messaging para push en background ── */
+/* VAPID public key (debe coincidir con la del servidor) */
+const _VAPID_PUBLIC='BODy9QBNnNx_TyTwD62uDqYfszR9dBtz_qO6umCLHcqUHPza6cuJIj_9enoiY-wdR2L6JLQWtjmbUsjL7mzHRZ8';
+
+/* Convierte la VAPID key base64url a Uint8Array para la API de Push */
+function _vapidToUint8(base64String){
+  const pad=base64String.replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(pad);
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+
+/* ── Inicializa Web Push (sin depender de FCM legacy) ── */
 async function _initFCMPush(role){
   try{
-    if(!('Notification' in window)||!('serviceWorker' in navigator))return;
-    /* ID único del dispositivo para identificar el token en Firestore */
+    if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window))return;
+    /* ID único del dispositivo */
     _fcmDeviceId=localStorage.getItem('_ayalym_did');
     if(!_fcmDeviceId){
       _fcmDeviceId='dev_'+Math.random().toString(36).slice(2)+Date.now();
       localStorage.setItem('_ayalym_did',_fcmDeviceId);
     }
-    /* Registrar el service worker de FCM */
+    /* Registrar service worker */
     const reg=await navigator.serviceWorker.register('/firebase-messaging-sw.js',{scope:'/'});
-    /* Pedir permiso de notificaciones */
+    await navigator.serviceWorker.ready;
+    /* Pedir permiso */
     const perm=await Notification.requestPermission();
-    if(perm!=='granted'){console.log('[FCM] permiso denegado');return;}
-    /* Obtener token FCM (necesita la VAPID key de Firebase Console) */
-    const messaging=firebase.messaging();
-    const vapidKey=window._AYALYM_VAPID||'';
-    if(!vapidKey){console.warn('[FCM] VAPID key no configurada');return;}
-    const token=await messaging.getToken({vapidKey,serviceWorkerRegistration:reg});
-    if(token){
-      fbSaveFCMToken(role,_fcmDeviceId,token);
-      console.log('[FCM] token registrado para rol:',role);
+    if(perm!=='granted'){console.log('[push] permiso denegado');return;}
+    /* Suscribir al push con VAPID */
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:_vapidToUint8(_VAPID_PUBLIC)
+      });
     }
-    /* Manejar mensajes en foreground (la app está abierta) — ya los maneja el listener de Firestore */
-    messaging.onMessage(()=>{});
-  }catch(e){console.warn('[FCM] init failed:',e.message);}
+    /* Guardar suscripción en Firestore con el rol del usuario */
+    fbSavePushSub(role,_fcmDeviceId,sub);
+    console.log('[push] suscripción registrada para rol:',role);
+  }catch(e){console.warn('[push] init failed:',e.message);}
 }
 
 function updateNotifBadge(){
@@ -448,13 +459,13 @@ function pushNotif(role,icon,type,title,body,reqId=null){
   if(!NOTIFICATIONS[role])NOTIFICATIONS[role]=[];
   NOTIFICATIONS[role].unshift({...n,_docId:'_tmp_'+Date.now()});
   if(role===currentRole){updateNotifBadge();if(notifPanelOpen)renderNotifications();}
-  /* Push en background: leer tokens FCM del rol y enviar vía servidor */
-  fbGetFCMTokens(role).then(function(tokens){
-    if(!tokens.length)return;
+  /* Push en background: leer suscripciones del rol y enviar vía servidor */
+  fbGetPushSubs(role).then(function(subscriptions){
+    if(!subscriptions.length)return;
     fetch('/api/push',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({tokens,title,body})
+      body:JSON.stringify({subscriptions,title,body})
     }).catch(function(){});
   }).catch(function(){});
 }
@@ -1071,7 +1082,7 @@ function doLogout(){
   if(typeof _stopAdminMapListener==='function')_stopAdminMapListener();
   if(typeof _stopSVMapListener==='function')_stopSVMapListener();
   _stopNotifListener();
-  if(_fcmDeviceId)fbDeleteFCMToken(_fcmDeviceId);
+  if(_fcmDeviceId)fbDeletePushSub(_fcmDeviceId);
   ['prev-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   facturaOn=false;const ft=document.getElementById('ftoggle');if(ft)ft.classList.remove('on');const ff=document.getElementById('ffields');if(ff)ff.classList.remove('show');
   document.getElementById('ficha-ov').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');notifPanelOpen=false;

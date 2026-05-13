@@ -1,35 +1,26 @@
 /* ═══════════════════════════════════════════════════════
-   AYALYM — Firebase Messaging Service Worker
-   Maneja notificaciones push cuando la app está cerrada.
-   Este archivo DEBE estar en la raíz del dominio.
+   AYALYM — Service Worker para Web Push
+   Muestra notificaciones push aunque la app esté cerrada.
+   No depende de FCM legacy — usa el protocolo Web Push.
    ═══════════════════════════════════════════════════════ */
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
 
-firebase.initializeApp({
-  apiKey:            'AIzaSyCPOysCjAn45mIYNX9L0ePrwIPOHRh56MM',
-  authDomain:        'ayalym-app.firebaseapp.com',
-  projectId:         'ayalym-app',
-  storageBucket:     'ayalym-app.firebasestorage.app',
-  messagingSenderId: '848723036056',
-  appId:             '1:848723036056:web:9db6343868afe7f9838ded'
+/* ── Recibir push desde el servidor ── */
+self.addEventListener('push', e => {
+  let data = { title: 'AYALYM', body: '' };
+  try { data = e.data ? e.data.json() : data; } catch (_) {}
+
+  e.waitUntil(
+    self.registration.showNotification(data.title || 'AYALYM', {
+      body:    data.body  || '',
+      icon:    data.icon  || '/img/logo.png',
+      badge:   data.badge || '/img/logo.png',
+      vibrate: [200, 100, 200],
+      data:    { url: '/app.html' }
+    })
+  );
 });
 
-const messaging = firebase.messaging();
-
-/* ── Notificaciones en background (app cerrada/en segundo plano) ── */
-messaging.onBackgroundMessage(payload => {
-  const n = payload.notification || {};
-  self.registration.showNotification(n.title || 'AYALYM', {
-    body:    n.body  || '',
-    icon:    '/img/logo.png',
-    badge:   '/img/logo.png',
-    vibrate: [200, 100, 200],
-    data:    { url: '/app.html' }
-  });
-});
-
-/* ── Al hacer clic en la notificación: abrir/enfocar la app ── */
+/* ── Al hacer clic en la notificación: enfocar/abrir la app ── */
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(
@@ -41,3 +32,7 @@ self.addEventListener('notificationclick', e => {
     })
   );
 });
+
+/* ── Activar inmediatamente sin esperar a recargar ── */
+self.addEventListener('activate', e => e.waitUntil(clients.claim()));
+self.addEventListener('install',  () => self.skipWaiting());

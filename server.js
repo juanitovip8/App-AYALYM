@@ -1,81 +1,70 @@
 /* ═══════════════════════════════════════════════════════
    AYALYM — Servidor Express
-   Sirve los archivos estáticos + endpoint /api/push
-   para enviar notificaciones FCM a dispositivos móviles
+   Sirve archivos estáticos + endpoint /api/push
+   Usa Web Push con VAPID (independiente de FCM legacy)
    ═══════════════════════════════════════════════════════ */
-const express = require('express');
-const path    = require('path');
-const app     = express();
+const express  = require('express');
+const webpush  = require('web-push');
+const path     = require('path');
+const app      = express();
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
+/* ── Configurar VAPID ───────────────────────────────────
+   Variables de entorno en Railway:
+     VAPID_PUBLIC_KEY  = BODy9QBNnNx_TyTwD62uDqYfszR9dBtz_qO6umCLHcqUHPza6cuJIj_9enoiY-wdR2L6JLQWtjmbUsjL7mzHRZ8
+     VAPID_PRIVATE_KEY = Ik7C30Kfw4QhpQz1AMb8UwrBjGtBh8XZ1FnMPJ9tMgU
+   ──────────────────────────────────────────────────────── */
+const VAPID_PUBLIC  = process.env.VAPID_PUBLIC_KEY  || 'BODy9QBNnNx_TyTwD62uDqYfszR9dBtz_qO6umCLHcqUHPza6cuJIj_9enoiY-wdR2L6JLQWtjmbUsjL7mzHRZ8';
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
+
+if (VAPID_PRIVATE) {
+  webpush.setVapidDetails('mailto:app@ayalym.com', VAPID_PUBLIC, VAPID_PRIVATE);
+} else {
+  console.warn('[push] VAPID_PRIVATE_KEY no configurada — push deshabilitado');
+}
+
 /* ── /api/push ──────────────────────────────────────────
-   Body: { tokens: string[], title: string, body: string }
-   Usa FCM Legacy HTTP API para entregar la notificación
-   incluso con la app cerrada en móvil.
+   Body: {
+     subscriptions: [{endpoint, keys:{p256dh, auth}}, ...],
+     title: string,
+     body:  string
+   }
    ──────────────────────────────────────────────────────── */
 app.post('/api/push', async (req, res) => {
-  const FCM_KEY = process.env.FCM_SERVER_KEY || '';
-  const { tokens, title, body } = req.body || {};
+  if (!VAPID_PRIVATE) return res.json({ ok: false, reason: 'no-vapid-key' });
 
-  if (!Array.isArray(tokens) || !tokens.length) {
-    return res.json({ ok: true, sent: 0, reason: 'no-tokens' });
-  }
-  if (!FCM_KEY) {
-    return res.json({ ok: false, reason: 'no-fcm-key' });
+  const { subscriptions, title, body } = req.body || {};
+  if (!Array.isArray(subscriptions) || !subscriptions.length) {
+    return res.json({ ok: true, sent: 0, reason: 'no-subscriptions' });
   }
 
-  try {
-    const payload = {
-      registration_ids: tokens.slice(0, 500),
-      notification: {
-        title: title || 'AYALYM',
-        body:  body  || '',
-        icon:  '/img/logo.png'
-      },
-      webpush: {
-        notification: {
-          title: title || 'AYALYM',
-          body:  body  || '',
-          icon:  '/img/logo.png',
-          badge: '/img/logo.png',
-          requireInteraction: false,
-          vibrate: [200, 100, 200]
-        },
-        fcm_options: { link: '/app.html' }
-      },
-      android: {
-        notification: {
-          icon:  'ic_notification',
-          color: '#185FA5',
-          sound: 'default'
-        }
-      }
-    };
+  const payload = JSON.stringify({
+    title: title || 'AYALYM',
+    body:  body  || '',
+    icon:  '/img/logo.png',
+    badge: '/img/logo.png'
+  });
 
-    const r = await fetch('https://fcm.googleapis.com/fcm/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'Authorization': `key=${FCM_KEY}`
-      },
-      body: JSON.stringify(payload)
-    });
+  let sent = 0, failed = 0;
+  await Promise.all(subscriptions.map(async sub => {
+    try {
+      await webpush.sendNotification(sub, payload);
+      sent++;
+    } catch (e) {
+      /* 410 Gone = suscripción expirada/eliminada → ignorar */
+      if (e.statusCode !== 410) console.warn('[push] error sub:', e.statusCode, e.message);
+      failed++;
+    }
+  }));
 
-    const result = await r.json();
-    console.log('[push] sent to', tokens.length, 'devices →', result.success, 'ok,', result.failure, 'fail');
-    res.json({ ok: true, sent: tokens.length, result });
-  } catch (e) {
-    console.error('[push] error:', e.message);
-    res.json({ ok: false, error: e.message });
-  }
+  console.log(`[push] enviado: ${sent} ok, ${failed} fallidos`);
+  res.json({ ok: true, sent, failed });
 });
 
-/* SPA fallback: todas las rutas sin archivo sirven app.html */
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'app.html'));
-});
+/* SPA fallback */
+app.get('*', (_req, res) => res.sendFile(path.join(__dirname, 'app.html')));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`AYALYM corriendo en puerto ${PORT}`));
