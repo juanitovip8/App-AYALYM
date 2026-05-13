@@ -923,7 +923,7 @@ function launchApp(role,nombre,zona){
     // ── Mostrar foto del supervisor en header si existe ──
     const svHeaderAv=document.getElementById('header-av');
     if(svHeaderAv&&currentSupervisorRef&&currentSupervisorRef.photo){svHeaderAv.innerHTML=`<img src="${currentSupervisorRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;svHeaderAv.style.fontSize='0';}
-    renderSVWorkers();renderSVMap();renderSVChatSelector();renderSVNotes();renderSupervisorResumen();
+    renderSVWorkers();renderSVChatSelector();renderSVNotes();renderSupervisorResumen();
     renderChatBox('sv-a','sv','chat-sv-a');
     renderChatBox('c-t','sv','chat-sv-ct');
     renderChatBox('c-a','sv','chat-sv-ca');
@@ -962,6 +962,8 @@ function doLogout(){
   window.scrollTo({top:0,behavior:'instant'});
   ['login-email','login-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});showLV('main');;
   uploadedFiles=[];clientDiscount=0;workerDeductions=[];selectedTimeSlot='';selectedWorkerId=null;fichaWorkerId=null;currentWorkerRef=null;currentSupervisorRef=null;currentUserEmail='';clearSession();
+  if(typeof _stopAdminMapListener==='function')_stopAdminMapListener();
+  if(typeof _stopSVMapListener==='function')_stopSVMapListener();
   ['prev-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   facturaOn=false;const ft=document.getElementById('ftoggle');if(ft)ft.classList.remove('on');const ff=document.getElementById('ffields');if(ff)ff.classList.remove('show');
   document.getElementById('ficha-ov').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');notifPanelOpen=false;
@@ -993,6 +995,7 @@ function navGo(role,sec,btn){
   if(role==='trabajador'&&sec==='mensajes-t'){renderChatBox('c-t','t','chat-t-c');renderChatBox('t-sv','t','chat-t-sv');renderChatBox('t-a','t','chat-t-a');}
   if(role==='supervisor'&&sec==='resumen')renderSupervisorResumen();
   if(role==='supervisor'&&sec==='mapa-sv'){setTimeout(()=>renderSVMap(),50);}
+  else if(_svMapListener&&role==='supervisor'){_stopSVMapListener();}
   if(role==='supervisor'&&sec==='eval-sv')renderSVEval();
   if(role==='supervisor'&&sec==='mensajes-sv'){renderSVChatSelector();renderChatBox('sv-a','sv','chat-sv-a');renderChatBox('c-t','sv','chat-sv-ct');renderChatBox('c-a','sv','chat-sv-ca');}
   if(role==='admin'&&sec==='mapa'){setTimeout(()=>renderAdminMapa(),50);}
@@ -2885,7 +2888,80 @@ function renderSVEval(){
     </div>`;
   }).join('')||'<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin personal asignado.</p>';
 }
-function renderSVMap(){const assigned=WORKERS.filter(w=>SUPERVISOR_ASSIGNED.includes(w.id)&&w.status!=='inactive');drawMap('sv-map-svg',assigned);const el=document.getElementById('sv-worker-loc-list');if(!el)return;el.innerHTML=assigned.map(w=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid #B5D4F4;"><div style="width:9px;height:9px;border-radius:50%;background:${w.status==='busy'?'#BA7517':'#1A56DB'};flex-shrink:0;"></div><div class="av" style="width:30px;height:30px;font-size:${w.photo?'0':'11px'};">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div><div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p></div><span class="badge ${w.status==='active'?'bok':'bwarn'}">${w.status==='active'?'Disponible':'En servicio'}</span></div>`).join('');}
+/* ══════════════════════════════════════════════════════════
+   MAPA EN TIEMPO REAL — Supervisor
+   ══════════════════════════════════════════════════════════ */
+let _svMapInstance=null;
+let _svMapMarkers={};
+let _svMapListener=null;
+
+function renderSVMap(){
+  const mapDiv=document.getElementById('sv-map-div');if(!mapDiv)return;
+  /* Limpiar listener previo si existe */
+  if(_svMapListener){_svMapListener();_svMapListener=null;}
+  _svMapMarkers={};_svMapInstance=null;
+  const statusEl=document.getElementById('sv-map-status');
+  if(statusEl)statusEl.textContent='Conectando…';
+  _waitForGoogleMaps().then(()=>{
+    const el=document.getElementById('sv-map-div');if(!el)return;
+    _svMapInstance=new google.maps.Map(el,{
+      center:{lat:19.4326,lng:-99.1332},zoom:12,
+      mapTypeId:'roadmap',streetViewControl:false,mapTypeControl:false,fullscreenControl:true
+    });
+    _svMapMarkers={};
+    _svMapListener=fbListenUbicActivas(function(locs){
+      var assignedIds=new Set((SUPERVISOR_ASSIGNED||[]).map(function(id){return 'w_'+id;}));
+      var filtered=locs.filter(function(l){return l.rol==='personal_inm'||(l.rol==='trabajador'&&assignedIds.has(String(l.id)));});
+      _updateSVMapMarkers(filtered);
+    });
+  });
+}
+
+function _stopSVMapListener(){
+  if(_svMapListener){_svMapListener();_svMapListener=null;}
+  _svMapMarkers={};_svMapInstance=null;
+}
+
+function _updateSVMapMarkers(locs){
+  if(!_svMapInstance)return;
+  const statusEl=document.getElementById('sv-map-status');
+  const locIds=new Set(locs.map(l=>String(l.id)));
+  Object.keys(_svMapMarkers).forEach(id=>{
+    if(!locIds.has(id)){_svMapMarkers[id].marker.setMap(null);delete _svMapMarkers[id];}
+  });
+  locs.forEach(loc=>{
+    const id=String(loc.id);
+    const pos={lat:parseFloat(loc.lat),lng:parseFloat(loc.lng)};
+    const color=loc.rol==='personal_inm'?'#065041':'#D97706';
+    const rolLabel=loc.rol==='personal_inm'?'🏢 Personal de Inmuebles':'🧹 Trabajador de Servicios';
+    const infoHtml=`<div style="font-family:system-ui,sans-serif;min-width:165px;padding:2px 0;">
+      <p style="font-weight:700;font-size:13px;color:#042C53;margin:0 0 4px;">${loc.nombre}</p>
+      <p style="font-size:11px;color:#5C7A9A;margin:0 0 3px;">${rolLabel}</p>
+      ${loc.contratoNombre?`<p style="font-size:11px;color:#185FA5;margin:0 0 3px;">🔧 ${loc.contratoNombre}</p>`:''}
+      <p style="font-size:11px;color:#065041;margin:0;">⏱ Inicio: <strong>${loc.entrada||'—'}</strong></p>
+    </div>`;
+    if(_svMapMarkers[id]){
+      _svMapMarkers[id].marker.setPosition(pos);
+      _svMapMarkers[id].infoWindow.setContent(infoHtml);
+    }else{
+      const marker=new google.maps.Marker({
+        position:pos,map:_svMapInstance,title:loc.nombre,
+        icon:{path:google.maps.SymbolPath.CIRCLE,scale:10,fillColor:color,fillOpacity:1,strokeColor:'#ffffff',strokeWeight:2.5},
+        animation:google.maps.Animation.DROP
+      });
+      const infoWindow=new google.maps.InfoWindow({content:infoHtml});
+      marker.addListener('click',()=>{
+        Object.values(_svMapMarkers).forEach(m=>m.infoWindow.close());
+        infoWindow.open(_svMapInstance,marker);
+      });
+      _svMapMarkers[id]={marker,infoWindow};
+    }
+  });
+  if(statusEl){
+    const now=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    statusEl.textContent=locs.length?`${locs.length} persona${locs.length>1?'s':''} activa${locs.length>1?'s':''} · Actualizado ${now}`:'Sin personal activo en este momento';
+  }
+}
 function renderSVChatSelector(){
   const assigned=WORKERS.filter(w=>SUPERVISOR_ASSIGNED.includes(w.id));
   const sel=document.getElementById('sv-chat-selector');if(!sel)return;
@@ -3733,6 +3809,9 @@ function renderAdminMapa(){
           <span style="font-size:11px;color:#5C7A9A;display:flex;align-items:center;gap:5px;">
             <span style="width:11px;height:11px;border-radius:50%;background:#185FA5;display:inline-block;border:2px solid #fff;box-shadow:0 0 0 1px #185FA5;"></span>Supervisores
           </span>
+          <span style="font-size:11px;color:#5C7A9A;display:flex;align-items:center;gap:5px;">
+            <span style="width:11px;height:11px;border-radius:50%;background:#D97706;display:inline-block;border:2px solid #fff;box-shadow:0 0 0 1px #D97706;"></span>Trabajadores
+          </span>
         </div>
       </div>
       <div id="admin-map-div" style="width:100%;height:520px;"></div>
@@ -3778,12 +3857,13 @@ function _updateAdminMapMarkers(locs){
   locs.forEach(loc=>{
     const id=String(loc.id);
     const pos={lat:parseFloat(loc.lat),lng:parseFloat(loc.lng)};
-    const color=loc.rol==='personal_inm'?'#065041':'#185FA5';
+    const color=loc.rol==='personal_inm'?'#065041':loc.rol==='trabajador'?'#D97706':'#185FA5';
+    const rolLabel=loc.rol==='personal_inm'?'🏢 Personal de Inmuebles':loc.rol==='trabajador'?'🧹 Trabajador de Servicios':'🧑‍💼 Supervisor';
     const infoHtml=`<div style="font-family:system-ui,sans-serif;min-width:175px;padding:2px 0;">
       <p style="font-weight:700;font-size:13px;color:#042C53;margin:0 0 4px;">${loc.nombre}</p>
-      <p style="font-size:11px;color:#5C7A9A;margin:0 0 3px;">${loc.rol==='personal_inm'?'🏢 Personal de Inmuebles':'🧑‍💼 Supervisor'}</p>
-      ${loc.contratoNombre?`<p style="font-size:11px;color:#185FA5;margin:0 0 3px;">📄 ${loc.contratoNombre}</p>`:''}
-      <p style="font-size:11px;color:#065041;margin:0;">⏱ Entrada: <strong>${loc.entrada||'—'}</strong></p>
+      <p style="font-size:11px;color:#5C7A9A;margin:0 0 3px;">${rolLabel}</p>
+      ${loc.contratoNombre?`<p style="font-size:11px;color:#185FA5;margin:0 0 3px;">🔧 ${loc.contratoNombre}</p>`:''}
+      <p style="font-size:11px;color:#065041;margin:0;">⏱ Inicio: <strong>${loc.entrada||'—'}</strong></p>
     </div>`;
     if(_adminMapMarkers[id]){
       _adminMapMarkers[id].marker.setPosition(pos);
@@ -4362,7 +4442,14 @@ function renderWorkerAgenda(){
         const startMin=sh*60+sm,svcEndMin=startMin+j.durMax,travelEndMin=svcEndMin+BUFFER_MIN;
         const svcEndH=Math.floor(svcEndMin/60),svcEndM=svcEndMin%60,nextH=Math.floor(travelEndMin/60),nextM=travelEndMin%60;
         if(lastEndMin!==null&&startMin>lastEndMin)html+=`<div class="agenda-gap">⏱ ${startMin-lastEndMin} min libres</div>`;
-        html+=`<div class="agenda-item" style="flex-direction:column;align-items:stretch;gap:8px;padding:12px;"><div style="display:flex;justify-content:space-between;align-items:center;"><div><p style="font-size:13px;font-weight:600;color:#042C53;margin-bottom:2px;">${j.svc}</p><span style="font-size:11px;color:#185FA5;">${j.zona}</span></div><span style="font-size:16px;font-weight:700;color:#1A56DB;">${j.hora}</span></div><div style="background:#F4F9FF;border-radius:8px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;font-size:11px;"><span>🔧 Servicio</span><span style="font-weight:500;color:#042C53;">${j.hora} – ${fmt(svcEndH,svcEndM)} <span style="color:#185FA5;">(${j.durMin}–${j.durMax} min)</span></span><span>🚗 Traslado</span><span style="font-weight:500;color:#042C53;">${fmt(svcEndH,svcEndM)} – ${fmt(nextH,nextM)} <span style="color:#185FA5;">(${BUFFER_MIN} min)</span></span><span>✅ Libre</span><span style="font-weight:700;color:#27500A;">${fmt(nextH,nextM)}</span></div></div>`;
+        const jobIdx=worker.todayJobs.indexOf(j);
+        const isInProgress=j.status==='in-progress';
+        const borderStyle=isInProgress?'border:1.5px solid #D97706;background:#FFFBF2;':'';
+        const statusBadge=isInProgress?'<span style="font-size:10px;font-weight:600;color:#D97706;background:#FFF3CD;border-radius:20px;padding:2px 8px;">● En curso</span>':'';
+        const actionBtn=isInProgress
+          ?`<button onclick="completarServicioWorker(${worker.id},${jobIdx})" style="width:100%;padding:8px;border:none;border-radius:8px;background:#27500A;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">✅ Completar servicio</button>`
+          :`<button onclick="iniciarServicioWorker(${worker.id},${jobIdx})" style="width:100%;padding:8px;border:none;border-radius:8px;background:#D97706;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">▶ Iniciar servicio</button>`;
+        html+=`<div class="agenda-item" style="flex-direction:column;align-items:stretch;gap:8px;padding:12px;${borderStyle}"><div style="display:flex;justify-content:space-between;align-items:center;"><div><p style="font-size:13px;font-weight:600;color:#042C53;margin-bottom:2px;">${j.svc} ${statusBadge}</p><span style="font-size:11px;color:#185FA5;">${j.zona}</span></div><span style="font-size:16px;font-weight:700;color:#1A56DB;">${j.hora}</span></div><div style="background:#F4F9FF;border-radius:8px;padding:8px 10px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;font-size:11px;"><span>🔧 Servicio</span><span style="font-weight:500;color:#042C53;">${j.hora} – ${fmt(svcEndH,svcEndM)} <span style="color:#185FA5;">(${j.durMin}–${j.durMax} min)</span></span><span>🚗 Traslado</span><span style="font-weight:500;color:#042C53;">${fmt(svcEndH,svcEndM)} – ${fmt(nextH,nextM)} <span style="color:#185FA5;">(${BUFFER_MIN} min)</span></span><span>✅ Libre</span><span style="font-weight:700;color:#27500A;">${fmt(nextH,nextM)}</span></div>${actionBtn}</div>`;
         lastEndMin=travelEndMin;
       });
       if(lastEndMin!==null){const nh=Math.floor(lastEndMin/60),nm=lastEndMin%60;html+=`<div style="background:#EAF3DE;border-radius:8px;padding:10px 14px;margin:4px 0;display:flex;justify-content:space-between;align-items:center;"><div><p style="font-size:13px;font-weight:600;color:#27500A;">Próxima disponibilidad</p><p style="font-size:11px;color:#27500A;">Tras el último traslado</p></div><span style="font-size:20px;font-weight:700;color:#27500A;">${fmt(nh,nm)}</span></div>`;}
@@ -4411,6 +4498,49 @@ function toggleAgendaAcc(id,hdr){
   hdr.classList.toggle('open',!isOpen);
   const arrow=hdr.querySelector('.acc-arrow');
   if(arrow)arrow.textContent=isOpen?'▼':'▲';
+}
+
+function iniciarServicioWorker(wid,jobIdx){
+  const worker=WORKERS.find(w=>w.id===wid);if(!worker)return;
+  const job=worker.todayJobs[jobIdx];if(!job)return;
+  const _doStart=(uLat,uLng)=>{
+    job.status='in-progress';
+    worker.status='busy';
+    fbSaveWorkers();
+    if(uLat&&uLng){
+      fbSaveUbicActiva({id:'w_'+wid,nombre:worker.name,rol:'trabajador',
+        lat:uLat,lng:uLng,entrada:job.hora,
+        contratoNombre:job.svc+(job.zona?' · '+job.zona:'')});
+    }
+    renderWorkerAgenda();
+    renderTrabajadorResumen();
+    showToast('green','▶','Servicio iniciado');
+  };
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos=>_doStart(pos.coords.latitude,pos.coords.longitude),
+      ()=>_doStart(null,null),
+      {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+    );
+  }else{
+    _doStart(null,null);
+  }
+}
+
+function completarServicioWorker(wid,jobIdx){
+  const worker=WORKERS.find(w=>w.id===wid);if(!worker)return;
+  const job=worker.todayJobs[jobIdx];if(!job)return;
+  if(!confirm('¿Marcar este servicio como completado?'))return;
+  job.status='completed';
+  const stillBusy=worker.todayJobs.some(j=>j.status==='in-progress');
+  if(!stillBusy)worker.status='active';
+  worker.services=(worker.services||0)+1;
+  fbDeleteUbicActiva('w_'+wid);
+  fbSaveWorkers();
+  renderWorkerAgenda();
+  renderWorkerHistorial();
+  renderTrabajadorResumen();
+  showToast('green','✅','Servicio completado');
 }
 
 function selectSupervisorTab(tab,btn){
