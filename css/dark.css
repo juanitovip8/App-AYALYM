@@ -151,6 +151,7 @@ select option {
   background: #0d0d0d !important;
   border-bottom: 1px solid var(--dk-border) !important;
   border-radius: 0 !important;
+  padding-top: calc(.75rem + env(safe-area-inset-top, 0px)) !important;
 }
 .header-brand-name { color: #ffffff !important; font-size: 17px !important; }
 .ubadge { color: var(--dk-sub) !important; background: rgba(255,255,255,.08) !important; }
