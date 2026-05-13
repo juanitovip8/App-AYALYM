@@ -1942,15 +1942,17 @@ textarea{resize:vertical;min-height:60px;}
 @media (max-width:640px){
   .header{padding:.5rem .9rem;padding-top:calc(.5rem + env(safe-area-inset-top,0px));}
   .header-logo{height:32px;width:32px;}
-  /* Nombre de marca visible en móvil — letra pequeña */
+  /* Nombre de marca visible en móvil — letra pequeña, no se encoge */
   .header-brand-name{font-size:11px;letter-spacing:.3px;}
-  .header-brand{gap:6px;}
-  /* Nombre y rol visibles en móvil — letra pequeña */
-  .header-user-text{display:flex;}
-  .header-uname{font-size:10px;font-weight:600;}
-  .header-urole{font-size:9px;}
+  .header-brand{gap:6px;flex-shrink:0;}
+  /* Header right: permite que el nombre ocupe lo que necesite */
+  .header-right{flex-shrink:1;min-width:0;overflow:hidden;}
+  /* Nombre y rol visibles en móvil — letra pequeña, permite doble línea */
+  .header-user-text{display:flex;max-width:100px;min-width:0;}
+  .header-uname{font-size:10px;font-weight:600;white-space:normal;word-break:break-word;line-height:1.25;}
+  .header-urole{font-size:9px;white-space:nowrap;}
   /* Invertir orden: texto primero, avatar después — queda [Nombre/Rol][Avatar] */
-  .header-user-info{flex-direction:row-reverse;gap:5px;}
+  .header-user-info{flex-direction:row-reverse;gap:5px;min-width:0;}
   /* Ícono de sitio web — solo emoji, sin texto */
   .btn-site-ext{display:inline-flex!important;padding:5px 8px;}
   /* Ocultar etiqueta de texto del toggle de tema — solo ícono */
