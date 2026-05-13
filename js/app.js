@@ -5674,9 +5674,13 @@ function buildPersonalAsignadoHtml(psId,showActions){
     const asis=p.asistencias.find(a=>a.fecha===today);
     const dot=asis?.salida?'#1A7A3B':asis?.entrada?'#E6A817':'#ccc';
     const dotTitle=asis?.salida?'Salida registrada':asis?.entrada?'Entrada registrada':'Sin registro hoy';
+    const avInner=p.photo
+      ?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      :`<span style="font-size:8px;font-weight:700;color:#fff;">${p.initials}</span>`;
     return`<span class="pi-asig-chip" title="${dotTitle}">
-      <span style="width:7px;height:7px;border-radius:50%;background:${dot};display:inline-block;margin-right:4px;"></span>
-      ${p.initials} ${p.nombre.split(' ')[0]}
+      <span style="width:7px;height:7px;border-radius:50%;background:${dot};display:inline-block;margin-right:5px;flex-shrink:0;"></span>
+      <span style="width:20px;height:20px;border-radius:50%;background:#085041;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;margin-right:5px;">${avInner}</span>
+      ${p.nombre.split(' ')[0]}
     </span>`;}).join('');
   return`<div class="inm-pi-assigned">
     <p class="inm-pi-assigned-title">👷 Personal asignado</p>
@@ -6289,6 +6293,7 @@ function buildInmDetailSV(ps){
     ${ps.descripcion?`<div class="inm-field" style="grid-column:1/-1;"><strong>Descripción</strong>${ps.descripcion}</div>`:''}
   </div>
   ${ps.notas?`<p style="font-size:11px;color:#5C7A9A;margin-top:8px;background:var(--blue-light);border-radius:6px;padding:6px 10px;">📝 ${ps.notas}</p>`:''}
+  ${buildPersonalAsignadoHtml(ps.id,false)}
   ${reportesHtml}
   <div id="att-sv-${ps.id}">${_buildSvAttHtml('sv_'+ps.id,ps)}</div>`;
 }
