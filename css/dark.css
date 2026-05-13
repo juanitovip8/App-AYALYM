@@ -1007,3 +1007,11 @@ select option {
 .gm-style .gm-style-iw-d p,
 .gm-style .gm-style-iw-d strong,
 .gm-style .gm-style-iw-d span { color: #042C53 !important; background: transparent !important; }
+
+/* ── HEADER MOBILE dark mode (≤ 640px) ─── */
+@media (max-width:640px){
+  .header {
+    padding: .5rem .9rem !important;
+    padding-top: calc(.5rem + env(safe-area-inset-top, 0px)) !important;
+  }
+}

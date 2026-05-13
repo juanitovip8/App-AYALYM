@@ -10,9 +10,9 @@
   <title>AYALYM — Limpieza profesional a domicilio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=50">
+  <link rel="stylesheet" href="css/style.css?v=51">
   <link rel="stylesheet" href="css/theme-toggle.css?v=1">
-  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=14">
+  <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=15">
   <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
   <script>!function(){var t=localStorage.getItem('ayalym-theme')||'dark';document.documentElement.classList.add(t+'-mode');if(t==='light'){document.addEventListener('DOMContentLoaded',function(){var l=document.getElementById('dark-css-link');if(l)l.disabled=true;});};}();</script>
   <link rel="icon" type="image/png" href="img/logo.png">
@@ -144,14 +144,14 @@
             <span class="header-urole" id="header-urole">Cliente</span>
           </div>
         </div>
-        <a href="index.html" class="btn-site">🌐 Sitio web</a>
-        <button id="btn-install-pwa" class="btn-site" onclick="installPWA()" title="Agregar a pantalla de inicio" style="display:none;">📲 Instalar</button>
+        <a href="index.html" class="btn-site btn-site-ext">🌐 <span class="btn-site-label">Sitio web</span></a>
+        <button id="btn-install-pwa" class="btn-site" onclick="installPWA()" title="Agregar a pantalla de inicio" style="display:none;">📲 <span class="btn-site-label">Instalar</span></button>
         <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar a modo claro" aria-label="Cambiar tema">
           <span class="tt-icon">☀️</span>
           <span class="tt-label">Claro</span>
         </button>
         <div class="notif-bell" onclick="toggleNotifPanel()"><span style="font-size:16px;">🔔</span><span class="notif-badge" id="notif-badge">0</span></div>
-        <button class="btn-logout" onclick="doLogout()">✕ Salir</button>
+        <button class="btn-logout" onclick="doLogout()">✕ <span class="logout-label">Salir</span></button>
       </div>
     </div>
   </div>

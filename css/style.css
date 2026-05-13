@@ -1934,3 +1934,28 @@ textarea{resize:vertical;min-height:60px;}
 .stc-chevron.open{transform:rotate(180deg);}
 .stc-hdr{cursor:pointer;}
 .stc-hdr:hover{background:rgba(238,245,255,.6);border-radius:8px;}
+
+/* ── HEADER MOBILE (≤ 640px) ─────────────────── */
+@media (max-width:640px){
+  .header{padding:.5rem .9rem;padding-top:calc(.5rem + env(safe-area-inset-top,0px));}
+  .header-logo{height:34px;width:34px;}
+  /* Ocultar nombre de marca en móvil */
+  .header-brand-name{display:none;}
+  /* Ocultar nombre y rol del usuario — solo queda el avatar */
+  .header-user-text{display:none;}
+  /* Ocultar "Sitio web" en móvil */
+  .btn-site-ext{display:none!important;}
+  /* Ocultar etiqueta de texto del toggle de tema — solo ícono */
+  .tt-label{display:none;}
+  /* Ocultar "Salir" — solo queda la ✕ */
+  .logout-label{display:none;}
+  /* Ajustar botón de cerrar sesión al nuevo tamaño */
+  .btn-logout{padding:5px 9px;font-size:13px;}
+  /* Reducir gap entre elementos del header */
+  .header-right{gap:5px;}
+  /* Botón instalar: solo emoji */
+  .btn-site-label{display:none;}
+  .btn-site{padding:5px 8px;}
+  /* Reducir tamaño del theme-toggle */
+  .theme-toggle{padding:5px 8px;}
+}
