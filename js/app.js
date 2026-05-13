@@ -3134,9 +3134,19 @@ function renderSVMap(){
   if(statusEl)statusEl.textContent='Conectando…';
   _waitForGoogleMaps().then(()=>{
     const el=document.getElementById('sv-map-div');if(!el)return;
+    const isMobileSV=window.innerWidth<=640;
     _svMapInstance=new google.maps.Map(el,{
-      center:{lat:19.4326,lng:-99.1332},zoom:12,
-      mapTypeId:'roadmap',streetViewControl:false,mapTypeControl:false,fullscreenControl:true
+      center:{lat:19.4326,lng:-99.1332},
+      zoom:isMobileSV?11:12,
+      mapTypeId:'roadmap',
+      streetViewControl:false,mapTypeControl:false,
+      fullscreenControl:!isMobileSV,
+      gestureHandling:'cooperative',
+      styles:[
+        {featureType:'poi',elementType:'labels',stylers:[{visibility:'off'}]},
+        {featureType:'transit',elementType:'labels',stylers:[{visibility:'off'}]},
+        {featureType:'administrative.locality',elementType:'labels',stylers:[{visibility:'simplified'}]}
+      ]
     });
     _svMapMarkers={};
     _svMapListener=fbListenUbicActivas(function(locs){
@@ -4019,11 +4029,29 @@ let _adminMapInstance=null;
 let _adminMapMarkers={};
 let _adminMapListener=null;
 
-async function _waitForGoogleMaps(){
-  for(let i=0;i<30;i++){
-    if(window.google&&window.google.maps&&window.google.maps.Map)break;
-    await new Promise(r=>setTimeout(r,300));
-  }
+/* Carga el API de Google Maps solo la primera vez que se necesita (lazy load).
+   Ahorra ~300KB en cada sesión donde el usuario nunca abre el mapa. */
+let _mapsLoadPromise=null;
+function _waitForGoogleMaps(){
+  if(_mapsLoadPromise)return _mapsLoadPromise;
+  _mapsLoadPromise=new Promise(resolve=>{
+    if(window.google&&window.google.maps&&window.google.maps.Map){resolve();return;}
+    /* Inyectar script solo una vez */
+    if(!document.getElementById('gmaps-script')){
+      const s=document.createElement('script');
+      s.id='gmaps-script';
+      s.src='https://maps.googleapis.com/maps/api/js?key=AIzaSyB09Mi1wxP_LSKMiM8un83M1OtnauG_vuE&loading=async';
+      s.async=true;
+      document.head.appendChild(s);
+    }
+    /* Esperar hasta que esté listo (máx 15 s) */
+    let tries=0;
+    const t=setInterval(()=>{
+      if(window.google&&window.google.maps&&window.google.maps.Map){clearInterval(t);resolve();}
+      else if(++tries>50){clearInterval(t);resolve();} // timeout seguro
+    },300);
+  });
+  return _mapsLoadPromise;
 }
 
 function renderAdminMapa(){
@@ -4044,7 +4072,7 @@ function renderAdminMapa(){
           </span>
         </div>
       </div>
-      <div id="admin-map-div" style="width:100%;height:520px;"></div>
+      <div id="admin-map-div" style="width:100%;height:clamp(280px,45vw,520px);"></div>
       <div id="admin-map-status" style="padding:10px 16px;font-size:11px;color:#5C7A9A;border-top:.5px solid #E6F1FB;background:#F4F8FD;">
         Conectando…
       </div>
@@ -4052,13 +4080,21 @@ function renderAdminMapa(){
   _waitForGoogleMaps().then(()=>{
     const mapDiv=document.getElementById('admin-map-div');
     if(!mapDiv)return;
+    const isMobile=window.innerWidth<=640;
     _adminMapInstance=new google.maps.Map(mapDiv,{
       center:{lat:19.4326,lng:-99.1332},
-      zoom:12,
+      zoom:isMobile?11:12,
       mapTypeId:'roadmap',
       streetViewControl:false,
       mapTypeControl:false,
-      fullscreenControl:true,
+      fullscreenControl:!isMobile,
+      gestureHandling:'cooperative',
+      /* Estilos simplificados: oculta POIs y etiquetas secundarias → tiles más simples */
+      styles:[
+        {featureType:'poi',elementType:'labels',stylers:[{visibility:'off'}]},
+        {featureType:'transit',elementType:'labels',stylers:[{visibility:'off'}]},
+        {featureType:'administrative.locality',elementType:'labels',stylers:[{visibility:'simplified'}]}
+      ]
     });
     _adminMapMarkers={};
     if(_adminMapListener){_adminMapListener();_adminMapListener=null;}
@@ -4750,7 +4786,7 @@ function iniciarServicioWorker(wid,jobIdx){
     navigator.geolocation.getCurrentPosition(
       pos=>_doStart(pos.coords.latitude,pos.coords.longitude),
       ()=>_doStart(null,null),
-      {enableHighAccuracy:true,timeout:10000,maximumAge:0}
+      {enableHighAccuracy:false,timeout:8000,maximumAge:20000}
     );
   }else{
     _doStart(null,null);
