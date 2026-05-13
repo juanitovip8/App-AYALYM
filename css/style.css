@@ -1938,11 +1938,16 @@ textarea{resize:vertical;min-height:60px;}
 /* ── HEADER MOBILE (≤ 640px) ─────────────────── */
 @media (max-width:640px){
   .header{padding:.5rem .9rem;padding-top:calc(.5rem + env(safe-area-inset-top,0px));}
-  .header-logo{height:34px;width:34px;}
-  /* Ocultar nombre de marca en móvil */
-  .header-brand-name{display:none;}
-  /* Ocultar nombre y rol del usuario — solo queda el avatar */
-  .header-user-text{display:none;}
+  .header-logo{height:32px;width:32px;}
+  /* Nombre de marca visible en móvil — letra pequeña */
+  .header-brand-name{font-size:11px;letter-spacing:.3px;}
+  .header-brand{gap:6px;}
+  /* Nombre y rol visibles en móvil — letra pequeña */
+  .header-user-text{display:flex;}
+  .header-uname{font-size:10px;font-weight:600;}
+  .header-urole{font-size:9px;}
+  /* Invertir orden: texto primero, avatar después — queda [Nombre/Rol][Avatar] */
+  .header-user-info{flex-direction:row-reverse;gap:5px;}
   /* Ocultar "Sitio web" en móvil */
   .btn-site-ext{display:none!important;}
   /* Ocultar etiqueta de texto del toggle de tema — solo ícono */

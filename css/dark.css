@@ -1014,4 +1014,7 @@ select option {
     padding: .5rem .9rem !important;
     padding-top: calc(.5rem + env(safe-area-inset-top, 0px)) !important;
   }
+  .header-uname { color: #ffffff !important; }
+  .header-urole { color: rgba(255,255,255,.55) !important; }
+  .header-brand-name { color: #ffffff !important; }
 }
