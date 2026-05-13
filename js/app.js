@@ -5039,6 +5039,9 @@ function buildInmDetail(ps,showActions){
       </div>
     </div>`:'';
 
+  /* geoOk debe estar fuera del if(showActions) para que mapHtml siempre pueda usarla */
+  const geoOk=!!(ps.inmueble&&ps.inmueble.lat&&ps.inmueble.lng);
+
   /* Acciones admin */
   let adminActionsHtml='';
   if(showActions){
@@ -5061,7 +5064,6 @@ function buildInmDetail(ps,showActions){
         <button class="btn-sm" style="background:#FFF0F0;color:#C0392B;margin-left:auto;" onclick="deletePropService(${ps.id})">🗑 Eliminar</button>
       </div>
     </div>`;
-    const geoOk=!!(ps.inmueble.lat&&ps.inmueble.lng);
     const geoBadge=geoOk
       ?`<span style="font-size:10px;color:#065F46;background:#D1FAE5;border-radius:4px;padding:2px 7px;font-weight:600;">📍 Geo OK</span>`
       :`<span style="font-size:10px;color:#92400E;background:#FEF3C7;border-radius:4px;padding:2px 7px;font-weight:600;cursor:pointer;" onclick="_regeocodeInm(${ps.id})">📍 Sin coords — Geocodificar</span>`;
