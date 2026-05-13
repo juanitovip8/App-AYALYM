@@ -3599,10 +3599,11 @@ function renderAdminAstReport(){
 
 function adminDeleteSVAst(id){
   if(!confirm('¿Eliminar este registro de asistencia?'))return;
-  const idx=SUPERVISOR_ASISTENCIAS.findIndex(a=>a.id===id);
+  const idx=SUPERVISOR_ASISTENCIAS.findIndex(a=>String(a.id)===String(id));
   if(idx===-1)return;
+  const docId=SUPERVISOR_ASISTENCIAS[idx].id;
   SUPERVISOR_ASISTENCIAS.splice(idx,1);
-  fbSaveSupervisorAsistencias();
+  fbDeleteDoc('sv_asistencias',docId); /* borra el documento en Firestore */
   renderAdminAstReport();
   showToast('green','🗑','Registro eliminado');
 }
@@ -3614,7 +3615,7 @@ function adminDeletePIAst(piId,fecha){
   const idx=(pi.asistencias||[]).findIndex(a=>a.fecha===fecha);
   if(idx===-1)return;
   pi.asistencias.splice(idx,1);
-  fbSavePersonalInm();
+  fbSavePersonalInm(); /* personal_inm se guarda como un solo doc, set() reemplaza todo */
   renderAdminAstReport();
   showToast('green','🗑','Registro eliminado');
 }
