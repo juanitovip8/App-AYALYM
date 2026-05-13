@@ -5084,7 +5084,7 @@ function buildInmDetail(ps,showActions){
 
   const reportesHtml=buildReportesSection(ps,true); // ambos roles pueden crear y ver reportes
   /* Mini mapa OSM — solo cuando hay coordenadas */
-  const _GMKEY='AIzaSyAlohdtB-IJ03j8MblL2nfml_m99yFQW-U';
+  const _GMKEY='AIzaSyB09Mi1wxP_LSKMiM8un83M1OtnauG_vuE';
   const mapHtml=geoOk
     ?`<div style="margin:10px 0 4px;border-radius:10px;overflow:hidden;border:.5px solid var(--blue-border);">
         <iframe src="https://www.google.com/maps/embed/v1/view?key=${_GMKEY}&center=${ps.inmueble.lat},${ps.inmueble.lng}&zoom=17&maptype=roadmap" style="width:100%;height:185px;border:none;display:block;" loading="lazy" title="Ubicación del inmueble" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -5716,7 +5716,7 @@ function _haversineDistance(lat1,lng1,lat2,lng2){
    Aplica varias estrategias: primero simplifica la dirección (elimina Torre/Piso/Oficina),
    luego intenta con colonia + CP, y como último recurso solo el CP. */
 async function _geocodeInmueble(ps){
-  const GMAP_KEY='AIzaSyAlohdtB-IJ03j8MblL2nfml_m99yFQW-U';
+  const GMAP_KEY='AIzaSyB09Mi1wxP_LSKMiM8un83M1OtnauG_vuE';
   const dir=(ps.inmueble.direccion||'').trim();
   const col=(ps.inmueble.colonia||'').trim();
 
