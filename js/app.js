@@ -933,7 +933,7 @@ function launchApp(role,nombre,zona){
     renderZonasAdmin();renderStaffList('all');renderLowReviews();renderRevBreakdown();renderUrgencias();
     renderSvcDurationList();renderCleaningTypesAdmin();drawMap('admin-map-svg',WORKERS);renderWorkerLocList();
     renderUsersPanel('all');renderQReport();renderConvs();renderSupervisorsPanel();renderAdminResumen();
-    renderAdminNotes();renderTopCards();renderAdminKPIs();renderPropServices('activo');
+    renderAdminNotes();renderTopCards();renderAdminKPIs();renderPropServices('all');
     renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');
     populatePropSupervisorSelect();
   }
@@ -998,7 +998,7 @@ function navGo(role,sec,btn){
   if(role==='admin'&&sec==='notas-admin')renderAdminNotes();
   if(role==='admin'&&sec==='soporte-admin'){renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');}
   if(role==='admin'&&sec==='resumen'){renderTopCards();renderAdminKPIs();}
-  if(role==='admin'&&sec==='inmuebles'){renderPropServices('activo');switchInmMainTab('contratos',document.getElementById('inm-main-tab-contratos'));}
+  if(role==='admin'&&sec==='inmuebles'){switchPropTab('all',document.getElementById('inm-ftab-all'));switchInmMainTab('contratos',document.getElementById('inm-main-tab-contratos'));}
   if(role==='admin'&&sec==='personal-inm')renderPersonalInmAdmin();
   if(role==='admin'&&sec==='usuarios'){renderUsersPanel();renderSupervisorsPanel();}
   if(role==='admin'&&sec==='supervisores')renderSupervisorsPanel();
@@ -4531,7 +4531,7 @@ function quickLogin(role){
    SERVICIOS DE INMUEBLES
    ═══════════════════════════════════════════ */
 
-let _propFilter='activo';
+let _propFilter='all';
 let _svPropFilter='all';
 let _openInmRows=new Set(); // IDs de servicios cuya fila debe permanecer abierta
 let _reportPsId=null;       // ID del servicio al que se agrega un reporte de visita
