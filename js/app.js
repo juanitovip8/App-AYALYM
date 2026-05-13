@@ -2877,12 +2877,12 @@ function renderSVEval(){
     const bars=[5,4,3,2,1].map(star=>{const cnt=counts[star-1];const pct=wRev?Math.round(cnt/wRev*100):0;return`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;"><span style="font-size:11px;color:#185FA5;width:16px;text-align:right;">${star}★</span><div style="flex:1;height:6px;background:#E6F1FB;border-radius:3px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:#1A56DB;border-radius:3px;"></div></div><span style="font-size:11px;color:#185FA5;width:16px;">${cnt}</span></div>`;}).join('');
     const revList=w.reviews.length?w.reviews.map(r=>`<div style="padding:8px 0;border-bottom:.5px solid #E6F1FB;"><div style="display:flex;gap:2px;margin-bottom:3px;">${s$(r.stars,12)}</div><p style="font-size:12px;color:#042C53;">"${r.comment}"</p><p style="font-size:11px;color:#185FA5;margin-top:2px;">${r.svc}${r.client?' · '+r.client:''}</p></div>`).join(''):`<p style="font-size:12px;color:#185FA5;padding:8px 0;">Sin reseñas aún.</p>`;
     return`<div style="border:.5px solid #B5D4F4;border-radius:10px;overflow:hidden;margin-bottom:10px;">
-      <div style="padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#fff;" onclick="this.nextElementSibling.classList.toggle('open')">
+      <div style="padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;background:#F4F8FF;" onclick="this.nextElementSibling.classList.toggle('open')">
         <div class="av" style="width:40px;height:40px;font-size:${w.photo?'0':'13px'};flex-shrink:0;">${w.photo?'<img src="'+w.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':w.initials}</div>
         <div style="flex:1;"><p style="font-size:13px;font-weight:500;color:#042C53;">${w.name}</p><div style="display:flex;align-items:center;gap:4px;margin-top:2px;">${s$(wAvg,12)}<span style="font-size:12px;color:#185FA5;">${wRev?wAvg.toFixed(1):'Sin reseñas'} · ${wRev} reseña${wRev!==1?'s':''}</span></div></div>
         <span style="font-size:18px;color:#185FA5;">›</span>
       </div>
-      <div class="rev-bd-body" style="padding:0 12px 12px;">
+      <div class="rev-bd-body" style="padding:12px;background:#fff;">
         <div style="margin-bottom:10px;">${bars}</div>
         ${revList}
       </div>
