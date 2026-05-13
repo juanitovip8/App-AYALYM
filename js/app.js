@@ -3011,43 +3011,96 @@ function renderZonasAdmin(){
 function toggleZona(i){ZONAS[i].activo=!(ZONAS[i].activo!==false);renderZonasAdmin();fbSaveZonas();showToast(ZONAS[i].activo!==false?'green':'blue',ZONAS[i].activo!==false?'✅':'⚪','"'+ZONAS[i].nombre+'" '+(ZONAS[i].activo!==false?'activada':'desactivada'));}
 function addZona(){const n=document.getElementById('nz-nombre').value.trim(),c=document.getElementById('nz-colonias').value.trim();if(!n){showToast('amber','⚠️','Escribe el nombre');return;}ZONAS.push({id:'z'+Date.now(),nombre:n,colonias:c,activo:true});_closeModal();renderZonasAdmin();fbSaveZonas();showToast('green','✅','"'+n+'" agregada');}
 function removeZona(i){const n=ZONAS[i].nombre;ZONAS.splice(i,1);renderZonasAdmin();showToast('blue','🗑️','"'+n+'" eliminada');}
+/* ── Genera lista de quincenas dinámicas (actual + 5 anteriores) ── */
+function _buildQPeriods(){
+  const periods=[];
+  const hoy=new Date();
+  let yr=hoy.getFullYear(),mo=hoy.getMonth();
+  // Quincena actual
+  const ini1=hoy.getDate()<=15?1:16;
+  const fin1=hoy.getDate()<=15?15:new Date(yr,mo+1,0).getDate();
+  periods.push({yr,mo,ini:ini1,fin:fin1});
+  // 5 quincenas anteriores
+  for(let i=0;i<5;i++){
+    let ni=periods[periods.length-1].ini===1?16:1;
+    let nm=periods[periods.length-1].mo,ny=periods[periods.length-1].yr;
+    if(ni===16){nm--;if(nm<0){nm=11;ny--;}}
+    const nf=ni===1?15:new Date(ny,nm+1,0).getDate();
+    periods.push({yr:ny,mo:nm,ini:ni,fin:nf});
+  }
+  return periods;
+}
+function _qLabel(p){
+  const MESES_S=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return`${p.ini}–${p.fin} ${MESES_S[p.mo]} ${p.yr}`;
+}
+function _qDateRange(p){
+  const pad=n=>String(n).padStart(2,'0');
+  return{
+    from:`${p.yr}-${pad(p.mo+1)}-${pad(p.ini)}`,
+    to:`${p.yr}-${pad(p.mo+1)}-${pad(p.fin)}`
+  };
+}
+
 function renderQReport(){
-  const idx=parseInt(document.getElementById('q-period').value)||0;
-  const period=Q_PERIODS[idx];
-  const comPct=(parseInt(document.getElementById('comision-pct')?document.getElementById('comision-pct').value:50)||50)/100;
-  const totalGen=period.workers.reduce((a,w)=>a+w.total,0);
-  const totalDesc=period.workers.reduce((a,w)=>{
-    const stat=(w.deductions||[]).reduce((s,d)=>s+d.amount,0);
-    const live=idx===0?workerDeductions.filter(d=>d.workerId===w.id).reduce((s,d)=>s+d.amount,0):0;
-    return a+stat+live;
-  },0);
-  document.getElementById('q-summary').innerHTML=`<div class="metric"><p>Servicios</p><span>${period.workers.reduce((a,w)=>a+w.svcs,0)}</span></div><div class="metric"><p>Total generado</p><span>$${totalGen.toLocaleString('es-MX')}</span></div><div class="metric"><p>Desc. comisiones</p><span style="color:#E24B4A;">-$${totalDesc.toLocaleString('es-MX')}</span></div>`;
-  document.getElementById('q-worker-list').innerHTML=period.workers.map((w,wi)=>{
-    const staticDeducs=w.deductions||[];
-    const liveDeducs=idx===0?workerDeductions.filter(d=>d.workerId===w.id):[];
-    const allDeducs=[...staticDeducs,...liveDeducs];
-    const totalD=allDeducs.reduce((a,d)=>a+d.amount,0);
-    const comBruta=Math.round(w.total*comPct);
-    const comNeta=comBruta-totalD;
-    const deducBlock=allDeducs.length?`
-      <div id="qd-${idx}-${wi}" style="display:none;background:#FCEBEB;border-top:.5px solid #FADADD;padding:8px 12px 10px;">
-        ${allDeducs.map(d=>`<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:.5px solid #FADADD;">
+  const selEl=document.getElementById('q-period');if(!selEl)return;
+  /* Poblar opciones si están vacías */
+  if(!selEl.options.length){
+    _buildQPeriods().forEach((p,i)=>{
+      const opt=document.createElement('option');opt.value=i;opt.textContent=_qLabel(p);selEl.appendChild(opt);
+    });
+  }
+  const idx=parseInt(selEl.value)||0;
+  const periods=_buildQPeriods();
+  const period=periods[idx];
+  const {from,to}=_qDateRange(period);
+  const isCurrent=idx===0;
+  /* Ingresos del período: PROPERTY_SERVICES con contrato activo en ese rango */
+  const contratos=PROPERTY_SERVICES.filter(ps=>{
+    const fi=ps.fechaInicio||'';const ff=ps.fechaFin||'';
+    return fi<=to&&(!ff||ff>=from);
+  });
+  const ingresosTotal=contratos.reduce((a,ps)=>a+(parseFloat(ps.pago?.monto)||0),0);
+  /* Solicitudes aceptadas en el período */
+  const svcsEnPeriodo=PENDING_REQUESTS.filter(r=>r.accepted&&r.fecha>=from&&r.fecha<=to);
+  const totalSvcs=WORKERS.reduce((a,w)=>a+w.services,0);
+  /* Descuentos activos (solo período actual) */
+  const totalDesc=isCurrent?workerDeductions.reduce((a,d)=>a+d.amount,0):0;
+  /* Render resumen */
+  document.getElementById('q-summary').innerHTML=`
+    <div class="metric"><p>Contratos activos</p><span>${contratos.length}</span></div>
+    <div class="metric"><p>Ingresos período</p><span>$${ingresosTotal.toLocaleString('es-MX')}</span></div>
+    <div class="metric"><p>Servicios acumulados</p><span>${totalSvcs.toLocaleString('es-MX')}</span></div>`;
+  /* Render por trabajador */
+  const wsConActividad=WORKERS.filter(w=>w.services>0||w.status!=='inactive').sort((a,b)=>b.services-a.services);
+  if(!wsConActividad.length){
+    document.getElementById('q-worker-list').innerHTML='<p style="font-size:13px;color:#185FA5;text-align:center;padding:1.5rem;">Sin trabajadores con actividad</p>';
+    return;
+  }
+  document.getElementById('q-worker-list').innerHTML=wsConActividad.map((w,wi)=>{
+    const myDeducs=isCurrent?workerDeductions.filter(d=>d.workerId===w.id):[];
+    const totalD=myDeducs.reduce((a,d)=>a+d.amount,0);
+    const wSvcsP=svcsEnPeriodo.filter(r=>r.workerId===w.id).length;
+    const wAvg=w.reviews.length?w.reviews.reduce((a,r)=>a+r.stars,0)/w.reviews.length:0;
+    const avHtml=w.photo
+      ?`<img src="${w.photo}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+      :`<div class="av" style="width:36px;height:36px;font-size:12px;flex-shrink:0;">${w.initials}</div>`;
+    const deducBlock=myDeducs.length?`
+      <div id="qd-${wi}" style="display:none;background:#FCEBEB;border-top:.5px solid #FADADD;padding:8px 12px 10px;">
+        ${myDeducs.map(d=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:.5px solid #FADADD;">
           <div><p style="font-size:12px;color:#791F1F;">Eval. baja · ${d.svc}</p><p style="font-size:11px;color:#B45309;">${d.client} · ${d.date}</p></div>
-          <span style="font-size:13px;font-weight:500;color:#E24B4A;white-space:nowrap;margin-left:10px;">-$${d.amount.toLocaleString('es-MX')}</span>
+          <span style="font-size:13px;font-weight:500;color:#E24B4A;">-$${d.amount.toLocaleString('es-MX')}</span>
         </div>`).join('')}
-        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;">
-          <span style="font-size:12px;font-weight:500;color:#042C53;">Comisión neta</span>
-          <span style="font-size:14px;font-weight:500;color:#042C53;">$${comNeta.toLocaleString('es-MX')}</span>
-        </div>
       </div>`:'';
-    const descTag=allDeducs.length?`<span style="font-size:11px;color:#E24B4A;cursor:pointer;text-decoration:underline;display:block;margin-top:2px;" onclick="toggleQDeducs('qd-${idx}-${wi}',this)">Ver ${allDeducs.length} desc. ›</span>`:'';
-    return`<div class="comm-row" style="flex-direction:column;align-items:stretch;gap:0;padding:0;overflow:hidden;">
+    const descTag=myDeducs.length?`<span style="font-size:11px;color:#E24B4A;cursor:pointer;text-decoration:underline;display:block;margin-top:2px;" onclick="toggleQDeducs('qd-${wi}',this)">Ver ${myDeducs.length} desc. ›</span>`:'';
+    return`<div class="comm-row" style="flex-direction:column;align-items:stretch;gap:0;padding:0;overflow:hidden;margin-bottom:8px;">
       <div style="display:flex;align-items:center;gap:10px;padding:12px;">
-        <div class="av" style="width:36px;height:36px;font-size:12px;flex-shrink:0;">${w.initials}</div>
-        <div class="comm-info"><p>${w.name}</p><span>${w.svcs} servicios</span></div>
+        ${avHtml}
+        <div class="comm-info"><p>${w.name}</p><span>${w.services} servicios acumulados${wSvcsP?` · ${wSvcsP} este período`:''}</span></div>
         <div class="comm-amounts" style="text-align:right;">
-          <p>$${w.total.toLocaleString('es-MX')}</p>
-          <span>Com: $${comNeta.toLocaleString('es-MX')}</span>
+          <p>${wAvg?wAvg.toFixed(1)+' ★':'Sin calificación'}</p>
+          <span class="badge ${w.status==='active'?'b-activo':w.status==='busy'?'bwarn':'b-inactivo'}" style="font-size:10px;">${w.status==='active'?'Disponible':w.status==='busy'?'En servicio':'Inactivo'}</span>
+          ${totalD?`<p style="font-size:11px;color:#E24B4A;margin-top:2px;">-$${totalD.toLocaleString('es-MX')}</p>`:''}
           ${descTag}
         </div>
       </div>
@@ -3817,52 +3870,49 @@ function selectTrabajadorTab(tab,btn){
       })()}`;
 
   } else if(tab==='quincena'){
-    const period=Q_PERIODS[0];
-    const me=period.workers.find(w=>w.id===0)||period.workers[0];
-    if(!me){panel.innerHTML=`<div class="tw-empty">Sin datos de quincena</div>`;return;}
-    const sd=(me.deductions||[]).reduce((a,d)=>a+d.amount,0);
-    const ld=workerDeductions.filter(d=>d.workerId===me.id).reduce((a,d)=>a+d.amount,0);
-    const totalD=sd+ld;
-    const comBruta=Math.round(me.total*.5);
-    const comNeta=comBruta-totalD;
-    const allD=[...(me.deductions||[]),...workerDeductions.filter(d=>d.workerId===me.id)];
+    /* ── Quincena con datos reales del trabajador ── */
+    const hoyQ=new Date();
+    const diaQ=hoyQ.getDate();
+    const iniQ=new Date(hoyQ.getFullYear(),hoyQ.getMonth(),diaQ<=15?1:16);
+    const finQ=new Date(hoyQ.getFullYear(),hoyQ.getMonth(),diaQ<=15?15:new Date(hoyQ.getFullYear(),hoyQ.getMonth()+1,0).getDate());
+    const fmtQ=d=>d.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+    const labelQ=`${fmtQ(iniQ)} – ${fmtQ(finQ)}`;
+    /* Descuentos del trabajador */
+    const myDeducts=workerDeductions.filter(d=>d.workerId===worker.id);
+    const totalD=myDeducts.reduce((a,d)=>a+d.amount,0);
+    /* Estadísticas reales */
+    const totalSvcs=worker.services||0;
+    const totalRevs=(worker.reviews||[]).length;
+    const avgRating=totalRevs?(worker.reviews.reduce((a,r)=>a+r.stars,0)/totalRevs):0;
+    /* Solicitudes aceptadas en el período */
+    const svcsAceptadas=PENDING_REQUESTS.filter(r=>r.workerId===worker.id&&r.accepted);
     panel.innerHTML=`
+      <p class="tw-section" style="margin-top:0;margin-bottom:12px;">📅 ${labelQ}</p>
       <div class="tw-kpi-grid">
         <div class="tw-kpi navy">
-          <span class="tw-kpi-label">Servicios</span>
-          <span class="tw-kpi-val">${me.svcs}</span>
-          <span class="tw-kpi-sub">${period.label}</span>
+          <span class="tw-kpi-label">Servicios acumulados</span>
+          <span class="tw-kpi-val">${totalSvcs}</span>
+          <span class="tw-kpi-sub">total registrado</span>
+        </div>
+        <div class="tw-kpi green">
+          <span class="tw-kpi-label">Calificación</span>
+          <span class="tw-kpi-val">${avgRating?avgRating.toFixed(1):'—'}</span>
+          <span class="tw-kpi-sub">${totalRevs} reseña${totalRevs!==1?'s':''}</span>
+        </div>
+        <div class="tw-kpi amber">
+          <span class="tw-kpi-label">Confirmados (período)</span>
+          <span class="tw-kpi-val">${svcsAceptadas.length}</span>
+          <span class="tw-kpi-sub">esta quincena</span>
         </div>
         ${totalD?`<div class="tw-kpi red">
           <span class="tw-kpi-label">Descuentos</span>
           <span class="tw-kpi-val">-$${totalD.toLocaleString('es-MX')}</span>
           <span class="tw-kpi-sub">por eval. bajas</span>
         </div>`:''}
-        <div class="tw-kpi green">
-          <span class="tw-kpi-label">A cobrar</span>
-          <span class="tw-kpi-val">$${comNeta.toLocaleString('es-MX')}</span>
-          <span class="tw-kpi-sub">este período</span>
-        </div>
       </div>
-      <div class="tw-pay-flow">
-        <p class="tw-pay-flow-title">Desglose de pago</p>
-        <div class="tw-pay-row">
-          <span>Tu pago base</span>
-          <strong>$${comBruta.toLocaleString('es-MX')}</strong>
-        </div>
-        ${totalD?`<div class="tw-pay-row deduct">
-          <span>Descuentos aplicados</span>
-          <strong>-$${totalD.toLocaleString('es-MX')}</strong>
-        </div>`:''}
-        <div class="tw-pay-divider"></div>
-        <div class="tw-pay-row total">
-          <span>Total a cobrar</span>
-          <strong>$${comNeta.toLocaleString('es-MX')}</strong>
-        </div>
-      </div>
-      ${allD.length?`
+      ${myDeducts.length?`
         <p class="tw-section">Descuentos aplicados</p>
-        ${allD.map(d=>`
+        ${myDeducts.map(d=>`
           <div class="tw-deduct-row">
             <div class="tw-deduct-info">
               <p>Evaluación baja · ${d.svc}</p>
@@ -3870,9 +3920,13 @@ function selectTrabajadorTab(tab,btn){
             </div>
             <span class="tw-deduct-amount">-$${d.amount.toLocaleString('es-MX')}</span>
           </div>`).join('')}`:''}
-      <p class="tw-section">Últimos servicios</p>
-      <div class="tw-svc-row"><div class="tw-svc-info"><p>Auto SUV + interior</p><span>24 abr · 45 min</span></div><span class="tw-svc-amount">$350</span></div>
-      <div class="tw-svc-row"><div class="tw-svc-info"><p>Lavado sedán</p><span>22 abr · 30 min</span></div><span class="tw-svc-amount">$200</span></div>`;
+      ${svcsAceptadas.length?`
+        <p class="tw-section">Servicios confirmados este período</p>
+        ${svcsAceptadas.map(r=>{
+          const fechaTxt=new Date(r.fecha+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+          return`<div class="tw-svc-row"><div class="tw-svc-info"><p>${r.svc}</p><span>${fechaTxt} · ${r.hora} · ${r.zona}</span></div><span class="badge b-activo" style="font-size:10px;">Aceptado</span></div>`;
+        }).join('')}`
+      :`<div class="tw-empty" style="margin-top:16px;">Sin servicios confirmados en esta quincena</div>`}`;
 
   } else if(tab==='evaluaciones'){
     const revs=worker.reviews;
