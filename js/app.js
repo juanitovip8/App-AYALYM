@@ -224,27 +224,22 @@ function renderFinance(){
     return fi<=hasta&&(!ff||ff>=desde);
   });
   const ingresosInm=contratos.reduce((a,ps)=>a+(parseFloat(ps.pago?.monto)||0),0);
-  const utilidadInm=Math.round(ingresosInm*.5);
-  const pagoPersonalInm=Math.round(ingresosInm*.5);
 
-  /* ── SECCIÓN 2: Servicios a domicilio ── */
-  /* Fuente 1: SOLICITUDES_FACTURA — reservas con factura (tienen precio exacto) */
+  /* ── SECCIÓN 2: Servicios de limpieza reservados y completados ── */
   const _parseMonto=s=>parseFloat((s||'').replace(/[^0-9.]/g,''))||0;
   const facturasEnPeriodo=(SOLICITUDES_FACTURA||[]).filter(f=>f.fecha>=desde&&f.fecha<=hasta);
   const ingresosFacturas=facturasEnPeriodo.reduce((a,f)=>a+_parseMonto(f.total),0);
-  /* Fuente 2: servicios acumulados de trabajadores (sin precio exacto por servicio) */
-  const totalSvcsAcum=WORKERS.reduce((a,w)=>a+w.services,0);
-  const wActivos=WORKERS.filter(w=>w.status!=='inactive').length;
+  const utilidadSvc=Math.round(ingresosFacturas*.5);
+  const pagoTrabajadorSvc=Math.round(ingresosFacturas*.5);
 
   document.getElementById('finance-grid').innerHTML=`
     <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;padding-bottom:4px;border-bottom:.5px solid #B5D4F4;margin-bottom:4px;">🏢 Contratos de inmuebles</div>
     <div class="fc fc-income"><p>Ingresos contratos</p><span class="amount">$${ingresosInm.toLocaleString('es-MX')}</span><small>${contratos.length} contrato${contratos.length!==1?'s':''} vigente${contratos.length!==1?'s':''}</small></div>
-    <div class="fc fc-utility"><p>Utilidad AYALYM (50%)</p><span class="amount">$${utilidadInm.toLocaleString('es-MX')}</span><small>Margen de inmuebles</small></div>
-    <div class="fc fc-workers"><p>Pago personal (50%)</p><span class="amount">$${pagoPersonalInm.toLocaleString('es-MX')}</span><small>Destinado a personal Inm.</small></div>
-    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;padding:12px 0 4px;border-bottom:.5px solid #B5D4F4;margin-top:8px;">🧹 Servicios a domicilio</div>
-    <div class="fc fc-discount"><p>Reservas con factura</p><span class="amount">${facturasEnPeriodo.length}</span><small>En el período</small></div>
-    <div class="fc fc-income" style="background:linear-gradient(135deg,#065535,#0A8754);"><p>Facturado (servicios)</p><span class="amount">$${ingresosFacturas.toLocaleString('es-MX')}</span><small>Reservas con precio registrado</small></div>
-    <div class="fc" style="background:linear-gradient(135deg,#3C3489,#5B45D4);color:#fff;"><p>Servicios acumulados</p><span class="amount">${totalSvcsAcum.toLocaleString('es-MX')}</span><small>${wActivos} trabajador${wActivos!==1?'es':''} activo${wActivos!==1?'s':''}</small></div>`;
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;padding:12px 0 4px;border-bottom:.5px solid #B5D4F4;margin-top:8px;">🧹 Servicios de limpieza (reservados y completados)</div>
+    <div class="fc fc-discount"><p>Servicios completados</p><span class="amount">${facturasEnPeriodo.length}</span><small>En el período</small></div>
+    <div class="fc fc-income" style="background:linear-gradient(135deg,#065535,#0A8754);"><p>Ingresos (servicios)</p><span class="amount">$${ingresosFacturas.toLocaleString('es-MX')}</span><small>Total reservas completadas</small></div>
+    <div class="fc fc-utility"><p>Utilidad AYALYM (50%)</p><span class="amount">$${utilidadSvc.toLocaleString('es-MX')}</span><small>Margen de servicios</small></div>
+    <div class="fc fc-workers"><p>Pago trabajador (50%)</p><span class="amount">$${pagoTrabajadorSvc.toLocaleString('es-MX')}</span><small>Destinado a trabajadores</small></div>`;
 
   /* Detalle de contratos */
   const rowsInm=contratos.length
@@ -351,23 +346,93 @@ function renderAdminResumen(){
 }
 
 /* NOTIFICATIONS */
-function updateNotifBadge(){const list=NOTIFICATIONS[currentRole]||[];const u=list.filter(n=>!n.read).length;const b=document.getElementById('notif-badge');b.textContent=u;b.classList.toggle('show',u>0);}
-function toggleNotifPanel(){notifPanelOpen=!notifPanelOpen;document.getElementById('notif-panel').classList.toggle('open',notifPanelOpen);if(notifPanelOpen)renderNotifications();}
+let _notifListener=null;
+
+function updateNotifBadge(){
+  const list=NOTIFICATIONS[currentRole]||[];
+  const u=list.filter(n=>!n.read).length;
+  const b=document.getElementById('notif-badge');
+  if(b){b.textContent=u;b.classList.toggle('show',u>0);}
+}
+
+function toggleNotifPanel(){
+  notifPanelOpen=!notifPanelOpen;
+  document.getElementById('notif-panel').classList.toggle('open',notifPanelOpen);
+  if(notifPanelOpen)renderNotifications();
+}
+
+function _fmtNotifTime(n){
+  if(!n.createdAt)return n.time||'';
+  const d=new Date(n.createdAt);
+  const now=new Date();
+  const diffMs=now-d;
+  const diffMin=Math.floor(diffMs/60000);
+  if(diffMin<1)return'ahora';
+  if(diffMin<60)return diffMin+'m';
+  const diffH=Math.floor(diffMin/60);
+  if(diffH<24)return diffH+'h';
+  return`${d.getDate()}/${d.getMonth()+1}`;
+}
+
 function renderNotifications(){
   const list=NOTIFICATIONS[currentRole]||[];
   const tc={green:'#EAF3DE',blue:'#E6F1FB',amber:'#FAEEDA',red:'#FCEBEB',purple:'#EEEDFE'};
-  document.getElementById('notif-list').innerHTML=list.length?list.map((n,i)=>{
+  document.getElementById('notif-list').innerHTML=list.length?list.map(n=>{
+    const did=n._docId||'';
     const canResched=currentRole==='cliente'&&n.reqId!=null;
-    const reschedBtn=canResched?`<button class="btn-sm" style="margin-top:7px;font-size:11px;padding:4px 12px;" onclick="event.stopPropagation();markRead('${currentRole}',${i});openReschedule(${n.reqId})">📅 Reprogramar →</button>`:'';
-    return`<div class="notif-item${n.read?'':' unread'}" onclick="markRead('${currentRole}',${i})">
+    const reschedBtn=canResched?`<button class="btn-sm" style="margin-top:7px;font-size:11px;padding:4px 12px;" onclick="event.stopPropagation();markRead('${currentRole}','${did}');openReschedule(${n.reqId})">📅 Reprogramar →</button>`:'';
+    return`<div class="notif-item${n.read?'':' unread'}" onclick="markRead('${currentRole}','${did}')">
       <div class="notif-icon" style="background:${tc[n.type]||'#E6F1FB'};">${n.icon}</div>
       <div class="notif-body"><p>${n.title}</p><span>${n.body}</span>${reschedBtn}</div>
-      <span class="notif-time">${n.time}</span>
+      <span class="notif-time">${_fmtNotifTime(n)}</span>
     </div>`;
-  }).join(''):`<div style="text-align:center;padding:1.5rem;font-size:13px;color:#185FA5;">Sin notificaciones</div>`;}
-function markRead(role,i){if(NOTIFICATIONS[role])NOTIFICATIONS[role][i].read=true;renderNotifications();updateNotifBadge();}
-function markAllRead(){(NOTIFICATIONS[currentRole]||[]).forEach(n=>n.read=true);renderNotifications();updateNotifBadge();}
-function pushNotif(role,icon,type,title,body,reqId=null){if(!NOTIFICATIONS[role])NOTIFICATIONS[role]=[];NOTIFICATIONS[role].unshift({id:Date.now(),icon,type,title,body,time:'ahora',read:false,reqId});if(role===currentRole)updateNotifBadge();}
+  }).join(''):`<div style="text-align:center;padding:1.5rem;font-size:13px;color:#185FA5;">Sin notificaciones</div>`;
+}
+
+function markRead(role,docId){
+  const list=NOTIFICATIONS[role]||[];
+  const n=list.find(x=>x._docId===String(docId));
+  if(!n||n.read)return;
+  n.read=true;
+  if(n._docId)fbMarkNotifRead(n._docId);
+  renderNotifications();updateNotifBadge();
+}
+
+function markAllRead(){
+  const list=NOTIFICATIONS[currentRole]||[];
+  const unread=list.filter(n=>!n.read);
+  if(!unread.length)return;
+  unread.forEach(n=>{n.read=true;});
+  fbMarkAllNotifsRead(currentRole);
+  renderNotifications();updateNotifBadge();
+}
+
+function pushNotif(role,icon,type,title,body,reqId=null){
+  const now=new Date();
+  const n={
+    destinatario:role,icon,type,title,body,reqId,
+    time:_nowTime(),read:false,createdAt:now.getTime()
+  };
+  fbPushNotif(n);
+  /* Actualización inmediata en memoria mientras llega el snapshot */
+  if(!NOTIFICATIONS[role])NOTIFICATIONS[role]=[];
+  NOTIFICATIONS[role].unshift({...n,_docId:'_tmp_'+Date.now()});
+  if(role===currentRole){updateNotifBadge();if(notifPanelOpen)renderNotifications();}
+}
+
+function _startNotifListener(role){
+  if(_notifListener){_notifListener();_notifListener=null;}
+  if(!NOTIFICATIONS[role])NOTIFICATIONS[role]=[];
+  _notifListener=fbListenNotifs(role,function(notifs){
+    NOTIFICATIONS[role]=notifs;
+    updateNotifBadge();
+    if(notifPanelOpen)renderNotifications();
+  });
+}
+
+function _stopNotifListener(){
+  if(_notifListener){_notifListener();_notifListener=null;}
+}
 
 /* LOGIN */
 function switchClientTab(tab){['login','registro'].forEach(t=>{document.getElementById('ctab-'+t).classList.toggle('active',t===tab);document.getElementById('view-'+t).classList.toggle('active',t===tab);});}
@@ -825,6 +890,7 @@ function launchApp(role,nombre,zona){
   document.getElementById('screen-login').classList.remove('active');document.getElementById('screen-app').classList.add('active');
   window.scrollTo({top:0,behavior:'instant'});
   currentRole=role;
+  _startNotifListener(role);
   // ── Header: nombre + rol + avatar ──
   const init=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
   const avBg={cliente:'#0C447C',trabajador:'#633806',supervisor:'#085041',admin:'#3C3489',cliente_inm:'#065535',personal_inm:'#5B2C6F'}[role]||'#042C53';
@@ -964,6 +1030,7 @@ function doLogout(){
   uploadedFiles=[];clientDiscount=0;workerDeductions=[];selectedTimeSlot='';selectedWorkerId=null;fichaWorkerId=null;currentWorkerRef=null;currentSupervisorRef=null;currentUserEmail='';clearSession();
   if(typeof _stopAdminMapListener==='function')_stopAdminMapListener();
   if(typeof _stopSVMapListener==='function')_stopSVMapListener();
+  _stopNotifListener();
   ['prev-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   facturaOn=false;const ft=document.getElementById('ftoggle');if(ft)ft.classList.remove('on');const ff=document.getElementById('ffields');if(ff)ff.classList.remove('show');
   document.getElementById('ficha-ov').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');notifPanelOpen=false;
