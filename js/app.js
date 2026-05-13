@@ -5157,7 +5157,16 @@ function openInmEdit(id){
   set('ie-cli-tel',ps.cliente.tel);
   set('ie-cli-email',ps.cliente.email);
   // Inmueble
-  set('ie-tipo',ps.inmueble.tipo||'Oficina');
+  const _knownTipos=['Oficina','Casa','Departamento','Residencial','Condominio','Bodega','Local comercial','Edificio','Hotel'];
+  const _psTipo=ps.inmueble.tipo||'Oficina';
+  const _ieOtroEl=document.getElementById('ie-tipo-otro');
+  if(_knownTipos.indexOf(_psTipo)>=0){
+    set('ie-tipo',_psTipo);
+    if(_ieOtroEl){_ieOtroEl.value='';_ieOtroEl.style.display='none';}
+  }else{
+    set('ie-tipo','Otro');
+    if(_ieOtroEl){_ieOtroEl.value=_psTipo;_ieOtroEl.style.display='';}
+  }
   set('ie-m2',ps.inmueble.m2);
   set('ie-direccion',ps.inmueble.direccion);
   set('ie-colonia',ps.inmueble.colonia);
@@ -5198,7 +5207,11 @@ function saveInmEdit(){
   ps.cliente.tel=g('ie-cli-tel');
   ps.cliente.email=g('ie-cli-email');
   // Inmueble
-  ps.inmueble.tipo=document.getElementById('ie-tipo').value;
+  const _ieTipoSel=document.getElementById('ie-tipo');
+  const _ieTipoOtro=document.getElementById('ie-tipo-otro');
+  ps.inmueble.tipo=(_ieTipoSel&&_ieTipoSel.value==='Otro')
+    ?(_ieTipoOtro&&_ieTipoOtro.value.trim()||'Otro')
+    :(_ieTipoSel?_ieTipoSel.value:'Oficina');
   ps.inmueble.m2=parseInt(document.getElementById('ie-m2').value)||ps.inmueble.m2;
   ps.inmueble.direccion=g('ie-direccion');
   ps.inmueble.colonia=g('ie-colonia');
@@ -5454,6 +5467,16 @@ function renderSVInmuebles(){
 
 /* ── Crear contrato ── */
 function _gv(id){return(document.getElementById(id)||{}).value?.trim()||'';}
+
+/* Muestra/oculta el campo de texto libre cuando se selecciona "Otro" en tipo de inmueble */
+function toggleTipoOtro(selId, inputId){
+  const sel=document.getElementById(selId);
+  const inp=document.getElementById(inputId);
+  if(!sel||!inp)return;
+  inp.style.display=sel.value==='Otro'?'':'none';
+  if(sel.value!=='Otro')inp.value='';
+}
+
 function clearPropForm(){
   ['inm-cli-nombre','inm-cli-contacto','inm-cli-tel','inm-cli-email','inm-cli-pass','inm-direccion','inm-colonia',
    'inm-svc-tipo','inm-svc-desc','inm-notas','inm-fiscal-razon','inm-fiscal-rfc',
@@ -5461,6 +5484,9 @@ function clearPropForm(){
     const el=document.getElementById(id);if(el)el.value='';
   });
   ['inm-m2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Resetear tipo inmueble y ocultar campo "Otro"
+  const tipoSel=document.getElementById('inm-tipo');if(tipoSel)tipoSel.value='Oficina';
+  const tipoOtro=document.getElementById('inm-tipo-otro');if(tipoOtro){tipoOtro.value='';tipoOtro.style.display='none';}
 }
 
 function createPropertyService(){
@@ -5485,7 +5511,7 @@ function createPropertyService(){
     tipo:svcTipo,
     descripcion:_gv('inm-svc-desc'),
     cliente:{nombre,contacto:_gv('inm-cli-contacto'),tel:_gv('inm-cli-tel'),email:_gv('inm-cli-email')},
-    inmueble:{tipo:(document.getElementById('inm-tipo')||{}).value||'Oficina',
+    inmueble:{tipo:(()=>{const _s=(document.getElementById('inm-tipo')||{}).value||'Oficina';return _s==='Otro'?(_gv('inm-tipo-otro')||'Otro'):_s;})(),
               direccion:dir,colonia:_gv('inm-colonia'),m2},
     frecuencia:(document.getElementById('inm-frecuencia')||{}).value||'única',
     fechaInicio,

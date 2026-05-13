@@ -277,7 +277,7 @@
 
       <!-- Inmueble -->
       <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🏢 Datos del inmueble</p>
-      <div class="frow"><div><label>Tipo</label><select id="ie-tipo"><option value="Oficina">Oficina</option><option value="Casa">Casa</option><option value="Departamento">Departamento</option><option value="Bodega">Bodega</option><option value="Local comercial">Local comercial</option><option value="Edificio">Edificio</option></select></div><div><label>Superficie (m²)</label><input type="number" id="ie-m2" min="1" placeholder="120"></div></div>
+      <div class="frow"><div><label>Tipo</label><select id="ie-tipo" onchange="toggleTipoOtro('ie-tipo','ie-tipo-otro')"><option value="Oficina">Oficina</option><option value="Casa">Casa</option><option value="Departamento">Departamento</option><option value="Residencial">Residencial</option><option value="Condominio">Condominio</option><option value="Bodega">Bodega</option><option value="Local comercial">Local comercial</option><option value="Edificio">Edificio</option><option value="Hotel">Hotel</option><option value="Otro">Otro</option></select><input type="text" id="ie-tipo-otro" placeholder="Especifica el tipo de inmueble..." style="display:none;margin-top:6px;width:100%;"></div><div><label>Superficie (m²)</label><input type="number" id="ie-m2" min="1" placeholder="120"></div></div>
       <div class="frow full"><label>Dirección</label><input type="text" id="ie-direccion" placeholder="Av. Reforma 200, Piso 3"></div>
       <div class="frow full"><label>Colonia</label><input type="text" id="ie-colonia" placeholder="Cuauhtémoc"></div>
 
@@ -1088,7 +1088,7 @@
 
             <!-- 2. Inmueble -->
             <p class="inm-section-label">🏗️ Datos del inmueble</p>
-            <div class="frow"><div><label>Tipo de inmueble</label><select id="inm-tipo"><option value="Oficina">Oficina</option><option value="Hotel">Hotel</option><option value="Departamento">Departamento</option><option value="Local comercial">Local comercial</option><option value="Bodega">Bodega</option><option value="Otro">Otro</option></select></div><div><label>Superficie (m²)</label><input type="number" id="inm-m2" placeholder="150" min="1"></div></div>
+            <div class="frow"><div><label>Tipo de inmueble</label><select id="inm-tipo" onchange="toggleTipoOtro('inm-tipo','inm-tipo-otro')"><option value="Oficina">Oficina</option><option value="Hotel">Hotel</option><option value="Departamento">Departamento</option><option value="Residencial">Residencial</option><option value="Condominio">Condominio</option><option value="Local comercial">Local comercial</option><option value="Bodega">Bodega</option><option value="Edificio">Edificio</option><option value="Casa">Casa</option><option value="Otro">Otro</option></select><input type="text" id="inm-tipo-otro" placeholder="Especifica el tipo de inmueble..." style="display:none;margin-top:6px;width:100%;"></div><div><label>Superficie (m²)</label><input type="number" id="inm-m2" placeholder="150" min="1"></div></div>
             <div class="frow full"><label>Dirección</label><input type="text" id="inm-direccion" placeholder="Av. Reforma 200, Piso 3"></div>
             <div class="frow full"><label>Colonia</label><input type="text" id="inm-colonia" placeholder="Cuauhtémoc"></div>
 
