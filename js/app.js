@@ -1047,6 +1047,8 @@ function goBackToWorkerSelect(){
 }
 
 function launchApp(role,nombre,zona){
+  /* Cargar radio de geovalla guardado por el admin (si existe) */
+  const _savedGeoR=fbGetLoadedGeoRadio();if(_savedGeoR)GEO_RADIO_M=_savedGeoR;
   document.getElementById('screen-login').classList.remove('active');document.getElementById('screen-app').classList.add('active');
   window.scrollTo({top:0,behavior:'instant'});
   currentRole=role;
@@ -3162,14 +3164,14 @@ function _stopSVMapListener(){
   _svMapMarkers={};_svMapInstance=null;
 }
 
-function _updateSVMapMarkers(locs){
+async function _updateSVMapMarkers(locs){
   if(!_svMapInstance)return;
   const statusEl=document.getElementById('sv-map-status');
   const locIds=new Set(locs.map(l=>String(l.id)));
   Object.keys(_svMapMarkers).forEach(id=>{
     if(!locIds.has(id)){_svMapMarkers[id].marker.setMap(null);delete _svMapMarkers[id];}
   });
-  locs.forEach(loc=>{
+  for(const loc of locs){
     const id=String(loc.id);
     const pos={lat:parseFloat(loc.lat),lng:parseFloat(loc.lng)};
     const color=loc.rol==='personal_inm'?'#065041':'#D97706';
@@ -3180,15 +3182,14 @@ function _updateSVMapMarkers(locs){
       ${loc.contratoNombre?`<p style="font-size:11px;color:#185FA5;margin:0 0 3px;">🔧 ${loc.contratoNombre}</p>`:''}
       <p style="font-size:11px;color:#065041;margin:0;">⏱ Inicio: <strong style="color:#042C53;">${loc.entrada||'—'}</strong></p>
     </div>`;
+    const{photo,initials}=_getPersonInfo(loc);
+    const icon=await _buildMarkerIcon(photo,initials,color);
     if(_svMapMarkers[id]){
+      _svMapMarkers[id].marker.setIcon(icon);
       _svMapMarkers[id].marker.setPosition(pos);
       _svMapMarkers[id].infoWindow.setContent(infoHtml);
     }else{
-      const marker=new google.maps.Marker({
-        position:pos,map:_svMapInstance,title:loc.nombre,
-        icon:{path:google.maps.SymbolPath.CIRCLE,scale:10,fillColor:color,fillOpacity:1,strokeColor:'#ffffff',strokeWeight:2.5},
-        animation:google.maps.Animation.DROP
-      });
+      const marker=new google.maps.Marker({position:pos,map:_svMapInstance,title:loc.nombre,icon,animation:google.maps.Animation.DROP});
       const infoWindow=new google.maps.InfoWindow({content:infoHtml});
       marker.addListener('click',()=>{
         Object.values(_svMapMarkers).forEach(m=>m.infoWindow.close());
@@ -3196,7 +3197,7 @@ function _updateSVMapMarkers(locs){
       });
       _svMapMarkers[id]={marker,infoWindow};
     }
-  });
+  }
   if(statusEl){
     const now=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
     statusEl.textContent=locs.length?`${locs.length} persona${locs.length>1?'s':''} activa${locs.length>1?'s':''} · Actualizado ${now}`:'Sin personal activo en este momento';
@@ -4054,6 +4055,65 @@ function _waitForGoogleMaps(){
   return _mapsLoadPromise;
 }
 
+/* ── Configurar radio de geovalla desde el mapa admin ── */
+function setGeoRadio(val){
+  const v=Math.max(50,Math.min(5000,parseInt(val)||500));
+  GEO_RADIO_M=v;
+  fbSaveGeoRadio(v);
+  const inp=document.getElementById('geo-radio-input');if(inp)inp.value=v;
+  showToast('green','📍',`Radio de geovalla: ${v} m`);
+}
+
+/* ── Obtener foto e iniciales de un trabajador/supervisor/personal-inm activo ── */
+function _getPersonInfo(loc){
+  const id=String(loc.id);
+  let person=null;
+  if(id.startsWith('w_')){const wid=parseInt(id.slice(2));person=WORKERS.find(w=>w.id===wid);}
+  else if(id.startsWith('sv_')){const sid=parseInt(id.slice(3));person=SUPERVISORS.find(s=>s.id===sid);}
+  else if(id.startsWith('pi_')){const pid=parseInt(id.slice(3));person=PERSONAL_INM.find(p=>p.id===pid);}
+  const rawName=person?(person.name||person.nombre||''):'';
+  const initials=person?.initials||(rawName.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase())||'??';
+  return{photo:person?.photo||null,initials};
+}
+
+/* ── Construir ícono de marcador circular con foto o iniciales (Canvas) ── */
+function _buildMarkerIcon(photo,initials,borderColor){
+  const S=44;
+  return new Promise(function(resolve){
+    const canvas=document.createElement('canvas');
+    canvas.width=S;canvas.height=S;
+    const ctx=canvas.getContext('2d');
+    function draw(img){
+      /* Círculo de borde con color del rol */
+      ctx.beginPath();ctx.arc(S/2,S/2,S/2-0.5,0,Math.PI*2);
+      ctx.fillStyle=borderColor;ctx.fill();
+      /* Anillo blanco interior */
+      ctx.beginPath();ctx.arc(S/2,S/2,S/2-3,0,Math.PI*2);
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=2.5;ctx.stroke();
+      /* Área interior recortada en círculo */
+      ctx.save();
+      ctx.beginPath();ctx.arc(S/2,S/2,S/2-4.5,0,Math.PI*2);ctx.clip();
+      if(img){
+        ctx.drawImage(img,4,4,S-8,S-8);
+      }else{
+        ctx.fillStyle=borderColor;ctx.fillRect(0,0,S,S);
+        ctx.fillStyle='#ffffff';
+        ctx.font='bold '+Math.round(S*0.3)+'px system-ui,sans-serif';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText((initials||'??').slice(0,2),S/2,S/2+1);
+      }
+      ctx.restore();
+      resolve({url:canvas.toDataURL('image/png'),scaledSize:new google.maps.Size(S,S),anchor:new google.maps.Point(S/2,S/2)});
+    }
+    if(photo){
+      const img=new Image();
+      img.onload=function(){draw(img);};
+      img.onerror=function(){draw(null);};
+      img.src=photo;
+    }else{draw(null);}
+  });
+}
+
 function renderAdminMapa(){
   const el=document.getElementById('a-mapa');if(!el)return;
   el.innerHTML=`
@@ -4070,6 +4130,13 @@ function renderAdminMapa(){
           <span style="font-size:11px;color:#5C7A9A;display:flex;align-items:center;gap:5px;">
             <span style="width:11px;height:11px;border-radius:50%;background:#D97706;display:inline-block;border:2px solid #fff;box-shadow:0 0 0 1px #D97706;"></span>Trabajadores
           </span>
+          <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#5C7A9A;background:#EEF5FF;border-radius:8px;padding:4px 10px;border:1px solid #C4D9F5;">
+            📍 Radio:
+            <input type="number" id="geo-radio-input" value="${GEO_RADIO_M}" min="50" max="5000" step="50"
+              style="width:58px;padding:2px 5px;border-radius:6px;border:1px solid #C4D9F5;font-size:11px;background:#fff;color:#042C53;text-align:center;"
+              onchange="setGeoRadio(this.value)" title="Radio de geovalla en metros">
+            <span>m</span>
+          </label>
         </div>
       </div>
       <div id="admin-map-div" style="width:100%;height:clamp(280px,45vw,520px);"></div>
@@ -4108,19 +4175,16 @@ function _stopAdminMapListener(){
   _adminMapInstance=null;
 }
 
-function _updateAdminMapMarkers(locs){
+async function _updateAdminMapMarkers(locs){
   if(!_adminMapInstance)return;
   const statusEl=document.getElementById('admin-map-status');
   /* Eliminar marcadores que ya no están activos */
   const locIds=new Set(locs.map(l=>String(l.id)));
   Object.keys(_adminMapMarkers).forEach(id=>{
-    if(!locIds.has(id)){
-      _adminMapMarkers[id].marker.setMap(null);
-      delete _adminMapMarkers[id];
-    }
+    if(!locIds.has(id)){_adminMapMarkers[id].marker.setMap(null);delete _adminMapMarkers[id];}
   });
-  /* Agregar o actualizar marcadores */
-  locs.forEach(loc=>{
+  /* Agregar o actualizar marcadores con foto/iniciales */
+  for(const loc of locs){
     const id=String(loc.id);
     const pos={lat:parseFloat(loc.lat),lng:parseFloat(loc.lng)};
     const color=loc.rol==='personal_inm'?'#065041':loc.rol==='trabajador'?'#D97706':'#185FA5';
@@ -4131,19 +4195,14 @@ function _updateAdminMapMarkers(locs){
       ${loc.contratoNombre?`<p style="font-size:11px;color:#185FA5;margin:0 0 3px;">🔧 ${loc.contratoNombre}</p>`:''}
       <p style="font-size:11px;color:#065041;margin:0;">⏱ Inicio: <strong style="color:#042C53;">${loc.entrada||'—'}</strong></p>
     </div>`;
+    const{photo,initials}=_getPersonInfo(loc);
+    const icon=await _buildMarkerIcon(photo,initials,color);
     if(_adminMapMarkers[id]){
+      _adminMapMarkers[id].marker.setIcon(icon);
       _adminMapMarkers[id].marker.setPosition(pos);
       _adminMapMarkers[id].infoWindow.setContent(infoHtml);
     }else{
-      const marker=new google.maps.Marker({
-        position:pos,map:_adminMapInstance,title:loc.nombre,
-        icon:{
-          path:google.maps.SymbolPath.CIRCLE,
-          scale:11,fillColor:color,fillOpacity:1,
-          strokeColor:'#ffffff',strokeWeight:2.5
-        },
-        animation:google.maps.Animation.DROP
-      });
+      const marker=new google.maps.Marker({position:pos,map:_adminMapInstance,title:loc.nombre,icon,animation:google.maps.Animation.DROP});
       const infoWindow=new google.maps.InfoWindow({content:infoHtml});
       marker.addListener('click',()=>{
         Object.values(_adminMapMarkers).forEach(m=>m.infoWindow.close());
@@ -4151,7 +4210,7 @@ function _updateAdminMapMarkers(locs){
       });
       _adminMapMarkers[id]={marker,infoWindow};
     }
-  });
+  }
   /* Actualizar status */
   if(statusEl){
     const now=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
@@ -6301,7 +6360,7 @@ function _nowHM(){
    Radio: GEO_RADIO_M metros. Usa Nominatim (OSM) para
    geocodificar la dirección del inmueble al crearlo/editarlo.
    ═══════════════════════════════════════════════════════════ */
-const GEO_RADIO_M = 500; // metros permitidos desde el inmueble
+let GEO_RADIO_M = 500; // metros permitidos desde el inmueble (configurable por admin)
 
 /* Formatea metros en texto legible: <1000→"Xm", ≥1000→"X.Xkm" */
 function _fmtDist(m){return m>=1000?(m/1000).toFixed(1)+'km':m+'m';}

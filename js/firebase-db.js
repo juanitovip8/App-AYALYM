@@ -190,6 +190,7 @@ async function loadAllData() {
     if (c.SVC_EXTRAS)     { SVC_EXTRAS.length = 0;       c.SVC_EXTRAS.forEach(function(x){ SVC_EXTRAS.push(x); }); }
     if (c.PRICES)         { Object.keys(c.PRICES).forEach(function(k){ PRICES[k] = c.PRICES[k]; }); }
     if (c.DIAS_FESTIVOS)  { DIAS_FESTIVOS.length = 0;   c.DIAS_FESTIVOS.forEach(function(x){ DIAS_FESTIVOS.push(x); }); }
+    if (c.GEO_RADIO_M)    { _loadedGeoRadio = c.GEO_RADIO_M; }
   } else {
     await _col('config').doc('main').set({
       SVC_TYPES:      _clone(SVC_TYPES),
@@ -266,6 +267,16 @@ function fbSaveZonas() {
     ZONAS.forEach(function(z){ b.set(_col('zonas').doc(z.id), _clone(z)); });
     b.commit().catch(function(e){ console.warn('fbSaveZonas', e); });
   } catch(e) { console.warn('fbSaveZonas', e); }
+}
+
+/* Radio de geovalla — cargado desde Firestore al iniciar */
+var _loadedGeoRadio = null;
+function fbGetLoadedGeoRadio() { return _loadedGeoRadio; }
+function fbSaveGeoRadio(value) {
+  try {
+    _col('config').doc('main').update({ GEO_RADIO_M: value })
+      .catch(function(e){ console.warn('fbSaveGeoRadio', e); });
+  } catch(e) { console.warn('fbSaveGeoRadio', e); }
 }
 
 function fbSaveConfig() {
