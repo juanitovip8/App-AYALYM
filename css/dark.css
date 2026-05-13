@@ -986,3 +986,12 @@ select option {
 .admin-modal-body select,
 .admin-modal-body textarea { background: var(--dk-mid) !important; border-color: var(--dk-border) !important; color: var(--dk-text) !important; }
 .stc-hdr:hover { background: rgba(255,255,255,.04) !important; }
+
+/* ── Personal Asignado (inmuebles contract detail) ── */
+.inm-pi-assigned        { background: rgba(5,80,65,.18) !important; border-color: rgba(52,211,153,.2) !important; }
+.inm-pi-assigned-title  { color: #4ade80 !important; }
+.inm-pi-empty           { color: var(--dk-sub) !important; }
+.pi-asig-chip           { background: rgba(5,80,65,.25) !important; border-color: rgba(52,211,153,.25) !important; color: #4ade80 !important; }
+
+/* ── inm-field strong (labels in contract detail) ── */
+.inm-field strong       { color: var(--dk-text) !important; }

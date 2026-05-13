@@ -4483,10 +4483,10 @@ function buildPersonalAsignadoHtml(psId,showActions){
       <span style="width:7px;height:7px;border-radius:50%;background:${dot};display:inline-block;margin-right:4px;"></span>
       ${p.initials} ${p.nombre.split(' ')[0]}
     </span>`;}).join('');
-  return`<div style="margin-top:8px;padding:8px 10px;background:#F0F7EE;border-radius:8px;border:.5px solid #A8D5B5;">
-    <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#085041;margin-bottom:6px;">👷 Personal asignado</p>
+  return`<div class="inm-pi-assigned">
+    <p class="inm-pi-assigned-title">👷 Personal asignado</p>
     <div style="display:flex;flex-wrap:wrap;gap:5px;">
-      ${chips||'<span style="font-size:11px;color:#5C7A9A;font-style:italic;">Sin personal asignado</span>'}
+      ${chips||'<span class="inm-pi-empty">Sin personal asignado</span>'}
     </div>
   </div>`;
 }
