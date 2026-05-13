@@ -5188,7 +5188,7 @@ function registrarEntrada(){
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
       showToast('green','✅','Entrada registrada: '+hora+dtxt);
     },
-    dist=>showToast('red','📍',`Estás a ${dist}m del inmueble. Debes estar a menos de ${GEO_RADIO_M}m para registrar entrada.`),
+    dist=>showToast('red','📍',`Te encuentras a ${_fmtDist(dist)} del inmueble, acércate para registrar tu entrada.`),
     err=>{
       if(err.code===1)showToast('red','🔒','Permite el acceso a tu ubicación para registrar asistencia.');
       else showToast('amber','⚠️','No se pudo obtener tu ubicación. Intenta de nuevo.');
@@ -5220,7 +5220,7 @@ function registrarSalida(){
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
       showToast('green','✅','Salida registrada: '+hora+dtxt);
     },
-    dist=>showToast('red','📍',`Estás a ${dist}m del inmueble. Debes estar a menos de ${GEO_RADIO_M}m para registrar salida.`),
+    dist=>showToast('red','📍',`Te encuentras a ${_fmtDist(dist)} del inmueble, acércate para registrar tu salida.`),
     err=>{
       if(err.code===1)showToast('red','🔒','Permite el acceso a tu ubicación para registrar asistencia.');
       else showToast('amber','⚠️','No se pudo obtener tu ubicación. Intenta de nuevo.');
@@ -6103,7 +6103,10 @@ function _nowHM(){
    Radio: GEO_RADIO_M metros. Usa Nominatim (OSM) para
    geocodificar la dirección del inmueble al crearlo/editarlo.
    ═══════════════════════════════════════════════════════════ */
-const GEO_RADIO_M = 800; // metros permitidos desde el inmueble
+const GEO_RADIO_M = 500; // metros permitidos desde el inmueble
+
+/* Formatea metros en texto legible: <1000→"Xm", ≥1000→"X.Xkm" */
+function _fmtDist(m){return m>=1000?(m/1000).toFixed(1)+'km':m+'m';}
 
 /* Distancia en metros entre dos pares lat/lng (fórmula Haversine) */
 function _haversineDistance(lat1,lng1,lat2,lng2){
@@ -6208,7 +6211,7 @@ function marcarEntradaSV(servicioId){
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
       showToast('green','📍','Entrada registrada: '+hora+dtxt);
     },
-    dist=>showToast('red','📍',`Estás a ${dist}m del inmueble. Debes estar a menos de ${GEO_RADIO_M}m para registrar asistencia.`),
+    dist=>showToast('red','📍',`Te encuentras a ${_fmtDist(dist)} del inmueble, acércate para registrar tu entrada.`),
     err=>{
       if(err.code===1)showToast('red','🔒','Permite el acceso a tu ubicación para registrar asistencia.');
       else showToast('amber','⚠️','No se pudo obtener tu ubicación. Intenta de nuevo.');
@@ -6238,7 +6241,7 @@ function marcarSalidaSV(servicioId){
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
       showToast('green','🏁','Salida registrada: '+hora+dtxt);
     },
-    dist=>showToast('red','📍',`Estás a ${dist}m del inmueble. Debes estar a menos de ${GEO_RADIO_M}m para registrar salida.`),
+    dist=>showToast('red','📍',`Te encuentras a ${_fmtDist(dist)} del inmueble, acércate para registrar tu salida.`),
     err=>{
       if(err.code===1)showToast('red','🔒','Permite el acceso a tu ubicación para registrar asistencia.');
       else showToast('amber','⚠️','No se pudo obtener tu ubicación. Intenta de nuevo.');
