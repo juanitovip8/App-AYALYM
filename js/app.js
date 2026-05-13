@@ -1587,6 +1587,29 @@ function renderUsersPanel(filter){
       document.getElementById('users-list').innerHTML+= extra;
     }
   }
+  /* ── Supervisores en SUPERVISORS sin cuenta de sistema ── */
+  if(filter==='all'||filter==='supervisor'){
+    const svInUsers=new Set(USERS.filter(u=>u.rol==='supervisor').map(u=>u.nombre));
+    const svSinCuenta=SUPERVISORS.filter(sv=>!svInUsers.has(sv.name));
+    if(svSinCuenta.length){
+      const extra=svSinCuenta.map(sv=>{
+        const photo=sv.photo?`<img src="${sv.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:sv.initials;
+        return`<div class="user-card" style="opacity:.85;">
+          <div class="user-card-top">
+            <div class="user-av" style="background:#E8F0FE;color:#185FA5;overflow:hidden;font-size:${sv.photo?'0':'13px'};">${photo}</div>
+            <div class="user-info">
+              <p>${sv.name} <span class="role-badge rb-supervisor">Supervisor</span> <span class="badge" style="background:#F4F4F4;color:#888;border:.5px solid #ddd;font-size:10px;">Sin acceso al sistema</span></p>
+              <span style="font-size:11px;color:#5C7A9A;">${sv.email||'Sin correo registrado'}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <button class="btn-sm" style="font-size:11px;" onclick="openAssignSupervisorAccess(${sv.id})">🔑 Asignar acceso</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('users-list').innerHTML+= extra;
+    }
+  }
   if(!document.getElementById('users-list').innerHTML)
     document.getElementById('users-list').innerHTML='<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin usuarios en esta categoría</p>';
 }
@@ -1616,6 +1639,36 @@ function doAssignWorkerAccess(wid){
   _closeModal();
   renderUsersPanel();
   showToast('green','✅','Acceso asignado a '+w.name);
+}
+function openAssignSupervisorAccess(svId){
+  const sv=SUPERVISORS.find(x=>x.id===svId);if(!sv)return;
+  document.getElementById('admin-modal-title').textContent='🔑 Asignar acceso a '+sv.name;
+  document.getElementById('admin-modal-body').innerHTML=`
+    <p style="font-size:12px;color:#185FA5;margin-bottom:12px;">Asigna un correo y contraseña para que ${sv.name.split(' ')[0]} pueda iniciar sesión como supervisor.</p>
+    <div class="frow full"><label>Correo electrónico</label><input type="email" id="svac-email" placeholder="supervisor@email.com" value="${sv.email||''}" autofocus></div>
+    <div class="frow full"><label>Contraseña</label><input type="password" id="svac-pass" placeholder="Mínimo 8 caracteres"></div>
+    <div class="admin-modal-btns">
+      <button class="btn-sm" onclick="doAssignSupervisorAccess(${svId})">Guardar acceso</button>
+      <button class="btn-sec" onclick="_closeModal()">Cancelar</button>
+    </div>`;
+  document.getElementById('admin-modal-ov').classList.add('open');
+}
+function doAssignSupervisorAccess(svId){
+  const sv=SUPERVISORS.find(x=>x.id===svId);if(!sv)return;
+  const email=(document.getElementById('svac-email')||{}).value?.trim()||'';
+  const pass=(document.getElementById('svac-pass')||{}).value?.trim()||'';
+  if(!email||!email.includes('@')){showToast('amber','⚠️','Ingresa un correo válido');return;}
+  if(!pass||pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
+  if(USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('red','❌','Este correo ya está registrado');return;}
+  // Guardar email en la entrada de SUPERVISORS también
+  sv.email=email;
+  fbSaveSupervisors();
+  const newId=USERS.length?Math.max(...USERS.map(u=>u.id))+1:0;
+  USERS.push({id:newId,nombre:sv.name,email,rol:'supervisor',tel:sv.tel||'',activo:true,accesoRevocado:false,password:pass});
+  fbSaveUsers();
+  _closeModal();
+  renderUsersPanel();
+  showToast('green','✅','Acceso asignado a '+sv.name);
 }
 function revokeAccess(i){
   if(USERS[i].rolProtegido===true){showToast('amber','⚠️','No puedes modificar al administrador principal');return;}
