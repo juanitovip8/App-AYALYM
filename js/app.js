@@ -5081,6 +5081,13 @@ function buildInmDetail(ps,showActions){
   }
 
   const reportesHtml=buildReportesSection(ps,true); // ambos roles pueden crear y ver reportes
+  /* Mini mapa OSM — solo cuando hay coordenadas */
+  const mapHtml=geoOk
+    ?`<div style="margin:10px 0 4px;border-radius:10px;overflow:hidden;border:.5px solid var(--blue-border);">
+        <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${ps.inmueble.lng-0.003},${ps.inmueble.lat-0.003},${ps.inmueble.lng+0.003},${ps.inmueble.lat+0.003}&layer=mapnik&marker=${ps.inmueble.lat},${ps.inmueble.lng}" style="width:100%;height:185px;border:none;display:block;" loading="lazy" title="Ubicación del inmueble"></iframe>
+        <a href="https://www.google.com/maps?q=${ps.inmueble.lat},${ps.inmueble.lng}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#185FA5;display:flex;align-items:center;gap:4px;justify-content:flex-end;padding:5px 10px;background:#F4F8FD;">🗺️ Abrir en Google Maps</a>
+      </div>`
+    :'';
   return`<div class="inm-grid">
     <div class="inm-field"><strong>🏗️ ${ps.inmueble.tipo} · ${ps.inmueble.m2} m²</strong>${ps.inmueble.colonia}</div>
     <div class="inm-field"><strong>📍 Dirección</strong>${ps.inmueble.direccion}</div>
@@ -5091,6 +5098,7 @@ function buildInmDetail(ps,showActions){
     <div class="inm-field" style="grid-column:1/-1;"><strong>✉️ Correo</strong>${ps.cliente.email}</div>
     ${ps.descripcion?`<div class="inm-field" style="grid-column:1/-1;"><strong>Descripción</strong>${ps.descripcion}</div>`:''}
   </div>
+  ${mapHtml}
   ${pagoHtml}
   ${fiscHtml}
   ${ps.notas?`<p style="font-size:11px;color:#5C7A9A;margin-top:8px;background:var(--blue-light);border-radius:6px;padding:6px 10px;">📝 ${ps.notas}</p>`:''}
@@ -5691,7 +5699,7 @@ function _nowHM(){
    Radio: GEO_RADIO_M metros. Usa Nominatim (OSM) para
    geocodificar la dirección del inmueble al crearlo/editarlo.
    ═══════════════════════════════════════════════════════════ */
-const GEO_RADIO_M = 300; // metros permitidos desde el inmueble
+const GEO_RADIO_M = 800; // metros permitidos desde el inmueble
 
 /* Distancia en metros entre dos pares lat/lng (fórmula Haversine) */
 function _haversineDistance(lat1,lng1,lat2,lng2){
@@ -5701,20 +5709,70 @@ function _haversineDistance(lat1,lng1,lat2,lng2){
   return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
 }
 
-/* Geocodifica la dirección del inmueble vía Nominatim y guarda lat/lng en ps */
+/* Geocodifica la dirección del inmueble vía Nominatim y guarda lat/lng en ps.
+   Aplica varias estrategias: primero simplifica la dirección (elimina Torre/Piso/Oficina),
+   luego intenta con colonia + CP, y como último recurso solo el CP. */
 async function _geocodeInmueble(ps){
-  const q=encodeURIComponent([ps.inmueble.direccion,ps.inmueble.colonia,'México'].filter(Boolean).join(', '));
-  try{
-    const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${q}`,
-      {headers:{'Accept-Language':'es-MX','User-Agent':'AYALYM-App/1.0'}});
-    const [hit]=await res.json();
-    if(hit){
-      ps.inmueble.lat=parseFloat(hit.lat);
-      ps.inmueble.lng=parseFloat(hit.lon);
-      fbSavePropertyServices();
-      return true;
-    }
-  }catch(e){console.warn('[geo]',e);}
+  const dir=(ps.inmueble.direccion||'').trim();
+  const col=(ps.inmueble.colonia||'').trim();
+
+  /* Limpiar detalles internos de edificio que Nominatim no entiende */
+  const cleanDir=dir
+    .replace(/,?\s*(Torre|Piso|Oficina|Ofna|Depto|Departamento|Int\.?|Interior|Local|Módulo|Bodega|Nivel|Suite)\s+[^,]*/gi,'')
+    .replace(/,?\s*Col\.?\s+[^,]*/i,'')
+    .replace(/,?\s*Alcald[ií]a\s+[^,]*/i,'')
+    .replace(/,?\s*C\.?P\.?\s*\d{5}/i,'')
+    .replace(/,?\s*(CDMX|Ciudad de México|Cd\. de México)/gi,'')
+    .replace(/\s{2,}/g,' ').replace(/^\s*,|,\s*$/g,'').trim();
+
+  /* Extraer código postal de la dirección completa */
+  const cpMatch=dir.match(/\b(\d{5})\b/);
+  const cp=cpMatch?cpMatch[1]:'';
+
+  async function _tryQ(q){
+    try{
+      const res=await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${encodeURIComponent(q)}`,
+        {headers:{'Accept-Language':'es-MX','User-Agent':'AYALYM-App/1.0'}}
+      );
+      const [hit]=await res.json();
+      return hit||null;
+    }catch(e){console.warn('[geo]',e);return null;}
+  }
+
+  let hit=null;
+
+  /* Estrategia 1: dirección limpia + colonia + Ciudad de México */
+  if(cleanDir){
+    hit=await _tryQ([cleanDir,col,'Ciudad de México','México'].filter(Boolean).join(', '));
+  }
+
+  /* Estrategia 2: dirección limpia + código postal */
+  if(!hit&&cleanDir&&cp){
+    hit=await _tryQ(`${cleanDir}, ${cp}, México`);
+  }
+
+  /* Estrategia 3: colonia + código postal */
+  if(!hit&&col&&cp){
+    hit=await _tryQ(`${col}, ${cp}, México`);
+  }
+
+  /* Estrategia 4: solo código postal */
+  if(!hit&&cp){
+    hit=await _tryQ(`${cp}, México`);
+  }
+
+  /* Estrategia 5: dirección completa original (último recurso) */
+  if(!hit){
+    hit=await _tryQ([dir,col,'México'].filter(Boolean).join(', '));
+  }
+
+  if(hit){
+    ps.inmueble.lat=parseFloat(hit.lat);
+    ps.inmueble.lng=parseFloat(hit.lon);
+    fbSavePropertyServices();
+    return true;
+  }
   return false;
 }
 
