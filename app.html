@@ -10,7 +10,7 @@
   <title>AYALYM — Limpieza profesional a domicilio</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/style.css?v=52">
+  <link rel="stylesheet" href="css/style.css?v=53">
   <link rel="stylesheet" href="css/theme-toggle.css?v=1">
   <link rel="stylesheet" id="dark-css-link" href="css/dark.css?v=16">
   <!-- Prevenir flash: deshabilitar dark.css si el usuario eligió modo claro -->
@@ -144,8 +144,9 @@
             <span class="header-urole" id="header-urole">Cliente</span>
           </div>
         </div>
-        <a href="index.html" class="btn-site btn-site-ext">🌐 <span class="btn-site-label">Sitio web</span></a>
+        <a href="index.html" class="btn-site btn-site-ext" title="Sitio web">🌐 <span class="btn-site-label">Sitio web</span></a>
         <button id="btn-install-pwa" class="btn-site" onclick="installPWA()" title="Agregar a pantalla de inicio" style="display:none;">📲 <span class="btn-site-label">Instalar</span></button>
+        <button class="btn-refresh-mob" onclick="location.reload()" title="Refrescar app">↺</button>
         <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar a modo claro" aria-label="Cambiar tema">
           <span class="tt-icon">☀️</span>
           <span class="tt-label">Claro</span>
