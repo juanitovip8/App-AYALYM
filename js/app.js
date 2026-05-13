@@ -4768,14 +4768,30 @@ function registrarEntrada(){
   const p=PERSONAL_INM.find(x=>x.id===currentPersonalId);if(!p)return;
   const today=new Date().toISOString().split('T')[0];
   if(p.asistencias.find(a=>a.fecha===today)){showToast('amber','⚠️','Entrada ya registrada hoy');return;}
-  const hora=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
-  p.asistencias.push({fecha:today,entrada:hora,salida:null});
-  const svcLabel=_piSvcLabel(p);
-  pushNotif('supervisor','🟢','green','Entrada registrada',`${p.nombre} registró entrada a las ${hora}${svcLabel}`);
-  pushNotif('admin','🟢','green','Entrada registrada',`${p.nombre} (Personal Inm.) registró entrada a las ${hora}${svcLabel}`);
-  renderPIInicio();
-  fbSavePersonalInm();
-  showToast('green','✅','Entrada registrada: '+hora);
+  /* Recopilar coords de todos los inmuebles asignados */
+  const myCoords=PROPERTY_SERVICES
+    .filter(ps=>(p.serviciosAsignados||[]).includes(ps.id))
+    .map(ps=>({lat:ps.inmueble.lat,lng:ps.inmueble.lng}));
+  showToast('blue','📍','Verificando ubicación…');
+  _checkGeoFence(
+    myCoords,
+    (info)=>{
+      const hora=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
+      p.asistencias.push({fecha:today,entrada:hora,salida:null});
+      const svcLabel=_piSvcLabel(p);
+      pushNotif('supervisor','🟢','green','Entrada registrada',`${p.nombre} registró entrada a las ${hora}${svcLabel}`);
+      pushNotif('admin','🟢','green','Entrada registrada',`${p.nombre} (Personal Inm.) registró entrada a las ${hora}${svcLabel}`);
+      renderPIInicio();
+      fbSavePersonalInm();
+      const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
+      showToast('green','✅','Entrada registrada: '+hora+dtxt);
+    },
+    dist=>showToast('red','📍',`Estás a ${dist}m del inmueble. Debes estar a menos de ${GEO_RADIO_M}m para registrar entrada.`),
+    err=>{
+      if(err.code===1)showToast('red','🔒','Permite el acceso a tu ubicación para registrar asistencia.');
+      else showToast('amber','⚠️','No se pudo obtener tu ubicación. Intenta de nuevo.');
+    }
+  );
 }
 
 function registrarSalida(){
@@ -4784,14 +4800,29 @@ function registrarSalida(){
   const asis=p.asistencias.find(a=>a.fecha===today);
   if(!asis||!asis.entrada){showToast('amber','⚠️','Primero registra tu entrada');return;}
   if(asis.salida){showToast('amber','⚠️','Salida ya registrada hoy');return;}
-  const hora=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
-  asis.salida=hora;
-  const svcLabel=_piSvcLabel(p);
-  pushNotif('supervisor','🔴','blue','Salida registrada',`${p.nombre} registró salida a las ${hora}${svcLabel}`);
-  pushNotif('admin','🔴','blue','Salida registrada',`${p.nombre} (Personal Inm.) registró salida a las ${hora}${svcLabel}`);
-  renderPIInicio();
-  fbSavePersonalInm();
-  showToast('green','✅','Salida registrada: '+hora);
+  const myCoords=PROPERTY_SERVICES
+    .filter(ps=>(p.serviciosAsignados||[]).includes(ps.id))
+    .map(ps=>({lat:ps.inmueble.lat,lng:ps.inmueble.lng}));
+  showToast('blue','📍','Verificando ubicación…');
+  _checkGeoFence(
+    myCoords,
+    (info)=>{
+      const hora=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
+      asis.salida=hora;
+      const svcLabel=_piSvcLabel(p);
+      pushNotif('supervisor','🔴','blue','Salida registrada',`${p.nombre} registró salida a las ${hora}${svcLabel}`);
+      pushNotif('admin','🔴','blue','Salida registrada',`${p.nombre} (Personal Inm.) registró salida a las ${hora}${svcLabel}`);
+      renderPIInicio();
+      fbSavePersonalInm();
+      const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
+      showToast('green','✅','Salida registrada: '+hora+dtxt);
+    },
+    dist=>showToast('red','📍',`Estás a ${dist}m del inmueble. Debes estar a menos de ${GEO_RADIO_M}m para registrar salida.`),
+    err=>{
+      if(err.code===1)showToast('red','🔒','Permite el acceso a tu ubicación para registrar asistencia.');
+      else showToast('amber','⚠️','No se pudo obtener tu ubicación. Intenta de nuevo.');
+    }
+  );
 }
 
 /* ── Admin: gestión de personal de inmuebles ── */
@@ -5028,8 +5059,13 @@ function buildInmDetail(ps,showActions){
         <button class="btn-sm" style="background:#FFF0F0;color:#C0392B;margin-left:auto;" onclick="deletePropService(${ps.id})">🗑 Eliminar</button>
       </div>
     </div>`;
-    const editRow=`<div class="inm-action-row" style="justify-content:flex-start;">
+    const geoOk=!!(ps.inmueble.lat&&ps.inmueble.lng);
+    const geoBadge=geoOk
+      ?`<span style="font-size:10px;color:#065F46;background:#D1FAE5;border-radius:4px;padding:2px 7px;font-weight:600;">📍 Geo OK</span>`
+      :`<span style="font-size:10px;color:#92400E;background:#FEF3C7;border-radius:4px;padding:2px 7px;font-weight:600;cursor:pointer;" onclick="_regeocodeInm(${ps.id})">📍 Sin coords — Geocodificar</span>`;
+    const editRow=`<div class="inm-action-row" style="justify-content:flex-start;gap:8px;">
       <button class="btn-sm" style="background:#EEF5FF;color:#0C447C;border:.5px solid #B5D4F4;" onclick="openInmEdit(${ps.id})">✏️ Editar información</button>
+      ${geoBadge}
     </div>`;
     adminActionsHtml=`<div class="inm-actions" style="flex-direction:column;gap:6px;">${editRow}<div class="inm-action-divider"></div>${svcRow}<div class="inm-action-divider"></div>${contratoRow}</div>`;
   }
@@ -5390,6 +5426,19 @@ ${r.fotos&&r.fotos.length?`
   w.document.close();
 }
 
+/* Re-geocodifica un inmueble existente desde el panel admin */
+async function _regeocodeInm(id){
+  const ps=PROPERTY_SERVICES.find(p=>p.id===id);if(!ps)return;
+  showToast('blue','📍',`Buscando coordenadas de ${ps.folio}…`);
+  const ok=await _geocodeInmueble(ps);
+  if(ok){
+    showToast('green','📍',`Coordenadas configuradas para ${ps.folio}`);
+    renderPropServices(_propFilter);
+  }else{
+    showToast('amber','📍',`No se encontraron coordenadas para "${ps.inmueble.direccion}". Verifica la dirección.`);
+  }
+}
+
 /* ── Edición de servicio de inmueble (admin) ── */
 function openInmEdit(id){
   const ps=PROPERTY_SERVICES.find(p=>p.id===id);
@@ -5451,6 +5500,9 @@ function saveInmEdit(){
   const ps=PROPERTY_SERVICES.find(p=>p.id===id);
   if(!ps)return;
   const g=id=>document.getElementById(id).value.trim();
+  /* Capturar dirección anterior para detectar cambio */
+  const _oldDir=ps.inmueble.direccion;
+  const _oldCol=ps.inmueble.colonia;
   // Cliente
   ps.cliente.nombre=g('ie-cli-nombre')||ps.cliente.nombre;
   ps.cliente.contacto=g('ie-cli-contacto');
@@ -5488,11 +5540,21 @@ function saveInmEdit(){
   ps.supervisorId=parseInt(document.getElementById('ie-supervisor').value);
   // Notas
   ps.notas=g('ie-notas');
+  /* Si cambió la dirección, limpiar coords viejas y re-geocodificar */
+  const _dirChanged=_oldDir!==ps.inmueble.direccion||_oldCol!==ps.inmueble.colonia;
+  if(_dirChanged){ps.inmueble.lat=null;ps.inmueble.lng=null;}
+  fbSavePropertyServices(); /* persistir cambios */
   closeInmEdit();
-  _openInmRows.add(id); // mantener abierta la fila tras guardar
+  _openInmRows.add(id);
   renderPropServices(_propFilter);
   renderSVInmuebles();
   showToast('green','✅','Información actualizada correctamente');
+  if(_dirChanged){
+    _geocodeInmueble(ps).then(ok=>{
+      if(ok)showToast('green','📍','Coordenadas del inmueble actualizadas.');
+      else showToast('amber','📍','No se encontraron coordenadas para la nueva dirección. Verifica que sea válida en México.');
+    });
+  }
 }
 
 /* ── Renderizado admin: agrupado por supervisor, activos primero ── */
@@ -5622,26 +5684,86 @@ function _nowHM(){
   return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
 }
 
+/* ═══════════════════════════════════════════════════════════
+   GEO-CERCA — Validación de proximidad para asistencias
+   Radio: GEO_RADIO_M metros. Usa Nominatim (OSM) para
+   geocodificar la dirección del inmueble al crearlo/editarlo.
+   ═══════════════════════════════════════════════════════════ */
+const GEO_RADIO_M = 300; // metros permitidos desde el inmueble
+
+/* Distancia en metros entre dos pares lat/lng (fórmula Haversine) */
+function _haversineDistance(lat1,lng1,lat2,lng2){
+  const R=6371000, r=Math.PI/180;
+  const dLat=(lat2-lat1)*r, dLng=(lng2-lng1)*r;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*r)*Math.cos(lat2*r)*Math.sin(dLng/2)**2;
+  return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)));
+}
+
+/* Geocodifica la dirección del inmueble vía Nominatim y guarda lat/lng en ps */
+async function _geocodeInmueble(ps){
+  const q=encodeURIComponent([ps.inmueble.direccion,ps.inmueble.colonia,'México'].filter(Boolean).join(', '));
+  try{
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=${q}`,
+      {headers:{'Accept-Language':'es-MX','User-Agent':'AYALYM-App/1.0'}});
+    const [hit]=await res.json();
+    if(hit){
+      ps.inmueble.lat=parseFloat(hit.lat);
+      ps.inmueble.lng=parseFloat(hit.lon);
+      fbSavePropertyServices();
+      return true;
+    }
+  }catch(e){console.warn('[geo]',e);}
+  return false;
+}
+
+/* Verifica si el usuario está dentro del radio de alguna de las coords dadas.
+   coordsList: [{lat,lng}]
+   onOk(dist|'sin-coords'|'no-api') — permitido
+   onFar(dist) — demasiado lejos
+   onError(err) — sin permiso u otro error */
+function _checkGeoFence(coordsList,onOk,onFar,onError){
+  if(!navigator.geolocation){onOk('no-api');return;}
+  const valid=(coordsList||[]).filter(c=>c&&c.lat&&c.lng);
+  if(!valid.length){onOk('sin-coords');return;}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const{latitude:uLat,longitude:uLng}=pos.coords;
+      const dist=Math.min(...valid.map(c=>_haversineDistance(uLat,uLng,c.lat,c.lng)));
+      if(dist<=GEO_RADIO_M)onOk(dist);
+      else onFar(dist);
+    },
+    err=>onError(err),
+    {enableHighAccuracy:true,timeout:10000,maximumAge:30000}
+  );
+}
+
 function marcarEntradaSV(servicioId){
   if(!currentSupervisorRef){showToast('amber','⚠️','Sin sesión de supervisor');return;}
   if(_todaySVAst(servicioId)){showToast('amber','⚠️','Ya registraste tu entrada hoy');return;}
   const ps=PROPERTY_SERVICES.find(p=>p.id===servicioId);if(!ps)return;
-  const hora=_nowHM();
-  const today=new Date().toISOString().split('T')[0];
-  SUPERVISOR_ASISTENCIAS.push({
-    id:'ast'+Date.now(),
-    supervisorId:currentSupervisorRef.id,
-    supervisorNombre:currentSupervisorRef.name,
-    servicioId:ps.id,
-    servicioFolio:ps.folio||String(ps.id),
-    servicioTipo:ps.tipo,
-    clienteNombre:ps.cliente.nombre,
-    inmuebleDireccion:ps.inmueble.direccion,
-    fecha:today,entrada:hora,salida:null,duracion:null,notas:'',
-  });
-  fbSaveSupervisorAsistencias();
-  renderSVAstHoy();
-  showToast('green','📍','Entrada registrada: '+hora);
+  showToast('blue','📍','Verificando ubicación…');
+  _checkGeoFence(
+    [{lat:ps.inmueble.lat,lng:ps.inmueble.lng}],
+    (info)=>{
+      const hora=_nowHM(),today=new Date().toISOString().split('T')[0];
+      SUPERVISOR_ASISTENCIAS.push({
+        id:'ast'+Date.now(),
+        supervisorId:currentSupervisorRef.id,supervisorNombre:currentSupervisorRef.name,
+        servicioId:ps.id,servicioFolio:ps.folio||String(ps.id),servicioTipo:ps.tipo,
+        clienteNombre:ps.cliente.nombre,inmuebleDireccion:ps.inmueble.direccion,
+        fecha:today,entrada:hora,salida:null,duracion:null,notas:'',
+      });
+      fbSaveSupervisorAsistencias();
+      renderSVAstHoy();
+      const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
+      showToast('green','📍','Entrada registrada: '+hora+dtxt);
+    },
+    dist=>showToast('red','📍',`Estás a ${dist}m del inmueble. Debes estar a menos de ${GEO_RADIO_M}m para registrar asistencia.`),
+    err=>{
+      if(err.code===1)showToast('red','🔒','Permite el acceso a tu ubicación para registrar asistencia.');
+      else showToast('amber','⚠️','No se pudo obtener tu ubicación. Intenta de nuevo.');
+    }
+  );
 }
 
 function marcarSalidaSV(servicioId){
@@ -5650,14 +5772,27 @@ function marcarSalidaSV(servicioId){
   const ast=SUPERVISOR_ASISTENCIAS.find(a=>a.supervisorId===currentSupervisorRef.id&&a.servicioId===servicioId&&a.fecha===today);
   if(!ast){showToast('amber','⚠️','No hay entrada registrada hoy');return;}
   if(ast.salida){showToast('amber','⚠️','Ya registraste tu salida hoy');return;}
-  const hora=_nowHM();
-  ast.salida=hora;
-  const[eh,em]=ast.entrada.split(':').map(Number);
-  const[sh,sm]=hora.split(':').map(Number);
-  ast.duracion=(sh*60+sm)-(eh*60+em);
-  fbSaveSupervisorAsistencias();
-  renderSVAstHoy();
-  showToast('green','🏁','Salida registrada: '+hora);
+  const ps=PROPERTY_SERVICES.find(p=>p.id===servicioId);
+  showToast('blue','📍','Verificando ubicación…');
+  _checkGeoFence(
+    [ps?{lat:ps.inmueble.lat,lng:ps.inmueble.lng}:{}],
+    (info)=>{
+      const hora=_nowHM();
+      ast.salida=hora;
+      const[eh,em]=ast.entrada.split(':').map(Number);
+      const[sh,sm]=hora.split(':').map(Number);
+      ast.duracion=(sh*60+sm)-(eh*60+em);
+      fbSaveSupervisorAsistencias();
+      renderSVAstHoy();
+      const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
+      showToast('green','🏁','Salida registrada: '+hora+dtxt);
+    },
+    dist=>showToast('red','📍',`Estás a ${dist}m del inmueble. Debes estar a menos de ${GEO_RADIO_M}m para registrar salida.`),
+    err=>{
+      if(err.code===1)showToast('red','🔒','Permite el acceso a tu ubicación para registrar asistencia.');
+      else showToast('amber','⚠️','No se pudo obtener tu ubicación. Intenta de nuevo.');
+    }
+  );
 }
 
 function renderSVAstHoy(){
@@ -5812,6 +5947,12 @@ function createPropertyService(){
   pushNotif('supervisor','🏢','blue','Nuevo contrato asignado',`${folio} — ${nombre}`);
   fbSavePropertyServices();
   showToast('green','🏢',`Contrato ${folio} creado y asignado.`);
+  /* Geocodificar la dirección en segundo plano para habilitar geo-cerca */
+  const _newPs=PROPERTY_SERVICES[PROPERTY_SERVICES.length-1];
+  _geocodeInmueble(_newPs).then(ok=>{
+    if(ok)showToast('green','📍','Ubicación del inmueble configurada correctamente.');
+    else showToast('amber','📍','No se encontraron coordenadas para la dirección. Verifica que sea una dirección válida en México o edita el inmueble para reintentarlo.');
+  });
   clearPropForm();
   togglePropForm();
   renderPropServices(_propFilter);
