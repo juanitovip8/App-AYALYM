@@ -8,6 +8,23 @@ const rolLabel=r=>({admin:'Administrador',supervisor:'Supervisor',cliente:'Clien
 const avBgs={admin:'#EEEDFE',supervisor:'#E1F5EE',cliente:'#E6F1FB',trabajador:'#FAEEDA'};
 const avCols={admin:'#3C3489',supervisor:'#085041',cliente:'#0C447C',trabajador:'#633806'};
 
+/* ── Avatar helper: muestra foto de perfil o iniciales en un círculo.
+   person  — objeto con .photo (base64 o null) e .initials (o .nombre/.name para auto-generar)
+   size    — diámetro en px (default 32)
+   bg      — color de fondo cuando no hay foto (default '#042C53')
+   xStyle  — estilos inline adicionales (string, opcional) */
+function _avHtml(person,size,bg,xStyle){
+  const s=size||32;
+  const background=bg||'#042C53';
+  const initials=person?(person.initials||(person.nombre||person.name||'').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()||'??'):'??';
+  const fs=person&&person.photo?'0':Math.round(s*0.38)+'px';
+  const inner=person&&person.photo
+    ?`<img src="${person.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    :initials;
+  const extra=xStyle?';'+xStyle:'';
+  return`<div class="av" style="width:${s}px;height:${s}px;font-size:${fs};background:${background};flex-shrink:0${extra}">${inner}</div>`;
+}
+
 /* RECOVER */
 function toggleRecover(){showLV('recover');}
 function recoverStep1(){const e=document.getElementById('rec-email').value.trim();if(!e){showToast('amber','⚠️','Ingresa tu correo');return;}document.getElementById('rec-email-shown').textContent=e;document.getElementById('rec-1').className='recover-step';document.getElementById('rec-2').className='recover-step active';showToast('blue','📧','Código enviado (demo: cualquier código)');}
@@ -1780,11 +1797,11 @@ function renderSupervisorsPanel(){
     const workerRatings=assignedW.map(w=>{
       const wAvg=w.reviews.length?w.reviews.reduce((a,r)=>a+r.stars,0)/w.reviews.length:null;
       return`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:.5px solid #E6F1FB;">
-        <div style="display:flex;align-items:center;gap:6px;"><div style="width:22px;height:22px;border-radius:50%;background:#042C53;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#fff;">${w.initials}</div><span style="font-size:12px;color:#042C53;">${w.name.split(' ')[0]}</span></div>
+        <div style="display:flex;align-items:center;gap:6px;">${_avHtml(w,22,'#042C53','font-size:'+(w.photo?'0':'9px'))}<span style="font-size:12px;color:#042C53;">${w.name.split(' ')[0]}</span></div>
         <div style="display:flex;align-items:center;gap:4px;">${s$(wAvg||0,11)}<span style="font-size:12px;font-weight:500;color:#042C53;">${wAvg!==null?wAvg.toFixed(1):'—'}</span><span style="font-size:11px;color:#185FA5;">(${w.reviews.length})</span></div>
       </div>`;
     }).join('');
-    const pills=assignedW.map(w=>`<div class="sv-worker-pill"><div style="width:22px;height:22px;border-radius:50%;background:#042C53;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:#fff;">${w.initials}</div><span>${w.name.split(' ')[0]}</span><button onclick="removeWorkerFromSV(${si},${w.id})">×</button></div>`).join('');
+    const pills=assignedW.map(w=>`<div class="sv-worker-pill">${_avHtml(w,22,'#042C53','font-size:'+(w.photo?'0':'9px'))}<span>${w.name.split(' ')[0]}</span><button onclick="removeWorkerFromSV(${si},${w.id})">×</button></div>`).join('');
     const svAvHtml=sv.photo
       ?`<div class="av-photo-wrap" style="position:relative;cursor:pointer;flex-shrink:0;" onclick="adminUploadSupervisorPhoto(${sv.id})" title="Cambiar foto"><div class="av" style="width:44px;height:44px;font-size:0;background:#085041;overflow:hidden;"><img src="${sv.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div><div class="av-photo-badge" style="font-size:10px;width:18px;height:18px;">📷</div></div>`
       :`<div class="av-photo-wrap" style="position:relative;cursor:pointer;flex-shrink:0;" onclick="adminUploadSupervisorPhoto(${sv.id})" title="Subir foto"><div class="av" style="width:44px;height:44px;font-size:14px;background:#085041;">${sv.initials}</div><div class="av-photo-badge" style="font-size:10px;width:18px;height:18px;">📷</div></div>`;
@@ -4352,7 +4369,7 @@ function selectClienteTab(tab,btn){
       ${active.slice(0,4).map(w=>{
         const svc=w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tap.'}[t])).join(' · ');
         return`<div class="dash-rank-row">
-          <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div>
+          ${_avHtml(w,32,'#042C53')}
           <div class="dash-rank-info"><p>${w.name}</p><span>${svc}</span></div>
           <div style="text-align:right;">${s$(w.rating,11)}<p style="font-size:12px;font-weight:500;color:#042C53;margin-top:2px;">${w.rating.toFixed(1)}</p></div>
         </div>`;
@@ -4895,7 +4912,7 @@ function selectSupervisorTab(tab,btn){
         const st=w.status==='active'?'Disponible':w.status==='busy'?'En servicio':'Inactivo';
         const wAvg=w.reviews.length?w.reviews.reduce((a,r)=>a+r.stars,0)/w.reviews.length:0;
         return`<div class="dash-rank-row">
-          <div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div>
+          ${_avHtml(w,32,'#042C53')}
           <div class="dash-rank-info"><p>${w.name}</p><span>${w.todayJobs.length} servicio${w.todayJobs.length!==1?'s':''} hoy</span></div>
           <div style="text-align:right;"><span class="badge ${sb}" style="font-size:10px;">${st}</span>${w.reviews.length?`<p style="font-size:11px;color:#185FA5;margin-top:2px;">${s$(wAvg,10)} ${wAvg.toFixed(1)}</p>`:''}
           </div>
@@ -4913,7 +4930,7 @@ function selectSupervisorTab(tab,btn){
         <div class="dash-kpi green"><p>Positivas (≥4★)</p><span>${allRevs.filter(r=>r.stars>=4).length}</span></div>
       </div>
       <p class="dash-section-title">Ranking del equipo</p>
-      ${ranked.map((w,i)=>{const avg=w.reviews.reduce((s,r)=>s+r.stars,0)/w.reviews.length;return`<div class="dash-rank-row"><span class="dash-rank-num">${i+1}</span><div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div><div class="dash-rank-info"><p>${w.name}</p><div style="display:flex;gap:2px;margin-top:2px;">${s$(avg,10)}</div></div><div style="text-align:right;"><p style="font-size:15px;font-weight:500;color:#042C53;">${avg.toFixed(1)}</p><span style="font-size:11px;color:#185FA5;">${w.reviews.length} reseñas</span></div></div>`;}).join('')||'<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin evaluaciones</p>'}`;
+      ${ranked.map((w,i)=>{const avg=w.reviews.reduce((s,r)=>s+r.stars,0)/w.reviews.length;return`<div class="dash-rank-row"><span class="dash-rank-num">${i+1}</span>${_avHtml(w,32,'#042C53')}<div class="dash-rank-info"><p>${w.name}</p><div style="display:flex;gap:2px;margin-top:2px;">${s$(avg,10)}</div></div><div style="text-align:right;"><p style="font-size:15px;font-weight:500;color:#042C53;">${avg.toFixed(1)}</p><span style="font-size:11px;color:#185FA5;">${w.reviews.length} reseñas</span></div></div>`;}).join('')||'<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin evaluaciones</p>'}`;
   } else if(tab==='alertas'){
     const inactivos=assigned.filter(w=>w.status==='inactive');
     const lowRevs=assigned.flatMap(w=>w.reviews.filter(r=>r.stars<4).map(r=>({...r,workerName:w.name})));
@@ -4923,7 +4940,7 @@ function selectSupervisorTab(tab,btn){
         <div class="dash-kpi" style="background:#FAEEDA;"><p>Eval. bajas en equipo</p><span style="color:#633806;">${lowRevs.length}</span></div>
       </div>
       ${inactivos.length?`<p class="dash-section-title">⚠️ Trabajadores inactivos</p>
-        ${inactivos.map(w=>`<div class="dash-rank-row"><div class="av" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${w.initials}</div><div class="dash-rank-info"><p>${w.name}</p><span>${w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tap.'}[t])).join(' · ')}</span></div><span class="badge berr">Inactivo</span></div>`).join('')}`:''}
+        ${inactivos.map(w=>`<div class="dash-rank-row">${_avHtml(w,32,'#042C53')}<div class="dash-rank-info"><p>${w.name}</p><span>${w.type.map(t=>({depto:'Depto',auto:'Autos',tapiceria:'Tap.'}[t])).join(' · ')}</span></div><span class="badge berr">Inactivo</span></div>`).join('')}`:''}
       ${lowRevs.length?`<p class="dash-section-title">⭐ Evaluaciones bajas recientes</p>
         ${lowRevs.slice(0,5).map(r=>`<div style="border:.5px solid #FAC775;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#FAEEDA;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><p style="font-size:12px;font-weight:500;color:#412402;">${r.workerName}</p><div style="display:flex;gap:2px;">${s$(r.stars,11)}</div></div><p style="font-size:12px;color:#412402;">"${r.comment}"</p><p style="font-size:11px;color:#633806;margin-top:3px;">${r.svc}${r.client?' · '+r.client:''}</p></div>`).join('')}`
         :`<p style="font-size:13px;color:#27500A;text-align:center;padding:1rem;background:#EAF3DE;border-radius:8px;margin-top:8px;">✓ Sin evaluaciones bajas en el equipo</p>`}
@@ -7270,7 +7287,7 @@ function renderClienteInmAsistencias(){
         ${personal.map(p=>`
           <button class="att-tab${p.id===_attTabId?' att-tab--active':''}"
             onclick="_selectAttTab(${p.id})">
-            <span class="att-tab-av">${p.initials}</span>
+            <span class="att-tab-av" style="${p.photo?'padding:0;font-size:0;overflow:hidden;':''}">${p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:p.initials}</span>
             <span class="att-tab-name">${p.nombre.split(' ')[0]}</span>
           </button>`).join('')}
       </div>
