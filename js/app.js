@@ -927,7 +927,7 @@ function launchApp(role,nombre,zona){
     renderChatBox('sv-a','sv','chat-sv-a');
     renderChatBox('c-t','sv','chat-sv-ct');
     renderChatBox('c-a','sv','chat-sv-ca');
-    renderSVInmuebles();
+    renderSVAstHoy();renderSVInmuebles();
   }
   if(role==='admin'){
     renderZonasAdmin();renderStaffList('all');renderLowReviews();renderRevBreakdown();renderUrgencias();
@@ -1008,6 +1008,7 @@ function navGo(role,sec,btn){
   if(role==='admin'&&sec==='usuarios'){renderUsersPanel();renderSupervisorsPanel();}
   if(role==='admin'&&sec==='supervisores')renderSupervisorsPanel();
   if(role==='admin'&&sec==='facturacion')renderFacturacionAdmin();
+  if(role==='supervisor'&&sec==='asistencias-sv')renderSVAstHoy();
   if(role==='supervisor'&&sec==='inmuebles-sv')renderSVInmuebles();
   // Personal Inmuebles
   if(role==='personal_inm'&&sec==='inicio')renderPIInicio();
@@ -6219,7 +6220,6 @@ function renderSVAstHoy(){
 
 /* ── Renderizado supervisor: solo servicios activos ── */
 function renderSVInmuebles(){
-  renderSVAstHoy();
   const list=document.getElementById('sv-prop-list');
   if(!list)return;
   const mySvId=currentSupervisorRef?currentSupervisorRef.id:0;

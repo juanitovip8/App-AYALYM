@@ -705,12 +705,13 @@
   <!-- SUPERVISOR -->
   <div id="role-supervisor" class="role-section" style="display:none">
     <!-- Nav superior -->
-    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(6,1fr);">
+    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(7,1fr);">
       <div class="bnav-btn active" onclick="navGo('supervisor','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
       <div class="bnav-btn" onclick="navGo('supervisor','trabajadores',this)"><span class="bnav-icon">👥</span>Equipo</div>
       <div class="bnav-btn" onclick="navGo('supervisor','eval-sv',this)"><span class="bnav-icon">⭐</span>Evaluar</div>
       <div class="bnav-btn" onclick="navGo('supervisor','mensajes-sv',this)"><span class="bnav-icon">💬</span>Mensajes</div>
       <div class="bnav-btn" onclick="navGo('supervisor','mapa-sv',this)"><span class="bnav-icon">📍</span>Mapa</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','asistencias-sv',this)"><span class="bnav-icon">📋</span>Asistencias</div>
       <div class="bnav-btn" onclick="navGo('supervisor','inmuebles-sv',this)"><span class="bnav-icon">🏢</span>Inmuebles</div>
     </div>
     <!-- Tarjeta de perfil -->
@@ -816,9 +817,13 @@
       </div>
     </div>
 
+    <!-- SUPERVISOR: ASISTENCIAS -->
+    <div id="sv-asistencias-sv" class="sec">
+      <div id="sv-ast-today"></div>
+    </div>
+
     <!-- SUPERVISOR: SERVICIOS DE INMUEBLES -->
     <div id="sv-inmuebles-sv" class="sec">
-      <div id="sv-ast-today"></div>
       <div class="card">
         <p class="ctitle">🏢 Mis servicios de inmuebles</p>
         <p class="csub">Servicios activos asignados a tu supervisión.</p>
