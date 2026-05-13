@@ -281,6 +281,7 @@ function fbSaveGeoRadio(value) {
 
 function fbSaveConfig() {
   try {
+    /* {merge:true} para no borrar campos extras como GEO_RADIO_M */
     _col('config').doc('main').set({
       SVC_TYPES:      _clone(SVC_TYPES),
       CLEANING_TYPES: _clone(CLEANING_TYPES),
@@ -288,7 +289,7 @@ function fbSaveConfig() {
       SVC_EXTRAS:     _clone(SVC_EXTRAS),
       PRICES:         _clone(PRICES),
       DIAS_FESTIVOS:  DIAS_FESTIVOS.slice()
-    }).catch(function(e){ console.warn('fbSaveConfig', e); });
+    }, { merge: true }).catch(function(e){ console.warn('fbSaveConfig', e); });
   } catch(e) { console.warn('fbSaveConfig', e); }
 }
 
