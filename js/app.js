@@ -6896,6 +6896,13 @@ function svUpdatePropStatus(id,status){
    CLIENTE INMUEBLES — PANEL
    ═══════════════════════════════════════════ */
 
+/* ── helper: formato de días de servicio ── */
+function _fmtDiasServicio(dias,short){
+  var m=short?{lun:'L',mar:'M',mie:'X',jue:'J',vie:'V',sab:'S',dom:'D'}:{lun:'Lun',mar:'Mar',mie:'Mi\xE9',jue:'Jue',vie:'Vie',sab:'S\xE1b',dom:'Dom'};
+  var sep=short?' ':' \xB7 ';
+  return(dias||[]).map(function(d){return m[d]||d;}).join(sep);
+}
+
 /* ── helper ── */
 function _cinmData(){
   const ci=CLIENTS_INM[currentClientInmId];
@@ -7007,10 +7014,7 @@ function renderClienteInmInicio(){
         <span class="cinm-si-icon">🕐</span>
         <div><p>Horario</p><span>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</span></div>
       </div>
-      ${(ps.diasServicio&&ps.diasServicio.length)?`<div class="cinm-summary-item">
-        <span class="cinm-si-icon">📆</span>
-        <div><p>Días</p><span>${(()=>{const m={lun:'L',mar:'M',mie:'X',jue:'J',vie:'V',sab:'S',dom:'D'};return ps.diasServicio.map(d=>m[d]||d).join(' ');})()}</span></div>
-      </div>`:''}
+      ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="cinm-summary-item"><span class="cinm-si-icon">📆</span><div><p>D\xEDas</p><span>'+_fmtDiasServicio(ps.diasServicio,true)+'</span></div></div>':''}
       <div class="cinm-summary-item">
         <span class="cinm-si-icon">📋</span>
         <div><p>Visitas</p><span>${reps.length} reportes</span></div>
@@ -7079,10 +7083,10 @@ function renderClienteInmContrato(){
     <div class="cinm-detail-grid">
       <div class="cinm-dg-item"><span>Frecuencia</span><p>${_cinmFreqLabel(ps.frecuencia)}</p></div>
       <div class="cinm-dg-item"><span>Hora entrada</span><p>${ps.hora} hrs</p></div>
-      ${ps.horaSalida?`<div class="cinm-dg-item"><span>Hora salida</span><p>${ps.horaSalida} hrs</p></div>`:''}
+      ${ps.horaSalida?'<div class="cinm-dg-item"><span>Hora salida</span><p>'+ps.horaSalida+' hrs</p></div>':''}
       <div class="cinm-dg-item"><span>Inicio</span><p>${formatDateShort(ps.fechaInicio)}</p></div>
       <div class="cinm-dg-item"><span>Fin</span><p>${formatDateShort(ps.fechaFin)}</p></div>
-      ${(ps.diasServicio&&ps.diasServicio.length)?`<div class="cinm-dg-item cinm-full"><span>Días de servicio</span><p>${(()=>{const m={lun:'Lun',mar:'Mar',mie:'Mié',jue:'Jue',vie:'Vie',sab:'Sáb',dom:'Dom'};return ps.diasServicio.map(d=>m[d]||d).join(' · ');})()</p></div>`:''}
+      ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="cinm-dg-item cinm-full"><span>D\xEDas de servicio</span><p>'+_fmtDiasServicio(ps.diasServicio)+'</p></div>':''}
       <div class="cinm-dg-item cinm-full"><span>Descripción</span><p>${ps.descripcion}</p></div>
     </div>
 
