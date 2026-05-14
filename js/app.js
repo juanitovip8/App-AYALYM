@@ -606,11 +606,49 @@ function pushNotif(role,icon,type,title,body,reqId=null){
 function _startNotifListener(role){
   if(_notifListener){_notifListener();_notifListener=null;}
   if(!NOTIFICATIONS[role])NOTIFICATIONS[role]=[];
+  let _firstLoad=true;
   _notifListener=fbListenNotifs(role,function(notifs){
+    const prev=NOTIFICATIONS[role]||[];
+    const prevIds=new Set(prev.map(function(n){return n._docId;}));
     NOTIFICATIONS[role]=notifs;
     updateNotifBadge();
     if(notifPanelOpen)renderNotifications();
+    /* Mostrar toast flotante para notificaciones nuevas (no en carga inicial) */
+    if(!_firstLoad){
+      notifs.forEach(function(n){
+        if(!n.read&&!prevIds.has(n._docId)){
+          _showNotifToast(n);
+        }
+      });
+    }
+    _firstLoad=false;
   });
+}
+
+/* Toast flotante de notificación entrante */
+function _showNotifToast(n){
+  const tc={green:'#22C55E',blue:'#3B82F6',amber:'#F59E0B',red:'#EF4444',purple:'#8B5CF6'};
+  const color=tc[n.type]||tc.blue;
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;top:70px;right:14px;left:14px;max-width:360px;margin:0 auto;
+    background:${document.documentElement.classList.contains('dark-mode')?'#1A2535':'#fff'};
+    border-left:4px solid ${color};border-radius:12px;padding:11px 14px;
+    box-shadow:0 4px 24px rgba(0,0,0,.28);z-index:99990;
+    display:flex;align-items:flex-start;gap:10px;
+    animation:_ntSlide .3s ease;`;
+  t.innerHTML=`<span style="font-size:20px;flex-shrink:0;">${n.icon||'🔔'}</span>
+    <div style="flex:1;min-width:0;">
+      <p style="font-size:13px;font-weight:600;color:${document.documentElement.classList.contains('dark-mode')?'#e8edf4':'#042C53'};margin:0 0 2px;">${n.title}</p>
+      <p style="font-size:11px;color:#7A9AB8;margin:0;line-height:1.4;">${n.body}</p>
+    </div>
+    <button onclick="this.parentNode.remove()" style="background:none;border:none;color:#7A9AB8;font-size:18px;cursor:pointer;line-height:1;padding:0;flex-shrink:0;">✕</button>`;
+  if(!document.getElementById('_nt-style')){
+    const s=document.createElement('style');s.id='_nt-style';
+    s.textContent='@keyframes _ntSlide{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}';
+    document.head.appendChild(s);
+  }
+  document.body.appendChild(t);
+  setTimeout(function(){if(t.parentNode)t.remove();},5000);
 }
 
 function _stopNotifListener(){
