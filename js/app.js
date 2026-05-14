@@ -1962,7 +1962,7 @@ const PROTECTED_ADMIN='admin@ayalym.com';
 function renderUsersPanel(filter){
   filter=filter||userRoleFilter||'recientes';
   let filtered;
-  if(filter==='recientes') filtered=[...USERS].sort((a,b)=>{const ta=a.creadoEn?.toMillis?a.creadoEn.toMillis():0;const tb=b.creadoEn?.toMillis?b.creadoEn.toMillis():0;return tb-ta;}).slice(0,5);
+  if(filter==='recientes') filtered=[...USERS].sort((a,b)=>{const ta=a.creadoEn?.toMillis?a.creadoEn.toMillis():(a.creadoEn?new Date(a.creadoEn).getTime():USERS.indexOf(a));const tb=b.creadoEn?.toMillis?b.creadoEn.toMillis():(b.creadoEn?new Date(b.creadoEn).getTime():USERS.indexOf(b));return tb-ta;}).slice(0,10);
   else if(filter==='all') filtered=USERS;
   else filtered=USERS.filter(u=>u.rol===filter);
   document.getElementById('users-list').innerHTML=filtered.map((u)=>{
