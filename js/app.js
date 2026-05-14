@@ -5505,7 +5505,7 @@ function renderPIServicios(){
         <div class="pi-svc-info">
           <p>${ps.folio} · ${ps.tipo}</p>
           <span>${ps.cliente.nombre} · ${ps.inmueble.tipo}, ${ps.inmueble.colonia}</span>
-          <span>📅 ${ps.frecuencia||'—'} · ⏰ ${ps.hora} hrs</span>
+          <span>📅 ${ps.frecuencia||'—'} · ⏰ ${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs${(ps.diasServicio&&ps.diasServicio.length)?' · 📆 '+_fmtDiasServicio(ps.diasServicio,'short'):''}</span>
         </div>
         <span class="pi-svc-badge" style="background:${stBg};color:${stCol};">${stLbl}</span>
       </div>`;}).join('')
@@ -5919,7 +5919,9 @@ function buildInmDetail(ps,showActions){
     <div class="inm-field"><strong>🏗️ ${ps.inmueble.tipo} · ${ps.inmueble.m2} m²</strong>${ps.inmueble.colonia}</div>
     <div class="inm-field"><strong>📍 Dirección</strong>${ps.inmueble.direccion}</div>
     <div class="inm-field"><strong>📅 Vigencia del contrato</strong>${formatDateShort(ps.fechaInicio)} → ${formatDateShort(ps.fechaFin)}</div>
-    <div class="inm-field"><strong>🔁 Frecuencia · ⏰ Hora</strong>${(ps.frecuencia||'').charAt(0).toUpperCase()+(ps.frecuencia||'').slice(1)} · ${ps.hora}</div>
+    <div class="inm-field"><strong>🔁 Frecuencia</strong>${(ps.frecuencia||'').charAt(0).toUpperCase()+(ps.frecuencia||'').slice(1)}</div>
+    <div class="inm-field"><strong>⏰ Horario</strong>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</div>
+    ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="inm-field" style="grid-column:1/-1;"><strong>📆 D\xEDas de servicio</strong><span style="line-height:1.7;">'+_fmtDiasServicio(ps.diasServicio,'full')+'</span></div>':''}
     <div class="inm-field"><strong>👤 Contacto directo</strong>${ps.cliente.contacto}</div>
     <div class="inm-field"><strong>📞 Teléfono</strong>${ps.cliente.tel}</div>
     <div class="inm-field" style="grid-column:1/-1;"><strong>✉️ Correo</strong>${ps.cliente.email}</div>
@@ -6435,7 +6437,9 @@ function buildInmDetailSV(ps){
     <div class="inm-field"><strong>🏗️ ${ps.inmueble.tipo} · ${ps.inmueble.m2} m²</strong>${ps.inmueble.colonia}</div>
     <div class="inm-field"><strong>📍 Dirección</strong>${ps.inmueble.direccion}</div>
     <div class="inm-field"><strong>📅 Vigencia del contrato</strong>${formatDateShort(ps.fechaInicio)} → ${formatDateShort(ps.fechaFin)}</div>
-    <div class="inm-field"><strong>🔁 Frecuencia · ⏰ Hora</strong>${(ps.frecuencia||'').charAt(0).toUpperCase()+(ps.frecuencia||'').slice(1)} · ${ps.hora}</div>
+    <div class="inm-field"><strong>🔁 Frecuencia</strong>${(ps.frecuencia||'').charAt(0).toUpperCase()+(ps.frecuencia||'').slice(1)}</div>
+    <div class="inm-field"><strong>⏰ Horario</strong>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</div>
+    ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="inm-field" style="grid-column:1/-1;"><strong>📆 D\xEDas de servicio</strong><span style="line-height:1.7;">'+_fmtDiasServicio(ps.diasServicio,'full')+'</span></div>':''}
     <div class="inm-field"><strong>👤 Contacto directo</strong>${ps.cliente.contacto}</div>
     <div class="inm-field"><strong>📞 Teléfono</strong>${ps.cliente.tel}</div>
     <div class="inm-field" style="grid-column:1/-1;"><strong>✉️ Correo</strong>${ps.cliente.email}</div>
