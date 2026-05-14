@@ -6845,9 +6845,9 @@ async function _geocodeInmueble(ps){
   const est=(ps.inmueble.estado||'').trim();
 
   /* Cargar la API de Google Maps si aún no está disponible */
-  if(typeof _loadGoogleMaps==='function') await _loadGoogleMaps();
-  /* Esperar hasta que el Geocoder específicamente esté listo (máx 10 seg) */
-  for(let i=0;i<40;i++){
+  await _waitForGoogleMaps();
+  /* Esperar hasta que el Geocoder específicamente esté listo (máx 5 seg) */
+  for(let i=0;i<20;i++){
     if(window.google&&window.google.maps&&window.google.maps.Geocoder) break;
     await new Promise(r=>setTimeout(r,250));
   }
