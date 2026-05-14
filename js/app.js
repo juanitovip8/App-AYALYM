@@ -6900,13 +6900,19 @@ function svUpdatePropStatus(id,status){
 function _cinmData(){
   const ci=CLIENTS_INM[currentClientInmId];
   if(!ci) return{ci:null,ps:null,psList:[]};
-  /* Buscar todos los contratos por clienteInmId (fuente principal) */
-  let psList=PROPERTY_SERVICES.filter(p=>p.clienteInmId===ci.id);
-  /* Retrocompatibilidad: si no hay ninguno por clienteInmId, usar contratoId */
-  if(!psList.length&&ci.contratoId!=null){
-    const leg=PROPERTY_SERVICES.find(p=>p.id===ci.contratoId);
-    if(leg) psList=[leg];
-  }
+  const seen=new Set();
+  const add=(p)=>{if(p&&!seen.has(p.id)){seen.add(p.id);list.push(p);}};
+  const list=[];
+  /* 1. Por clienteInmId (campo directo en el PS) */
+  PROPERTY_SERVICES.filter(p=>p.clienteInmId===ci.id).forEach(add);
+  /* 2. Por contratoId legacy (puede apuntar a un PS sin clienteInmId) */
+  if(ci.contratoId!=null) add(PROPERTY_SERVICES.find(p=>p.id===ci.contratoId));
+  /* 3. Por email del cliente en ps.cliente.email (contratos históricos) */
+  if(ci.email) PROPERTY_SERVICES.filter(p=>p.cliente&&p.cliente.email===ci.email).forEach(add);
+  /* Ordenar por folio */
+  const psList=list.sort((a,b)=>(a.folio||'').localeCompare(b.folio||''));
+  /* Auto-arreglar clienteInmId faltante en Firestore (silencioso) */
+  psList.forEach(p=>{if(!p.clienteInmId){p.clienteInmId=ci.id;fbSavePropertyServices();}});
   /* Contrato activo: usar _cinmActivePsId si es válido, si no el primero */
   const ps=(_cinmActivePsId!=null?psList.find(p=>p.id===_cinmActivePsId):null)||psList[0]||null;
   return{ci,ps,psList};
