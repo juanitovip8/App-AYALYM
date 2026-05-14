@@ -751,9 +751,9 @@ textarea{resize:vertical;min-height:60px;}
 .inm-row-hdr.open .inm-row-arrow{transform:rotate(180deg);}
 
 /* ── Tarjetas de contrato (nuevo diseño sin acordeón) ── */
-.inm-card-btn{transition:background .15s,box-shadow .15s,border-color .15s;}
-.inm-card-btn:hover{background:#EBF2FA!important;box-shadow:0 2px 10px rgba(24,95,165,.14);}
-.inm-card-btn.inm-card-active{background:var(--blue-light,#EBF2FA)!important;box-shadow:0 2px 12px rgba(24,95,165,.20)!important;}
+.inm-card-btn{transition:box-shadow .15s,border-color .15s,opacity .15s;}
+.inm-card-btn:hover{box-shadow:0 2px 10px rgba(24,95,165,.22);border-color:rgba(24,95,165,.45)!important;opacity:.88;}
+.inm-card-btn.inm-card-active{box-shadow:0 2px 12px rgba(24,95,165,.28)!important;border-color:rgba(24,95,165,.6)!important;opacity:1!important;}
 
 /* ── CHAT CONTACT BAR ── */
 .chat-contact-bar{display:flex;align-items:center;gap:10px;background:var(--blue-light);border-radius:8px;padding:10px 12px;margin-bottom:12px;}

@@ -6035,10 +6035,10 @@ function _selectInmCard(btn){
   const bgActive=dark?'rgba(24,95,165,0.18)':'#EBF2FA';
   const id=parseInt(btn.dataset.id);
   const isActive=btn.classList.contains('inm-card-active');
-  group.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background=bgDefault;});
+  group.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';});
   const panel=group.querySelector('.inm-detail-wrap');
   if(isActive){if(panel)panel.style.display='none';_openInmRows.delete(id);return;}
-  btn.classList.add('inm-card-active');btn.style.boxShadow='0 2px 10px rgba(24,95,165,.18)';btn.style.background=bgActive;
+  btn.classList.add('inm-card-active');
   if(panel){
     const inner=group.querySelector('.inm-detail-inner');
     if(inner){
@@ -6076,7 +6076,7 @@ function buildSupervisorGroup(sv,services,showActions){
       <div class="inm-detail-wrap" style="display:none;margin-top:14px;border-top:.5px solid var(--blue-border,rgba(24,95,165,.18));padding-top:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
           <span class="inm-detail-folio" style="font-size:12px;font-weight:700;color:#185FA5;"></span>
-          <button onclick="const g=this.closest('.inm-group');const dk=document.documentElement.classList.contains('dark-mode');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background=dk?'rgba(255,255,255,0.05)':'#fff';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
+          <button onclick="const g=this.closest('.inm-group');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
         </div>
         <div class="inm-detail-inner"></div>
       </div>
@@ -6816,7 +6816,7 @@ function renderSVInmuebles(){
       <div class="inm-detail-wrap" style="display:none;margin-top:14px;border-top:.5px solid var(--blue-border,rgba(24,95,165,.18));padding-top:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
           <span class="inm-detail-folio" style="font-size:12px;font-weight:700;color:#185FA5;"></span>
-          <button onclick="const g=this.closest('.inm-group');const dk=document.documentElement.classList.contains('dark-mode');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background=dk?'rgba(255,255,255,0.05)':'#fff';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
+          <button onclick="const g=this.closest('.inm-group');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
         </div>
         <div class="inm-detail-inner"></div>
       </div>
