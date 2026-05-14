@@ -6931,14 +6931,18 @@ function _cinmFreqLabel(f){return{diaria:'Diaria',semanal:'Semanal',quincenal:'Q
 /* ── selector de inmueble cuando hay más de uno ── */
 function _cinmPsSelector(psList,activeId){
   if(psList.length<=1)return'';
-  return`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-    ${psList.map(p=>`<button onclick="_cinmActivePsId=${p.id};renderClienteInmInicio();renderClienteInmContrato();renderClienteInmReportes();renderClienteInmAsistencias();"
-      style="font-size:11px;padding:5px 12px;border-radius:20px;border:1.5px solid ${p.id===activeId?'#042C53':'#B5D4F4'};
-      background:${p.id===activeId?'#042C53':'#fff'};color:${p.id===activeId?'#fff':'#042C53'};
-      font-weight:${p.id===activeId?'700':'500'};cursor:pointer;">
-      🏢 ${p.folio}${p.inmueble?.direccion?' — '+(p.inmueble.direccion.split(',')[0]):''}
-    </button>`).join('')}
-  </div>`;
+  var btns=psList.map(function(p){
+    var active=p.id===activeId;
+    var bg=active?'#185FA5':'rgba(255,255,255,0.10)';
+    var col=active?'#fff':'var(--text-main,#e8edf4)';
+    var border=active?'#185FA5':'rgba(255,255,255,0.25)';
+    var fw=active?'700':'500';
+    var label='🏢 '+p.folio+(p.inmueble&&p.inmueble.direccion?' — '+p.inmueble.direccion.split(',')[0]:'');
+    return'<button onclick="_cinmActivePsId='+p.id+';renderClienteInmInicio();renderClienteInmContrato();renderClienteInmReportes();renderClienteInmAsistencias();" '
+      +'style="font-size:11px;padding:5px 12px;border-radius:20px;border:1.5px solid '+border+';background:'+bg+';color:'+col+';font-weight:'+fw+';cursor:pointer;white-space:nowrap;">'
+      +label+'</button>';
+  }).join('');
+  return'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'+btns+'</div>';
 }
 
 /* ── INICIO ── */
@@ -6957,8 +6961,8 @@ function renderClienteInmInicio(){
       const reps=(p.reportes||[]).length;
       const personal=PERSONAL_INM.filter(x=>x.activo&&x.serviciosAsignados.includes(p.id)).length;
       return`<div onclick="_cinmActivePsId=${p.id};renderClienteInmInicio();renderClienteInmContrato();renderClienteInmReportes();renderClienteInmAsistencias();"
-        style="cursor:pointer;border:1.5px solid #B5D4F4;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;background:#F7FBFF;transition:border-color .2s;"
-        onmouseover="this.style.borderColor='#042C53'" onmouseout="this.style.borderColor='#B5D4F4'">
+        style="cursor:pointer;border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.07);transition:border-color .2s;"
+        onmouseover="this.style.borderColor='rgba(255,255,255,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'"
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:13px;font-weight:700;color:#042C53;">📄 ${p.folio}</span>
           <span class="cinm-status-badge ${_cinmStatusClass(p.status)}">${_cinmStatusLabel(p.status)}</span>
@@ -6985,7 +6989,7 @@ function renderClienteInmInicio(){
   ${psList.length>1?`<div class="card" style="padding:12px 16px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <p style="font-size:12px;font-weight:600;color:#5C7A9A;margin:0;">🏢 Seleccionar inmueble</p>
-      <button onclick="_cinmActivePsId=null;renderClienteInmInicio();" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid #B5D4F4;background:#fff;color:#185FA5;cursor:pointer;">← Ver todos</button>
+      <button onclick="_cinmActivePsId=null;renderClienteInmInicio();" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.10);color:var(--text-main,#e8edf4);cursor:pointer;">← Ver todos</button>
     </div>
     ${selector}
   </div>`:''}
