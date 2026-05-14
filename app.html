@@ -744,7 +744,7 @@
   <!-- SUPERVISOR -->
   <div id="role-supervisor" class="role-section" style="display:none">
     <!-- Nav superior -->
-    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(7,1fr);">
+    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(8,1fr);">
       <div class="bnav-btn active" onclick="navGo('supervisor','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
       <div class="bnav-btn" onclick="navGo('supervisor','trabajadores',this)"><span class="bnav-icon">👥</span>Equipo</div>
       <div class="bnav-btn" onclick="navGo('supervisor','eval-sv',this)"><span class="bnav-icon">⭐</span>Evaluar</div>
@@ -752,6 +752,7 @@
       <div class="bnav-btn" onclick="navGo('supervisor','mapa-sv',this)"><span class="bnav-icon">📍</span>Mapa</div>
       <div class="bnav-btn" onclick="navGo('supervisor','asistencias-sv',this)"><span class="bnav-icon">📋</span>Asistencias</div>
       <div class="bnav-btn" onclick="navGo('supervisor','inmuebles-sv',this)"><span class="bnav-icon">🏢</span>Inmuebles</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','insumos-sv',this)"><span class="bnav-icon">📦</span>Insumos</div>
     </div>
     <!-- Tarjeta de perfil -->
     <div class="card role-profile-card" style="background:linear-gradient(135deg,#042C53,#185FA5);border:none;">
@@ -869,6 +870,7 @@
         <div id="sv-prop-list"></div>
       </div>
     </div>
+    <div id="sv-insumos-sv" class="sec"><div id="sv-insumos-content" style="padding:16px;"></div></div>
   </div>
 
   <!-- ADMIN -->
@@ -1291,11 +1293,23 @@
             <div class="frow full"><label>Puesto</label><select id="pi-puesto"><option value="aux_limpieza">Aux. de limpieza</option><option value="pulidor">Pulidor</option><option value="encargado">Encargado de servicio</option></select></div>
             <div class="frow"><div><label>Correo</label><input type="email" id="pi-email" placeholder="pedro@ayalym.com"></div><div><label>Teléfono</label><input type="text" id="pi-tel" placeholder="+52 55 0000 0000"></div></div>
             <div class="frow full"><label>Contraseña</label><input type="password" id="pi-pass" placeholder="Mínimo 8 caracteres"></div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0 4px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;">
+                <input type="checkbox" id="pi-puede-insumos" style="width:16px;height:16px;accent-color:#042C53;">
+                📦 Habilitar panel de solicitud de insumos
+              </label>
+            </div>
             <div style="display:flex;gap:8px;margin-top:10px;">
               <button class="btn-royal" style="flex:2;" onclick="addPersonalInm()">Guardar</button>
               <button class="btn-sec" style="flex:1;" onclick="togglePiForm()">Cancelar</button>
             </div>
           </div>
+        </div>
+
+        <!-- Panel insumos admin -->
+        <div style="margin-top:16px;border-top:.5px solid var(--blue-border,#DCE8F5);padding-top:14px;">
+          <p class="ctitle" style="font-size:13px;margin:0 0 10px;">📦 Solicitudes de insumos</p>
+          <div id="admin-insumos-content"></div>
         </div>
 
         <!-- Buscador de personal -->
@@ -1336,12 +1350,14 @@
     <div class="bnav-btn active" onclick="navGo('personal_inm','inicio',this)"><span class="bnav-icon">🏠</span>Inicio</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','servicios',this)"><span class="bnav-icon">🏢</span>Servicios</div>
     <div class="bnav-btn" id="pi-nav-equipo" style="display:none;" onclick="navGo('personal_inm','equipo',this)"><span class="bnav-icon">👥</span>Mi equipo</div>
+    <div class="bnav-btn" id="pi-nav-insumos" style="display:none;" onclick="navGo('personal_inm','insumos',this)"><span class="bnav-icon">📦</span>Insumos</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','asistencias',this)"><span class="bnav-icon">📋</span>Asistencias</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
   </div>
   <div id="pi-inicio" class="sec active"><div id="pi-inicio-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
   <div id="pi-servicios" class="sec"><div id="pi-servicios-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
   <div id="pi-equipo" class="sec"><div id="pi-equipo-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
+  <div id="pi-insumos" class="sec"><div id="pi-insumos-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
   <div id="pi-asistencias" class="sec"><div id="pi-asistencias-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
   <div id="pi-perfil" class="sec"><div id="pi-perfil-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
 </div>
@@ -1354,12 +1370,14 @@
     <div class="bnav-btn" onclick="navGo('cliente_inm','contrato',this)"><span class="bnav-icon">📄</span>Contrato</div>
     <div class="bnav-btn" onclick="navGo('cliente_inm','reportes',this)"><span class="bnav-icon">📋</span>Reportes</div>
     <div class="bnav-btn" onclick="navGo('cliente_inm','asistencias',this)"><span class="bnav-icon">🕐</span>Asistencias</div>
+    <div class="bnav-btn" onclick="navGo('cliente_inm','insumos-ci',this)"><span class="bnav-icon">📦</span>Insumos</div>
     <div class="bnav-btn" onclick="navGo('cliente_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
   </div>
   <div id="cinm-inicio" class="sec active"><div id="cinm-inicio-content" style="padding:16px;"></div></div>
   <div id="cinm-contrato" class="sec"><div id="cinm-contrato-content" style="padding:16px;"></div></div>
   <div id="cinm-reportes" class="sec"><div id="cinm-reportes-content" style="padding:16px;"></div></div>
   <div id="cinm-asistencias" class="sec"><div id="cinm-asistencias-content" style="padding:16px;"></div></div>
+  <div id="cinm-insumos-ci" class="sec"><div id="cinm-insumos-content" style="padding:16px;"></div></div>
   <div id="cinm-perfil" class="sec"><div id="cinm-perfil-content" style="padding:16px;"></div></div>
 </div>
 

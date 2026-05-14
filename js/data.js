@@ -84,6 +84,7 @@ let currentClientInmId=null;
 
 let CLIENTS_INM=[];
 let PERSONAL_INM=[];
+let INSUMOS_REQUESTS=[]; /* {id,personalId,servicioId,folio,fecha,status,items:[],notas,revisadoPor,revisadoFecha} */
 
 let SUPERVISORS=[];
 let SUPERVISOR_ASSIGNED=[];

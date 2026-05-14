@@ -241,6 +241,13 @@ async function loadAllData() {
     svAstSnap.docs.forEach(function(d){ SUPERVISOR_ASISTENCIAS.push(d.data()); });
   }
 
+  /* 10. INSUMOS_REQUESTS — cargar solicitudes de insumos */
+  var insSnap = await _col('insumos_requests').get();
+  if (!insSnap.empty) {
+    INSUMOS_REQUESTS.length = 0;
+    insSnap.docs.forEach(function(d){ INSUMOS_REQUESTS.push(d.data()); });
+  }
+
   /* Marcar versión como aplicada en Firestore (persiste en todos los dispositivos) */
   if (forceReseed && typeof DATA_VERSION !== 'undefined') {
     await _col('config').doc('version').set({ v: DATA_VERSION });
@@ -337,6 +344,21 @@ function fbSaveSupervisors() {
     });
     b.commit().catch(function(e){ console.warn('fbSaveSupervisors', e); });
   } catch(e) { console.warn('fbSaveSupervisors', e); }
+}
+
+function fbSaveInsumos() {
+  try {
+    var b = _db.batch();
+    INSUMOS_REQUESTS.forEach(function(r){ b.set(_col('insumos_requests').doc(String(r.id)), _clone(r)); });
+    b.commit().catch(function(e){ console.warn('fbSaveInsumos', e); });
+  } catch(e) { console.warn('fbSaveInsumos', e); }
+}
+function fbListenInsumos(callback){
+  try{
+    return _col('insumos_requests').onSnapshot(function(snap){
+      var list=[];snap.forEach(function(d){list.push(d.data());});callback(list);
+    },function(e){console.warn('fbListenInsumos',e);});
+  }catch(e){console.warn('fbListenInsumos',e);return function(){};}
 }
 
 function fbSaveSupervisorAsistencias() {

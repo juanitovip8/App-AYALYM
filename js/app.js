@@ -1363,7 +1363,7 @@ function navGo(role,sec,btn){
   if(role==='admin'&&sec==='soporte-admin'){renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');renderConvs();}
   if(role==='admin'&&sec==='resumen'){renderAdminResumen();renderTopCards();renderAdminKPIs();}
   if(role==='admin'&&sec==='inmuebles'){switchPropTab('all',document.getElementById('inm-ftab-all'));switchInmMainTab('contratos',document.getElementById('inm-main-tab-contratos'));renderPropServices('all');populatePropSupervisorSelect();}
-  if(role==='admin'&&sec==='personal-inm')renderPersonalInmAdmin();
+  if(role==='admin'&&sec==='personal-inm'){renderPersonalInmAdmin();renderAdminInsumos();}
   if(role==='admin'&&sec==='usuarios'){renderUsersPanel();renderSupervisorsPanel();}
   if(role==='admin'&&sec==='supervisores')renderSupervisorsPanel();
   if(role==='admin'&&sec==='facturacion')renderFacturacionAdmin();
@@ -1376,8 +1376,11 @@ function navGo(role,sec,btn){
   if(role==='personal_inm'&&sec==='inicio')renderPIInicio();
   if(role==='personal_inm'&&sec==='servicios')renderPIServicios();
   if(role==='personal_inm'&&sec==='equipo')renderPIEquipo();
+  if(role==='personal_inm'&&sec==='insumos')renderPIInsumos();
   if(role==='personal_inm'&&sec==='asistencias')renderPIAsistencias();
   if(role==='personal_inm'&&sec==='perfil')renderPIPerfil();
+  if(role==='supervisor'&&sec==='insumos-sv')renderSVInsumos();
+  if(role==='cliente_inm'&&sec==='insumos-ci')renderCIInsumos();
   // Cliente Inmuebles
   if(role==='cliente_inm'&&sec==='inicio')renderClienteInmInicio();
   if(role==='cliente_inm'&&sec==='contrato')renderClienteInmContrato();
@@ -5610,19 +5613,21 @@ function renderPersonalInmPanel(){
   const ini=document.getElementById('pi-inicio');if(ini)ini.classList.add('active');
   const nav=document.getElementById('nav-personal_inm');
   if(nav){nav.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));const first=nav.querySelector('.bnav-btn');if(first)first.classList.add('active');}
-  /* Mostrar tab "Mi equipo" solo si es Encargado */
+  /* Mostrar tabs condicionales según puesto y permisos */
   const p=_getPIData();
   const isEncargado=p&&p.puesto==='encargado';
+  const tieneInsumos=p&&p.puedeInsumos===true;
   const tabEquipo=document.getElementById('pi-nav-equipo');
-  if(tabEquipo){
-    tabEquipo.style.display=isEncargado?'flex':'none';
-    /* Ajustar columnas del nav */
-    const navEl=document.getElementById('nav-personal_inm');
-    if(navEl)navEl.style.gridTemplateColumns=isEncargado?'repeat(5,1fr)':'repeat(4,1fr)';
-  }
+  const tabInsumos=document.getElementById('pi-nav-insumos');
+  if(tabEquipo) tabEquipo.style.display=isEncargado?'flex':'none';
+  if(tabInsumos) tabInsumos.style.display=tieneInsumos?'flex':'none';
+  /* Ajustar columnas del nav según tabs visibles */
+  const navEl=document.getElementById('nav-personal_inm');
+  if(navEl){const cols=4+(isEncargado?1:0)+(tieneInsumos?1:0);navEl.style.gridTemplateColumns=`repeat(${cols},1fr)`;}
   renderPIInicio();
   renderPIServicios();
   if(isEncargado)renderPIEquipo();
+  if(tieneInsumos)renderPIInsumos();
 }
 
 function _getPIData(){
@@ -5958,13 +5963,14 @@ function addPersonalInm(){
   const tel=document.getElementById('pi-tel').value.trim();
   const pass=document.getElementById('pi-pass').value;
   const puesto=(document.getElementById('pi-puesto')||{}).value||'aux_limpieza';
+  const puedeInsumos=!!(document.getElementById('pi-puede-insumos')||{}).checked;
   if(!nombre||!email){showToast('amber','⚠️','Nombre y correo son obligatorios');return;}
   if(pass&&pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
   if(USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('amber','⚠️','Este correo ya está registrado');return;}
   if(tel&&USERS.find(u=>u.tel&&u.tel.replace(/\s/g,'')===tel.replace(/\s/g,''))){showToast('amber','⚠️','Este teléfono ya está registrado en otro usuario');return;}
   const newId=PERSONAL_INM.length?Math.max(...PERSONAL_INM.map(p=>p.id))+1:0;
   const newUserId=USERS.length?Math.max(...USERS.map(u=>u.id))+1:0;
-  PERSONAL_INM.push({id:newId,nombre,initials,email,password:pass||'ayalym123',tel,puesto,activo:true,serviciosAsignados:[],asistencias:[]});
+  PERSONAL_INM.push({id:newId,nombre,initials,email,password:pass||'ayalym123',tel,puesto,puedeInsumos,activo:true,serviciosAsignados:[],asistencias:[]});
   USERS.push({id:newUserId,nombre,email,rol:'personal_inm',tel,activo:true,accesoRevocado:false,password:pass||'ayalym123'});
   ['pi-nombre','pi-initials','pi-email','pi-tel','pi-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   togglePiForm();
@@ -7181,6 +7187,130 @@ function clearPropForm(){
   const tipoOtro=document.getElementById('inm-tipo-otro');if(tipoOtro){tipoOtro.value='';tipoOtro.style.display='none';}
   const jtSel=document.getElementById('inm-jornada-tipo');if(jtSel)jtSel.value='normal';
   toggleJornadaFechas('inm');
+}
+
+/* ══════════════════════════════════════════════════════════
+   PANEL DE INSUMOS
+   ══════════════════════════════════════════════════════════ */
+const _insStatusLabel={pendiente:'⏳ Pendiente',aprobado:'✅ Aprobado',rechazado:'❌ Rechazado',entregado:'📦 Entregado'};
+const _insStatusBg={pendiente:'#FFF3CD',aprobado:'#D4EDDA',rechazado:'#FFE0E0',entregado:'#E8F5FF'};
+const _insStatusCol={pendiente:'#A05C00',aprobado:'#1A7A3B',rechazado:'#C0392B',entregado:'#185FA5'};
+
+/* ── Panel del personal de inmuebles: ver sus solicitudes y crear nuevas ── */
+function renderPIInsumos(){
+  const el=document.getElementById('pi-insumos-content');if(!el)return;
+  const p=_getPIData();if(!p||!p.puedeInsumos){el.innerHTML='';return;}
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const misReqs=(INSUMOS_REQUESTS||[]).filter(r=>r.personalId===p.id).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const listaHtml=misReqs.length
+    ?misReqs.map(r=>`<div style="border:.5px solid ${dark?'rgba(255,255,255,.1)':'#DCE8F5'};border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
+          <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+        </div>
+        <p style="font-size:11px;color:${lbl};margin:0;">${r.fecha} · ${r.notas||'Sin notas'}</p>
+      </div>`).join('')
+    :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:30px 0;">Sin solicitudes aún. Crea la primera.</p>';
+  el.innerHTML=`
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Mis solicitudes de insumos</p>
+    <button class="btn-royal" style="width:100%;margin-bottom:16px;" onclick="abrirNuevaInsumoSol()">+ Nueva solicitud</button>
+    ${listaHtml}`;
+}
+
+/* ── Panel del supervisor: ver y gestionar todas las solicitudes de su personal ── */
+function renderSVInsumos(){
+  const el=document.getElementById('sv-insumos-content');if(!el)return;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  /* Obtener IDs de personal asignado a sus servicios */
+  const mySvId=currentSupervisorRef?currentSupervisorRef.id:null;
+  const misServicios=(PROPERTY_SERVICES||[]).filter(ps=>ps.supervisorId===mySvId).map(ps=>ps.id);
+  const reqs=(INSUMOS_REQUESTS||[]).filter(r=>misServicios.includes(r.servicioId)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const listaHtml=reqs.length
+    ?reqs.map(r=>{
+        const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
+        const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
+        return`<div style="border:.5px solid ${dark?'rgba(255,255,255,.1)':'#DCE8F5'};border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
+            <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+          </div>
+          <p style="font-size:11px;color:${lbl};margin:0 0 4px;">👷 ${pi?pi.nombre:'—'} · 🏢 ${ps?ps.folio:'—'}</p>
+          <p style="font-size:11px;color:${lbl};margin:0 0 8px;">${r.fecha} · ${r.notas||'Sin notas'}</p>
+          ${r.status==='pendiente'?`<div style="display:flex;gap:6px;">
+            <button class="btn-royal" style="flex:1;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'aprobado')">✅ Aprobar</button>
+            <button class="btn-danger" style="flex:1;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'rechazado')">❌ Rechazar</button>
+          </div>`:''}
+          ${r.status==='aprobado'?`<button class="btn-sec" style="width:100%;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'entregado')">📦 Marcar entregado</button>`:''}
+        </div>`;}).join('')
+    :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:40px 0;">Sin solicitudes de insumos pendientes.</p>';
+  el.innerHTML=`<p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Solicitudes de insumos</p>${listaHtml}`;
+}
+
+/* ── Panel del cliente inmuebles: solo consulta (read-only) ── */
+function renderCIInsumos(){
+  const el=document.getElementById('cinm-insumos-content');if(!el)return;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  /* Obtener servicios del cliente */
+  const ci=CLIENTS_INM.find(c=>c.email===currentUserEmail);
+  if(!ci){el.innerHTML='<p style="color:'+lbl+';text-align:center;padding:40px 0;">Sin información disponible.</p>';return;}
+  const misServiciosIds=(PROPERTY_SERVICES||[]).filter(ps=>ps.clienteInmId===ci.id||ps.cliente?.email===currentUserEmail).map(ps=>ps.id);
+  const reqs=(INSUMOS_REQUESTS||[]).filter(r=>misServiciosIds.includes(r.servicioId)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const listaHtml=reqs.length
+    ?reqs.map(r=>{
+        const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
+        return`<div style="border:.5px solid ${dark?'rgba(255,255,255,.1)':'#DCE8F5'};border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
+            <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+          </div>
+          <p style="font-size:11px;color:${lbl};margin:0;">👷 ${pi?pi.nombre:'—'} · ${r.fecha}</p>
+        </div>`;}).join('')
+    :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:40px 0;">Sin solicitudes de insumos para tus servicios.</p>';
+  el.innerHTML=`<p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Insumos solicitados</p>${listaHtml}`;
+}
+
+/* ── Cambiar status de solicitud (supervisor/admin) ── */
+function cambiarStatusInsumo(id,nuevoStatus){
+  const r=INSUMOS_REQUESTS.find(x=>x.id===id);if(!r)return;
+  r.status=nuevoStatus;r.revisadoPor=currentUserEmail;r.revisadoFecha=_localDateStr();
+  fbSaveInsumos();
+  renderSVInsumos();
+  showToast('green','📦','Solicitud actualizada a: '+(_insStatusLabel[nuevoStatus]||nuevoStatus));
+}
+
+/* ── Placeholder para abrir formulario de nueva solicitud (se definirá cuando se den los campos) ── */
+function abrirNuevaInsumoSol(){
+  showToast('blue','📦','Próximamente: indica los campos y armamos el formulario de solicitud');
+}
+
+/* ── Render de insumos en panel admin (dentro de a-personal-inm) ── */
+function renderAdminInsumos(){
+  const el=document.getElementById('admin-insumos-content');if(!el)return;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const reqs=[...INSUMOS_REQUESTS].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  const listaHtml=reqs.length
+    ?reqs.map(r=>{
+        const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
+        const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
+        return`<div style="border:.5px solid ${dark?'rgba(255,255,255,.1)':'#DCE8F5'};border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
+            <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+          </div>
+          <p style="font-size:11px;color:${lbl};margin:0 0 4px;">👷 ${pi?pi.nombre:'—'} · 🏢 ${ps?ps.folio+' – '+ps.cliente?.nombre:'—'}</p>
+          <p style="font-size:11px;color:${lbl};margin:0 0 8px;">${r.fecha} · ${r.notas||'Sin notas'}</p>
+          ${r.status==='pendiente'?`<div style="display:flex;gap:6px;">
+            <button class="btn-royal" style="flex:1;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'aprobado');renderAdminInsumos();">✅ Aprobar</button>
+            <button class="btn-danger" style="flex:1;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'rechazado');renderAdminInsumos();">❌ Rechazar</button>
+          </div>`:''}
+          ${r.status==='aprobado'?`<button class="btn-sec" style="width:100%;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'entregado');renderAdminInsumos();">📦 Marcar entregado</button>`:''}
+        </div>`;}).join('')
+    :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:30px 0;">Sin solicitudes de insumos registradas.</p>';
+  el.innerHTML=listaHtml;
 }
 
 /* ── Autocompletado de cliente existente en el formulario de nuevo inmueble ── */
