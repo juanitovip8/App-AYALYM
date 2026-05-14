@@ -389,17 +389,23 @@ window.addEventListener('appinstalled',()=>{
 /* iOS: muestra modal con instrucciones de Safari */
 function _showIOSInstallModal(){
   if(document.getElementById('ios-install-modal'))return;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const bg=dark?'#1A2535':'#fff';
+  const txt=dark?'#e8edf4':'#042C53';
+  const sub=dark?'#8AABCC':'#5C7A9A';
+  const cardBg=dark?'rgba(255,255,255,0.07)':'#F4F8FF';
+  const drag=dark?'rgba(255,255,255,0.20)':'#ddd';
   const m=document.createElement('div');
   m.id='ios-install-modal';
-  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:99999;display:flex;align-items:flex-end;';
-  m.innerHTML=`<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;text-align:center;">
-    <div style="width:40px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 20px;"></div>
-    <p style="font-size:16px;font-weight:700;color:#042C53;margin-bottom:6px;">Agregar a pantalla de inicio</p>
-    <p style="font-size:13px;color:#5C7A9A;margin-bottom:18px;">Sigue estos pasos en Safari:</p>
-    <div style="text-align:left;background:#F4F8FF;border-radius:12px;padding:16px;margin-bottom:20px;">
-      <p style="font-size:13px;color:#042C53;margin:0 0 10px;"><strong>1.</strong> Toca el botón <strong>Compartir</strong> ⬆️ en la barra inferior de Safari</p>
-      <p style="font-size:13px;color:#042C53;margin:0 0 10px;"><strong>2.</strong> Desliza y elige <strong>"Agregar a pantalla de inicio"</strong> 📲</p>
-      <p style="font-size:13px;color:#042C53;margin:0;"><strong>3.</strong> Toca <strong>"Agregar"</strong> arriba a la derecha</p>
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;display:flex;align-items:flex-end;';
+  m.innerHTML=`<div style="background:${bg};border-radius:20px 20px 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));width:100%;text-align:center;">
+    <div style="width:40px;height:4px;background:${drag};border-radius:2px;margin:0 auto 20px;"></div>
+    <p style="font-size:16px;font-weight:700;color:${txt};margin-bottom:6px;">Agregar a pantalla de inicio</p>
+    <p style="font-size:13px;color:${sub};margin-bottom:18px;">Sigue estos pasos en Safari:</p>
+    <div style="text-align:left;background:${cardBg};border-radius:12px;padding:16px;margin-bottom:20px;">
+      <p style="font-size:13px;color:${txt};margin:0 0 10px;"><strong>1.</strong> Toca el botón <strong>Compartir</strong> ⬆️ en la barra inferior de Safari</p>
+      <p style="font-size:13px;color:${txt};margin:0 0 10px;"><strong>2.</strong> Desliza y elige <strong>"Agregar a pantalla de inicio"</strong> 📲</p>
+      <p style="font-size:13px;color:${txt};margin:0;"><strong>3.</strong> Toca <strong>"Agregar"</strong> arriba a la derecha</p>
     </div>
     <button onclick="document.getElementById('ios-install-modal').remove()" style="background:#185FA5;color:#fff;border:none;border-radius:10px;padding:13px 0;font-size:14px;font-weight:600;width:100%;cursor:pointer;">Entendido</button>
   </div>`;
