@@ -6271,6 +6271,8 @@ function openInmEdit(id){
   set('ie-svc-desc',ps.descripcion);
   set('ie-frecuencia',ps.frecuencia||'única');
   set('ie-hora',ps.hora);
+  set('ie-hora-salida',ps.horaSalida||'');
+  ['lun','mar','mie','jue','vie','sab','dom'].forEach(d=>{const el=document.getElementById('ie-dia-'+d);if(el)el.checked=(ps.diasServicio||[]).includes(d);});
   set('ie-fecha-inicio',ps.fechaInicio);
   set('ie-fecha-fin',ps.fechaFin);
   // Pago
@@ -6319,6 +6321,8 @@ function saveInmEdit(){
   ps.descripcion=g('ie-svc-desc');
   ps.frecuencia=document.getElementById('ie-frecuencia').value;
   ps.hora=document.getElementById('ie-hora').value;
+  ps.horaSalida=(document.getElementById('ie-hora-salida')||{}).value||'';
+  ps.diasServicio=['lun','mar','mie','jue','vie','sab','dom'].filter(d=>(document.getElementById('ie-dia-'+d)||{}).checked);
   ps.fechaInicio=document.getElementById('ie-fecha-inicio').value||ps.fechaInicio;
   ps.fechaFin=document.getElementById('ie-fecha-fin').value||ps.fechaFin;
   // Pago
@@ -6739,6 +6743,8 @@ function createPropertyService(){
     fechaInicio,
     fechaFin:_gv('inm-fecha-fin'),
     hora:(document.getElementById('inm-hora')||{}).value||'08:00',
+    horaSalida:(document.getElementById('inm-hora-salida')||{}).value||'',
+    diasServicio:['lun','mar','mie','jue','vie','sab','dom'].filter(d=>(document.getElementById('inm-dia-'+d)||{}).checked),
     status:'pendiente',
     contratoStatus:(document.getElementById('inm-contrato-status')||{}).value||'por_firmar',
     supervisorId:supId,
@@ -6992,6 +6998,14 @@ function renderClienteInmInicio(){
         <div><p>Frecuencia</p><span>${_cinmFreqLabel(ps.frecuencia)}</span></div>
       </div>
       <div class="cinm-summary-item">
+        <span class="cinm-si-icon">🕐</span>
+        <div><p>Horario</p><span>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</span></div>
+      </div>
+      ${(ps.diasServicio&&ps.diasServicio.length)?`<div class="cinm-summary-item">
+        <span class="cinm-si-icon">📆</span>
+        <div><p>Días</p><span>${(()=>{const m={lun:'L',mar:'M',mie:'X',jue:'J',vie:'V',sab:'S',dom:'D'};return ps.diasServicio.map(d=>m[d]||d).join(' ');})()}</span></div>
+      </div>`:''}
+      <div class="cinm-summary-item">
         <span class="cinm-si-icon">📋</span>
         <div><p>Visitas</p><span>${reps.length} reportes</span></div>
       </div>
@@ -7058,9 +7072,11 @@ function renderClienteInmContrato(){
     <p class="cinm-section-title">🧹 Servicio</p>
     <div class="cinm-detail-grid">
       <div class="cinm-dg-item"><span>Frecuencia</span><p>${_cinmFreqLabel(ps.frecuencia)}</p></div>
-      <div class="cinm-dg-item"><span>Hora</span><p>${ps.hora} hrs</p></div>
+      <div class="cinm-dg-item"><span>Hora entrada</span><p>${ps.hora} hrs</p></div>
+      ${ps.horaSalida?`<div class="cinm-dg-item"><span>Hora salida</span><p>${ps.horaSalida} hrs</p></div>`:''}
       <div class="cinm-dg-item"><span>Inicio</span><p>${formatDateShort(ps.fechaInicio)}</p></div>
       <div class="cinm-dg-item"><span>Fin</span><p>${formatDateShort(ps.fechaFin)}</p></div>
+      ${(ps.diasServicio&&ps.diasServicio.length)?`<div class="cinm-dg-item cinm-full"><span>Días de servicio</span><p>${(()=>{const m={lun:'Lun',mar:'Mar',mie:'Mié',jue:'Jue',vie:'Vie',sab:'Sáb',dom:'Dom'};return ps.diasServicio.map(d=>m[d]||d).join(' · ');})()</p></div>`:''}
       <div class="cinm-dg-item cinm-full"><span>Descripción</span><p>${ps.descripcion}</p></div>
     </div>
 

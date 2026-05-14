@@ -291,7 +291,18 @@
       <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🧹 Servicio</p>
       <div class="frow full"><label>Tipo de servicio</label><input type="text" id="ie-svc-tipo" placeholder="Limpieza general, post-construcción…"></div>
       <div class="frow full"><label>Descripción</label><textarea id="ie-svc-desc" rows="2" style="resize:vertical;width:100%;border:.5px solid #B5D4F4;border-radius:8px;padding:8px 10px;font-size:13px;color:#042C53;" placeholder="Descripción del trabajo…"></textarea></div>
-      <div class="frow"><div><label>Frecuencia</label><select id="ie-frecuencia"><option value="diaria">Diaria</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option><option value="única">Única</option></select></div><div><label>Hora de servicio</label><input type="time" id="ie-hora"></div></div>
+      <div class="frow"><div><label>Frecuencia</label><select id="ie-frecuencia"><option value="diaria">Diaria</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option><option value="única">Única</option></select></div><div><label>Hora entrada</label><input type="time" id="ie-hora"></div><div><label>Hora salida</label><input type="time" id="ie-hora-salida"></div></div>
+      <div class="frow full"><label>Días de servicio</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+          <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="ie-dia-lun" style="accent-color:#042C53;">L</label>
+          <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="ie-dia-mar" style="accent-color:#042C53;">M</label>
+          <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="ie-dia-mie" style="accent-color:#042C53;">X</label>
+          <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="ie-dia-jue" style="accent-color:#042C53;">J</label>
+          <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="ie-dia-vie" style="accent-color:#042C53;">V</label>
+          <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="ie-dia-sab" style="accent-color:#042C53;">S</label>
+          <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="ie-dia-dom" style="accent-color:#042C53;">D</label>
+        </div>
+      </div>
       <div class="frow"><div><label>Inicio de contrato</label><input type="date" id="ie-fecha-inicio"></div><div><label>Fin de contrato</label><input type="date" id="ie-fecha-fin"></div></div>
 
       <div class="div" style="margin:12px 0;"></div>
@@ -1130,7 +1141,18 @@
             <p class="inm-section-label">🛠️ Datos del servicio</p>
             <div class="frow full"><label>Tipo de servicio</label><input type="text" id="inm-svc-tipo" placeholder="Ej: Limpieza post-construcción, Mantenimiento semanal…"></div>
             <div class="frow full"><label>Descripción</label><textarea id="inm-svc-desc" placeholder="Detalles del servicio a realizar…" style="resize:vertical;min-height:55px;"></textarea></div>
-            <div class="frow"><div><label>Frecuencia</label><select id="inm-frecuencia"><option value="única">Única</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div><div><label>Hora</label><input type="time" id="inm-hora" value="08:00"></div></div>
+            <div class="frow"><div><label>Frecuencia</label><select id="inm-frecuencia"><option value="única">Única</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div><div><label>Hora entrada</label><input type="time" id="inm-hora" value="08:00"></div><div><label>Hora salida</label><input type="time" id="inm-hora-salida"></div></div>
+            <div class="frow full"><label>Días de servicio</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+                <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="inm-dia-lun" style="accent-color:#042C53;">L</label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="inm-dia-mar" style="accent-color:#042C53;">M</label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="inm-dia-mie" style="accent-color:#042C53;">X</label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="inm-dia-jue" style="accent-color:#042C53;">J</label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="inm-dia-vie" style="accent-color:#042C53;">V</label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="inm-dia-sab" style="accent-color:#042C53;">S</label>
+                <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="inm-dia-dom" style="accent-color:#042C53;">D</label>
+              </div>
+            </div>
 
             <!-- 4. Contrato -->
             <p class="inm-section-label">📋 Contrato</p>
@@ -1315,7 +1337,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=6"></script>
-<script src="js/app.js?v=91"></script>
+<script src="js/app.js?v=92"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 
