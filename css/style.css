@@ -746,6 +746,8 @@ textarea{resize:vertical;min-height:60px;}
 .inm-section-label{font-size:11px;font-weight:600;color:var(--blue-mid);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;border-top:.5px solid var(--blue-border);padding-top:10px;}
 .inm-section-label:first-child{margin-top:0;border-top:none;padding-top:0;}
 .inm-filter-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+#inm-cli-suggest div:hover{background:#EEF5FF;}
+#inm-cli-suggest{font-family:inherit;}
 
 /* ── Lista acordeón agrupada por supervisor ── */
 .inm-group{margin-bottom:14px;}

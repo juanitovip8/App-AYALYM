@@ -1960,8 +1960,11 @@ function saveSVAssign(si){document.getElementById('sv-ap-'+si).classList.remove(
 /* USERS WITH REVOKE */
 const PROTECTED_ADMIN='admin@ayalym.com';
 function renderUsersPanel(filter){
-  filter=filter||userRoleFilter||'all';
-  const filtered=filter==='all'?USERS:USERS.filter(u=>u.rol===filter);
+  filter=filter||userRoleFilter||'recientes';
+  let filtered;
+  if(filter==='recientes') filtered=[...USERS].sort((a,b)=>{const ta=a.creadoEn?.toMillis?a.creadoEn.toMillis():0;const tb=b.creadoEn?.toMillis?b.creadoEn.toMillis():0;return tb-ta;}).slice(0,5);
+  else if(filter==='all') filtered=USERS;
+  else filtered=USERS.filter(u=>u.rol===filter);
   document.getElementById('users-list').innerHTML=filtered.map((u)=>{
     const i=USERS.indexOf(u);
     const isProtected=u.rolProtegido===true;
@@ -6689,7 +6692,8 @@ function saveInmEdit(){
 
 /* ── Renderizado admin: agrupado por supervisor, activos primero ── */
 const _statusOrder={activo:0,pendiente:1,completado:2,vencido:3};
-const _sortActivos=arr=>[...arr].sort((a,b)=>(_statusOrder[a.status]??9)-(_statusOrder[b.status]??9));
+const _inmFolioNum=p=>parseInt((p.folio||'').replace(/\D/g,'')||'0');
+const _sortActivos=arr=>[...arr].sort((a,b)=>{const sd=(_statusOrder[a.status]??9)-(_statusOrder[b.status]??9);return sd!==0?sd:_inmFolioNum(a)-_inmFolioNum(b);});
 
 function _selectSv(btn){
   const svId=parseInt(btn.dataset.svid);
@@ -7117,6 +7121,62 @@ function clearPropForm(){
   const tipoOtro=document.getElementById('inm-tipo-otro');if(tipoOtro){tipoOtro.value='';tipoOtro.style.display='none';}
   const jtSel=document.getElementById('inm-jornada-tipo');if(jtSel)jtSel.value='normal';
   toggleJornadaFechas('inm');
+}
+
+/* ── Autocompletado de cliente existente en el formulario de nuevo inmueble ── */
+function _inmGetDrop(){
+  let drop=document.getElementById('inm-cli-suggest');
+  if(!drop){
+    drop=document.createElement('div');
+    drop.id='inm-cli-suggest';
+    const dark=document.documentElement.classList.contains('dark-mode');
+    drop.style.cssText='position:fixed;z-index:99999;border-radius:8px;overflow:hidden;max-height:200px;overflow-y:auto;display:none;box-shadow:0 6px 20px rgba(4,44,83,.2);border:1px solid '+(dark?'#2a4060':'#C5D8EC')+';background:'+(dark?'#1b2a3a':'#fff')+';';
+    document.body.appendChild(drop);
+  }
+  return drop;
+}
+function _inmClientHide(){const d=document.getElementById('inm-cli-suggest');if(d)d.style.display='none';}
+function _inmClientSearch(inp){
+  const q=(inp.value||'').trim().toLowerCase();
+  const drop=_inmGetDrop();
+  if(q.length<2){drop.style.display='none';return;}
+  const seen=new Set();const candidates=[];
+  (CLIENTS_INM||[]).forEach(ci=>{
+    if(!ci.nombre)return;
+    if(ci.nombre.toLowerCase().includes(q)){
+      const key=ci.email||ci.nombre;
+      if(!seen.has(key)){seen.add(key);candidates.push({nombre:ci.nombre,contacto:ci.empresa||'',tel:ci.tel||'',email:ci.email||'',pass:ci.password||''});}
+    }
+  });
+  (PROPERTY_SERVICES||[]).forEach(ps=>{
+    if(!ps.cliente||!ps.cliente.nombre)return;
+    const n=ps.cliente.nombre;const key=ps.cliente.email||n;
+    if(n.toLowerCase().includes(q)&&!seen.has(key)){seen.add(key);candidates.push({nombre:n,contacto:ps.cliente.contacto||'',tel:ps.cliente.tel||'',email:ps.cliente.email||'',pass:''});}
+  });
+  if(!candidates.length){drop.style.display='none';return;}
+  drop._candidates=candidates;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txtMain=dark?'#C5D8EC':'#042C53';const txtSub=dark?'#7AABCF':'#5A8CB0';const bdr=dark?'#2a4060':'#EEF5FF';
+  drop.innerHTML=candidates.slice(0,6).map((c,i)=>`<div onmousedown="event.preventDefault();_inmClientFill(${i})" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid ${bdr};"><div style="font-weight:600;color:${txtMain};font-size:13px;">${c.nombre}</div><div style="color:${txtSub};font-size:11px;">${c.email||c.tel||'Sin contacto registrado'}</div></div>`).join('');
+  /* Posicionar debajo del input */
+  const rect=inp.getBoundingClientRect();
+  drop.style.left=rect.left+'px';
+  drop.style.top=(rect.bottom+4)+'px';
+  drop.style.width=rect.width+'px';
+  drop.style.display='block';
+}
+function _inmClientFill(idx){
+  const drop=document.getElementById('inm-cli-suggest');
+  if(!drop||!drop._candidates)return;
+  const c=drop._candidates[idx];if(!c)return;
+  const _sv=(id,val)=>{const el=document.getElementById(id);if(el)el.value=val||'';};
+  _sv('inm-cli-nombre',c.nombre);
+  _sv('inm-cli-contacto',c.contacto);
+  _sv('inm-cli-tel',c.tel);
+  _sv('inm-cli-email',c.email);
+  if(c.pass)_sv('inm-cli-pass',c.pass);
+  drop.style.display='none';
+  showToast('blue','👤','Datos del cliente prellenados — solo modifica lo necesario');
 }
 
 function createPropertyService(){
