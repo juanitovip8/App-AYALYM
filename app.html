@@ -302,7 +302,20 @@
       <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🧹 Servicio</p>
       <div class="frow full"><label>Tipo de servicio</label><input type="text" id="ie-svc-tipo" placeholder="Limpieza general, post-construcción…"></div>
       <div class="frow full"><label>Descripción</label><textarea id="ie-svc-desc" rows="2" style="resize:vertical;width:100%;border:.5px solid #B5D4F4;border-radius:8px;padding:8px 10px;font-size:13px;color:#042C53;" placeholder="Descripción del trabajo…"></textarea></div>
-      <div class="frow"><div><label>Frecuencia</label><select id="ie-frecuencia"><option value="diaria">Diaria</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option><option value="única">Única</option></select></div><div><label>Hora entrada</label><input type="time" id="ie-hora"></div><div><label>Hora salida</label><input type="time" id="ie-hora-salida"></div></div>
+      <div class="frow"><div><label>Frecuencia</label><select id="ie-frecuencia"><option value="diaria">Diaria</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option><option value="única">Única</option></select></div><div><label>Tipo de jornada</label><select id="ie-jornada-tipo" onchange="toggleJornadaFechas('ie')"><option value="normal">Normal (horario fijo)</option><option value="24x24">24×24 hrs</option><option value="48x48">48×48 hrs</option></select></div></div>
+      <!-- Jornada normal: sólo horas -->
+      <div class="frow" id="ie-horario-normal"><div><label>Hora entrada</label><input type="time" id="ie-hora"></div><div><label>Hora salida</label><input type="time" id="ie-hora-salida"></div></div>
+      <!-- Jornada 24x24 / 48x48: fecha+hora de inicio y fin del turno -->
+      <div id="ie-horario-jornada" style="display:none;">
+        <div style="background:#EEF5FF;border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+          <p style="font-size:11px;font-weight:700;color:#185FA5;margin:0 0 10px;">🕐 Turno de entrada</p>
+          <div class="frow"><div><label>Fecha de entrada</label><input type="date" id="ie-jornada-inicio-fecha"></div><div><label>Hora de entrada</label><input type="time" id="ie-jornada-inicio-hora"></div></div>
+        </div>
+        <div style="background:#EEF5FF;border-radius:10px;padding:12px 14px;">
+          <p style="font-size:11px;font-weight:700;color:#185FA5;margin:0 0 10px;">🕐 Turno de salida</p>
+          <div class="frow"><div><label>Fecha de salida</label><input type="date" id="ie-jornada-fin-fecha"></div><div><label>Hora de salida</label><input type="time" id="ie-jornada-fin-hora"></div></div>
+        </div>
+      </div>
       <div class="frow full"><label>Días de servicio</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
           <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="ie-dia-lun" style="accent-color:#042C53;">L</label>
@@ -1153,7 +1166,20 @@
             <p class="inm-section-label">🛠️ Datos del servicio</p>
             <div class="frow full"><label>Tipo de servicio</label><input type="text" id="inm-svc-tipo" placeholder="Ej: Limpieza post-construcción, Mantenimiento semanal…"></div>
             <div class="frow full"><label>Descripción</label><textarea id="inm-svc-desc" placeholder="Detalles del servicio a realizar…" style="resize:vertical;min-height:55px;"></textarea></div>
-            <div class="frow"><div><label>Frecuencia</label><select id="inm-frecuencia"><option value="única">Única</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div><div><label>Hora entrada</label><input type="time" id="inm-hora" value="08:00"></div><div><label>Hora salida</label><input type="time" id="inm-hora-salida"></div></div>
+            <div class="frow"><div><label>Frecuencia</label><select id="inm-frecuencia"><option value="única">Única</option><option value="semanal">Semanal</option><option value="quincenal">Quincenal</option><option value="mensual">Mensual</option></select></div><div><label>Tipo de jornada</label><select id="inm-jornada-tipo" onchange="toggleJornadaFechas('inm')"><option value="normal">Normal (horario fijo)</option><option value="24x24">24×24 hrs</option><option value="48x48">48×48 hrs</option></select></div></div>
+            <!-- Jornada normal: sólo horas -->
+            <div class="frow" id="inm-horario-normal"><div><label>Hora entrada</label><input type="time" id="inm-hora" value="08:00"></div><div><label>Hora salida</label><input type="time" id="inm-hora-salida"></div></div>
+            <!-- Jornada 24x24 / 48x48: fecha+hora de inicio y fin del turno -->
+            <div id="inm-horario-jornada" style="display:none;">
+              <div style="background:#EEF5FF;border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+                <p style="font-size:11px;font-weight:700;color:#185FA5;margin:0 0 10px;">🕐 Turno de entrada</p>
+                <div class="frow"><div><label>Fecha de entrada</label><input type="date" id="inm-jornada-inicio-fecha"></div><div><label>Hora de entrada</label><input type="time" id="inm-jornada-inicio-hora"></div></div>
+              </div>
+              <div style="background:#EEF5FF;border-radius:10px;padding:12px 14px;">
+                <p style="font-size:11px;font-weight:700;color:#185FA5;margin:0 0 10px;">🕐 Turno de salida</p>
+                <div class="frow"><div><label>Fecha de salida</label><input type="date" id="inm-jornada-fin-fecha"></div><div><label>Hora de salida</label><input type="time" id="inm-jornada-fin-hora"></div></div>
+              </div>
+            </div>
             <div class="frow full"><label>Días de servicio</label>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
                 <label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:11px;font-weight:600;color:#042C53;"><input type="checkbox" id="inm-dia-lun" style="accent-color:#042C53;">L</label>
@@ -1349,7 +1375,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=124"></script>
+<script src="js/app.js?v=125"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 

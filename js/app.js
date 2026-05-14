@@ -6100,7 +6100,9 @@ function buildInmDetail(ps,showActions){
     <div class="inm-field"><strong>📍 Dirección</strong>${ps.inmueble.direccion}</div>
     <div class="inm-field"><strong>📅 Vigencia del contrato</strong>${formatDateShort(ps.fechaInicio)} → ${formatDateShort(ps.fechaFin)}</div>
     <div class="inm-field"><strong>🔁 Frecuencia</strong>${(ps.frecuencia||'').charAt(0).toUpperCase()+(ps.frecuencia||'').slice(1)}</div>
-    <div class="inm-field"><strong>⏰ Horario</strong>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</div>
+    ${ps.jornadaTipo&&ps.jornadaTipo!=='normal'
+      ?`<div class="inm-field" style="grid-column:1/-1;"><strong>⏰ Jornada ${ps.jornadaTipo}</strong>Entrada: ${ps.jornadaInicioFecha?formatDateShort(ps.jornadaInicioFecha)+' ':''}<strong>${ps.jornadaInicioHora||ps.hora} hrs</strong> &nbsp;→&nbsp; Salida: ${ps.jornadaFinFecha?formatDateShort(ps.jornadaFinFecha)+' ':''}<strong>${ps.jornadaFinHora||ps.horaSalida} hrs</strong></div>`
+      :`<div class="inm-field"><strong>⏰ Horario</strong>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</div>`}
     ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="inm-field" style="grid-column:1/-1;"><strong>📆 D\xEDas de servicio</strong><span style="line-height:1.7;">'+_fmtDiasServicio(ps.diasServicio,'full')+'</span></div>':''}
     <div class="inm-field"><strong>👤 Contacto directo</strong>${ps.cliente.contacto}</div>
     <div class="inm-field"><strong>📞 Teléfono</strong>${ps.cliente.tel}</div>
@@ -6552,6 +6554,14 @@ function openInmEdit(id){
   set('ie-frecuencia',ps.frecuencia||'única');
   set('ie-hora',ps.hora);
   set('ie-hora-salida',ps.horaSalida||'');
+  // Jornada especial
+  const jt=ps.jornadaTipo||'normal';
+  set('ie-jornada-tipo',jt);
+  set('ie-jornada-inicio-fecha',ps.jornadaInicioFecha||'');
+  set('ie-jornada-inicio-hora',ps.jornadaInicioHora||ps.hora||'');
+  set('ie-jornada-fin-fecha',ps.jornadaFinFecha||'');
+  set('ie-jornada-fin-hora',ps.jornadaFinHora||ps.horaSalida||'');
+  toggleJornadaFechas('ie');
   ['lun','mar','mie','jue','vie','sab','dom'].forEach(d=>{const el=document.getElementById('ie-dia-'+d);if(el)el.checked=(ps.diasServicio||[]).includes(d);});
   set('ie-fecha-inicio',ps.fechaInicio);
   set('ie-fecha-fin',ps.fechaFin);
@@ -6574,6 +6584,29 @@ function openInmEdit(id){
   set('ie-notas',ps.notas);
 }
 function closeInmEdit(){const ov=document.getElementById('inm-edit-ov');if(ov)ov.classList.remove('open');}
+
+/* Muestra/oculta secciones de horario según tipo de jornada. pfx = 'ie' o 'inm' */
+function toggleJornadaFechas(pfx){
+  const sel=document.getElementById(pfx+'-jornada-tipo');
+  if(!sel)return;
+  const esJornada=sel.value==='24x24'||sel.value==='48x48';
+  const normal=document.getElementById(pfx+'-horario-normal');
+  const jornada=document.getElementById(pfx+'-horario-jornada');
+  if(normal)normal.style.display=esJornada?'none':'';
+  if(jornada)jornada.style.display=esJornada?'':'none';
+  /* Prerellenar fechas sugeridas si están vacías */
+  if(esJornada){
+    const horas={'24x24':24,'48x48':48}[sel.value]||24;
+    const fi=document.getElementById(pfx+'-jornada-inicio-fecha');
+    const ff=document.getElementById(pfx+'-jornada-fin-fecha');
+    if(fi&&!fi.value){const hoy=new Date();fi.value=hoy.toISOString().split('T')[0];}
+    if(ff&&!ff.value&&fi&&fi.value){
+      const fin=new Date(fi.value+'T00:00:00');fin.setHours(fin.getHours()+horas);
+      ff.value=fin.toISOString().split('T')[0];
+    }
+  }
+}
+
 function saveInmEdit(){
   const id=parseInt(document.getElementById('inm-edit-id').value);
   const ps=PROPERTY_SERVICES.find(p=>p.id===id);
@@ -6604,8 +6637,20 @@ function saveInmEdit(){
   ps.tipo=g('ie-svc-tipo')||ps.tipo;
   ps.descripcion=g('ie-svc-desc');
   ps.frecuencia=document.getElementById('ie-frecuencia').value;
-  ps.hora=document.getElementById('ie-hora').value;
-  ps.horaSalida=(document.getElementById('ie-hora-salida')||{}).value||'';
+  const _ieJt=(document.getElementById('ie-jornada-tipo')||{}).value||'normal';
+  ps.jornadaTipo=_ieJt;
+  if(_ieJt==='normal'){
+    ps.hora=document.getElementById('ie-hora').value;
+    ps.horaSalida=(document.getElementById('ie-hora-salida')||{}).value||'';
+    ps.jornadaInicioFecha='';ps.jornadaInicioHora='';ps.jornadaFinFecha='';ps.jornadaFinHora='';
+  }else{
+    ps.jornadaInicioFecha=(document.getElementById('ie-jornada-inicio-fecha')||{}).value||'';
+    ps.jornadaInicioHora=(document.getElementById('ie-jornada-inicio-hora')||{}).value||'';
+    ps.jornadaFinFecha=(document.getElementById('ie-jornada-fin-fecha')||{}).value||'';
+    ps.jornadaFinHora=(document.getElementById('ie-jornada-fin-hora')||{}).value||'';
+    ps.hora=ps.jornadaInicioHora;
+    ps.horaSalida=ps.jornadaFinHora;
+  }
   ps.diasServicio=['lun','mar','mie','jue','vie','sab','dom'].filter(d=>(document.getElementById('ie-dia-'+d)||{}).checked);
   ps.fechaInicio=document.getElementById('ie-fecha-inicio').value||ps.fechaInicio;
   ps.fechaFin=document.getElementById('ie-fecha-fin').value||ps.fechaFin;
@@ -6725,7 +6770,9 @@ function buildInmDetailSV(ps){
     <div class="inm-field"><strong>📍 Dirección</strong>${ps.inmueble.direccion}</div>
     <div class="inm-field"><strong>📅 Vigencia del contrato</strong>${formatDateShort(ps.fechaInicio)} → ${formatDateShort(ps.fechaFin)}</div>
     <div class="inm-field"><strong>🔁 Frecuencia</strong>${(ps.frecuencia||'').charAt(0).toUpperCase()+(ps.frecuencia||'').slice(1)}</div>
-    <div class="inm-field"><strong>⏰ Horario</strong>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</div>
+    ${ps.jornadaTipo&&ps.jornadaTipo!=='normal'
+      ?`<div class="inm-field" style="grid-column:1/-1;"><strong>⏰ Jornada ${ps.jornadaTipo}</strong>Entrada: ${ps.jornadaInicioFecha?formatDateShort(ps.jornadaInicioFecha)+' ':''}<strong>${ps.jornadaInicioHora||ps.hora} hrs</strong> &nbsp;→&nbsp; Salida: ${ps.jornadaFinFecha?formatDateShort(ps.jornadaFinFecha)+' ':''}<strong>${ps.jornadaFinHora||ps.horaSalida} hrs</strong></div>`
+      :`<div class="inm-field"><strong>⏰ Horario</strong>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</div>`}
     ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="inm-field" style="grid-column:1/-1;"><strong>📆 D\xEDas de servicio</strong><span style="line-height:1.7;">'+_fmtDiasServicio(ps.diasServicio,'full')+'</span></div>':''}
     <div class="inm-field"><strong>👤 Contacto directo</strong>${ps.cliente.contacto}</div>
     <div class="inm-field"><strong>📞 Teléfono</strong>${ps.cliente.tel}</div>
@@ -7060,13 +7107,16 @@ function toggleTipoOtro(selId, inputId){
 function clearPropForm(){
   ['inm-cli-nombre','inm-cli-contacto','inm-cli-tel','inm-cli-email','inm-cli-pass','inm-direccion','inm-colonia','inm-municipio','inm-estado',
    'inm-svc-tipo','inm-svc-desc','inm-notas','inm-fiscal-razon','inm-fiscal-rfc',
-   'inm-fiscal-regimen','inm-fiscal-cfdi','inm-fiscal-dir','inm-fecha-inicio','inm-fecha-fin','inm-pago-monto'].forEach(id=>{
+   'inm-fiscal-regimen','inm-fiscal-cfdi','inm-fiscal-dir','inm-fecha-inicio','inm-fecha-fin','inm-pago-monto',
+   'inm-jornada-inicio-fecha','inm-jornada-inicio-hora','inm-jornada-fin-fecha','inm-jornada-fin-hora'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
   });
   ['inm-m2'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // Resetear tipo inmueble y ocultar campo "Otro"
   const tipoSel=document.getElementById('inm-tipo');if(tipoSel)tipoSel.value='Oficina';
   const tipoOtro=document.getElementById('inm-tipo-otro');if(tipoOtro){tipoOtro.value='';tipoOtro.style.display='none';}
+  const jtSel=document.getElementById('inm-jornada-tipo');if(jtSel)jtSel.value='normal';
+  toggleJornadaFechas('inm');
 }
 
 function createPropertyService(){
@@ -7096,8 +7146,17 @@ function createPropertyService(){
     frecuencia:(document.getElementById('inm-frecuencia')||{}).value||'única',
     fechaInicio,
     fechaFin:_gv('inm-fecha-fin'),
-    hora:(document.getElementById('inm-hora')||{}).value||'08:00',
-    horaSalida:(document.getElementById('inm-hora-salida')||{}).value||'',
+    jornadaTipo:(document.getElementById('inm-jornada-tipo')||{}).value||'normal',
+    jornadaInicioFecha:_gv('inm-jornada-inicio-fecha'),
+    jornadaInicioHora:_gv('inm-jornada-inicio-hora'),
+    jornadaFinFecha:_gv('inm-jornada-fin-fecha'),
+    jornadaFinHora:_gv('inm-jornada-fin-hora'),
+    hora:((document.getElementById('inm-jornada-tipo')||{}).value||'normal')==='normal'
+      ?(document.getElementById('inm-hora')||{}).value||'08:00'
+      :_gv('inm-jornada-inicio-hora'),
+    horaSalida:((document.getElementById('inm-jornada-tipo')||{}).value||'normal')==='normal'
+      ?(document.getElementById('inm-hora-salida')||{}).value||''
+      :_gv('inm-jornada-fin-hora'),
     diasServicio:['lun','mar','mie','jue','vie','sab','dom'].filter(d=>(document.getElementById('inm-dia-'+d)||{}).checked),
     status:'pendiente',
     contratoStatus:(document.getElementById('inm-contrato-status')||{}).value||'por_firmar',
