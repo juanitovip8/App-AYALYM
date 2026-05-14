@@ -7084,7 +7084,7 @@ function renderClienteInmInicio(){
     <p class="cinm-section-title">👷 Personal asignado</p>
     ${personal.length?personal.map(p=>`<div class="cinm-person-card">
       <div class="av" style="width:44px;height:44px;font-size:${p.photo?'0':'14px'};flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
-      <div class="cinm-person-info"><p>${p.nombre}</p><span>Personal de inmuebles · <strong style="color:#185FA5;">${ps.folio}</strong>${p.tel?' · '+p.tel:''}</span><span style="font-size:11px;color:#5C7A9A;margin-top:1px;">${(ps.inmueble&&ps.inmueble.direccion?ps.inmueble.direccion.split(',')[0]:'')}${ps.cliente&&ps.cliente.nombre?' — '+ps.cliente.nombre:''}</span></div>
+      <div class="cinm-person-info"><p>${p.nombre}</p><span>Personal de inmuebles${p.tel?' · '+p.tel:''}</span><span style="font-size:11px;color:#5C7A9A;margin-top:1px;"><strong style="color:#185FA5;">${ps.folio}</strong>${(ps.inmueble&&ps.inmueble.direccion?' — '+ps.inmueble.direccion.split(',')[0]:'')}${ps.cliente&&ps.cliente.nombre?' — '+ps.cliente.nombre:''}</span></div>
     </div>`).join(''):'<p class="csub">Sin personal asignado aún.</p>'}
   </div>
 
