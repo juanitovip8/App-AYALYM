@@ -586,15 +586,15 @@ function pushNotif(role,icon,type,title,body,reqId=null){
   if(!NOTIFICATIONS[role])NOTIFICATIONS[role]=[];
   NOTIFICATIONS[role].unshift({...n,_docId:'_tmp_'+Date.now()});
   if(role===currentRole){updateNotifBadge();if(notifPanelOpen)renderNotifications();}
-  /* Push en background: leer suscripciones del rol y enviar vía servidor */
-  fbGetPushSubs(role).then(function(subscriptions){
-    if(!subscriptions.length)return;
-    fetch('/api/push',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({subscriptions,title,body})
-    }).catch(function(){});
-  }).catch(function(){});
+  /* Push en background: el servidor lee suscripciones de Firestore y envía */
+  fetch('/api/push',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({role,title,body})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.sent>0)console.log('[push] enviado:',d.sent,'dispositivo(s) para rol "'+role+'"');
+    else if(d&&d.reason)console.log('[push] sin envío:',d.reason);
+  }).catch(function(e){console.warn('[push] error fetch:',e&&e.message);});
 }
 
 function _startNotifListener(role){
