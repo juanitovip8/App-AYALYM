@@ -3245,30 +3245,31 @@ let _svMapListener=null;
 let _svAstListener=null;
 let _piAstListener=null;
 
+/* Debounce: evita renders múltiples cuando Firestore dispara cambios rápidos */
+function _debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn,ms);};}
+const _renderAstDebounced=_debounce(function(){
+  const rep=document.getElementById('rep-panel-asistencias');
+  if(rep&&rep.style.display!=='none')renderAdminAstReport();
+},400);
+const _renderSVAstDebounced=_debounce(function(){
+  const el=document.getElementById('sv-ast-hoy');
+  if(el&&el.offsetParent!==null)renderSVAstHoy();
+},400);
+
 function _startAstListeners(role){
-  /* sv_asistencias — usado por admin (reporte) y supervisor (su panel) */
   if(_svAstListener){_svAstListener();_svAstListener=null;}
   _svAstListener=fbListenSvAsistencias(function(list){
     SUPERVISOR_ASISTENCIAS.length=0;
     list.forEach(function(a){SUPERVISOR_ASISTENCIAS.push(a);});
-    /* Re-renderizar si el reporte de asistencias está visible */
-    if(role==='admin'){
-      const rep=document.getElementById('rep-panel-asistencias');
-      if(rep&&rep.style.display!=='none')renderAdminAstReport();
-    }
-    if(role==='supervisor'){
-      const el=document.getElementById('sv-ast-hoy');
-      if(el)renderSVAstHoy();
-    }
+    if(role==='admin')_renderAstDebounced();
+    if(role==='supervisor')_renderSVAstDebounced();
   });
-  /* personal_inm — solo admin necesita escuchar asistencias PI en tiempo real */
   if(role==='admin'){
     if(_piAstListener){_piAstListener();_piAstListener=null;}
     _piAstListener=fbListenPersonalInm(function(list){
       PERSONAL_INM.length=0;
       list.forEach(function(p){PERSONAL_INM.push(p);});
-      const rep=document.getElementById('rep-panel-asistencias');
-      if(rep&&rep.style.display!=='none')renderAdminAstReport();
+      _renderAstDebounced();
     });
   }
 }
