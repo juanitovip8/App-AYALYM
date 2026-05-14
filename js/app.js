@@ -4210,13 +4210,13 @@ function _buildMarkerIcon(photo,initials,borderColor){
       ctx.beginPath();ctx.arc(S/2,S/2,S/2-0.5,0,Math.PI*2);
       ctx.fillStyle=borderColor;ctx.fill();
       /* Anillo blanco interior */
-      ctx.beginPath();ctx.arc(S/2,S/2,S/2-3,0,Math.PI*2);
-      ctx.strokeStyle='#ffffff';ctx.lineWidth=2.5;ctx.stroke();
+      ctx.beginPath();ctx.arc(S/2,S/2,S/2-6,0,Math.PI*2);
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.stroke();
       /* Área interior recortada en círculo */
       ctx.save();
-      ctx.beginPath();ctx.arc(S/2,S/2,S/2-4.5,0,Math.PI*2);ctx.clip();
+      ctx.beginPath();ctx.arc(S/2,S/2,S/2-7.5,0,Math.PI*2);ctx.clip();
       if(img){
-        ctx.drawImage(img,4,4,S-8,S-8);
+        ctx.drawImage(img,7,7,S-14,S-14);
       }else{
         ctx.fillStyle=borderColor;ctx.fillRect(0,0,S,S);
         ctx.fillStyle='#ffffff';
