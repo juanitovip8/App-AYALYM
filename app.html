@@ -897,7 +897,7 @@
         <div id="supervisors-list"></div>
       </div>
     </div>
-    <div id="a-usuarios" class="sec"><div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><p class="ctitle" style="margin:0;">Gestión de usuarios</p><button class="btn-sm" onclick="openAdminModal('usuario')">+ Registrar usuario</button></div><div class="user-role-filter"><button class="urf-btn active" onclick="filterUsers('all',this)">Todos</button><button class="urf-btn" onclick="filterUsers('admin',this)">Admins</button><button class="urf-btn" onclick="filterUsers('supervisor',this)">Supervisores</button><button class="urf-btn" onclick="filterUsers('trabajador',this)">Trabajadores</button><button class="urf-btn" onclick="filterUsers('cliente',this)">Clientes</button></div><p class="csub">🔒 Revocar acceso bloquea el inicio de sesión sin eliminar la cuenta.</p><div id="users-list"></div></div></div>
+    <div id="a-usuarios" class="sec"><div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><p class="ctitle" style="margin:0;">Gestión de usuarios</p><button class="btn-sm" onclick="openAdminModal('usuario')">+ Registrar usuario</button></div><div class="user-role-filter"><button class="urf-btn active" onclick="filterUsers('all',this)">Todos</button><button class="urf-btn" onclick="filterUsers('admin',this)">Admins</button><button class="urf-btn" onclick="filterUsers('supervisor',this)">Supervisores</button><button class="urf-btn" onclick="filterUsers('trabajador',this)">Trabajadores</button><button class="urf-btn" onclick="filterUsers('cliente',this)">Clientes</button><button class="urf-btn" onclick="filterUsers('cliente_inm',this)">Clientes Inm.</button><button class="urf-btn" onclick="filterUsers('personal_inm',this)">Personal Inm.</button></div><p class="csub">🔒 Revocar acceso bloquea el inicio de sesión sin eliminar la cuenta.</p><div id="users-list"></div></div></div>
     <div id="a-reportes" class="sec"></div>
     <div id="a-mapa" class="sec"></div>
     <div id="a-quincenas" class="sec"><div class="card"><p class="ctitle">Reporte quincenas</p><div class="frow full" style="margin-bottom:12px;"><label>Período</label><select id="q-period" onchange="renderQReport()"></select></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem;" id="q-summary"></div><div id="q-worker-list"></div></div></div>
@@ -1337,7 +1337,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=6"></script>
-<script src="js/app.js?v=98"></script>
+<script src="js/app.js?v=99"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 

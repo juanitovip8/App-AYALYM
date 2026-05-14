@@ -3,10 +3,10 @@
    ===================================================== */
 function s$(n,sz=14){return Array.from({length:5},(_,i)=>`<span style="font-size:${sz}px;color:${i<Math.round(n)?'#EF9F27':'#D3D1C7'};">★</span>`).join('');}
 function ss(id,n,sz=14){const el=document.getElementById(id);if(el)el.innerHTML=s$(n,sz);}
-const rolColor=r=>({admin:'rb-admin',supervisor:'rb-supervisor',cliente:'rb-cliente',trabajador:'rb-trabajador',personal_inm:'rb-supervisor'}[r]||'rb-cliente');
-const rolLabel=r=>({admin:'Administrador',supervisor:'Supervisor',cliente:'Cliente',trabajador:'Trabajador',personal_inm:'Personal Inmuebles'}[r]||r);
-const avBgs={admin:'#EEEDFE',supervisor:'#E1F5EE',cliente:'#E6F1FB',trabajador:'#FAEEDA'};
-const avCols={admin:'#3C3489',supervisor:'#085041',cliente:'#0C447C',trabajador:'#633806'};
+const rolColor=r=>({admin:'rb-admin',supervisor:'rb-supervisor',cliente:'rb-cliente',trabajador:'rb-trabajador',personal_inm:'rb-supervisor',cliente_inm:'rb-cliente'}[r]||'rb-cliente');
+const rolLabel=r=>({admin:'Administrador',supervisor:'Supervisor',cliente:'Cliente',trabajador:'Trabajador',personal_inm:'Personal Inmuebles',cliente_inm:'Cliente Inmuebles'}[r]||r);
+const avBgs={admin:'#EEEDFE',supervisor:'#E1F5EE',cliente:'#E6F1FB',trabajador:'#FAEEDA',cliente_inm:'#E6F4FF',personal_inm:'#E1F5EE'};
+const avCols={admin:'#3C3489',supervisor:'#085041',cliente:'#0C447C',trabajador:'#633806',cliente_inm:'#185FA5',personal_inm:'#065041'};
 
 /* ── Avatar helper: muestra foto de perfil o iniciales en un círculo.
    person  — objeto con .photo (base64 o null) e .initials (o .nombre/.name para auto-generar)
@@ -1945,6 +1945,46 @@ function renderUsersPanel(filter){
         </div>`;
       }).join('');
       document.getElementById('users-list').innerHTML+= extra;
+    }
+  }
+  /* ── Personal Inmuebles sin cuenta de sistema ── */
+  if(filter==='all'||filter==='personal_inm'){
+    const piInUsers=new Set(USERS.filter(u=>u.rol==='personal_inm').map(u=>u.email));
+    const piSinCuenta=(PERSONAL_INM||[]).filter(p=>p.email&&!piInUsers.has(p.email));
+    if(piSinCuenta.length){
+      const extra=piSinCuenta.map(p=>{
+        const photo=p.photo?`<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:((p.nombre||'?').split(' ').map(n=>n[0]).join('').slice(0,2));
+        return`<div class="user-card" style="opacity:.85;">
+          <div class="user-card-top">
+            <div class="user-av" style="background:#E1F5EE;color:#065041;overflow:hidden;font-size:${p.photo?'0':'13px'};">${photo}</div>
+            <div class="user-info">
+              <p>${p.nombre||'—'} <span class="role-badge rb-supervisor">Personal Inm.</span> <span class="badge" style="background:#F4F4F4;color:#888;border:.5px solid #ddd;font-size:10px;">Sin acceso al sistema</span></p>
+              <span style="font-size:11px;color:#5C7A9A;">${p.email||'Sin correo'}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('users-list').innerHTML+=extra;
+    }
+  }
+  /* ── Clientes Inmuebles sin cuenta de sistema ── */
+  if(filter==='all'||filter==='cliente_inm'){
+    const ciInUsers=new Set(USERS.filter(u=>u.rol==='cliente_inm').map(u=>u.email));
+    const ciSinCuenta=(CLIENTS_INM||[]).filter(c=>c.email&&!ciInUsers.has(c.email));
+    if(ciSinCuenta.length){
+      const extra=ciSinCuenta.map(c=>{
+        const photo=c.photo?`<img src="${c.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:((c.nombre||'?').split(' ').map(n=>n[0]).join('').slice(0,2));
+        return`<div class="user-card" style="opacity:.85;">
+          <div class="user-card-top">
+            <div class="user-av" style="background:#E6F4FF;color:#185FA5;overflow:hidden;font-size:${c.photo?'0':'13px'};">${photo}</div>
+            <div class="user-info">
+              <p>${c.nombre||'—'} <span class="role-badge rb-cliente">Cliente Inm.</span> <span class="badge" style="background:#F4F4F4;color:#888;border:.5px solid #ddd;font-size:10px;">Sin acceso al sistema</span></p>
+              <span style="font-size:11px;color:#5C7A9A;">${c.email||'Sin correo'}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('users-list').innerHTML+=extra;
     }
   }
   if(!document.getElementById('users-list').innerHTML)
