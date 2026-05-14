@@ -292,9 +292,9 @@
       <!-- Inmueble -->
       <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🏢 Datos del inmueble</p>
       <div class="frow"><div><label>Tipo</label><select id="ie-tipo" onchange="toggleTipoOtro('ie-tipo','ie-tipo-otro')"><option value="Oficina">Oficina</option><option value="Casa">Casa</option><option value="Departamento">Departamento</option><option value="Residencial">Residencial</option><option value="Condominio">Condominio</option><option value="Bodega">Bodega</option><option value="Local comercial">Local comercial</option><option value="Edificio">Edificio</option><option value="Hotel">Hotel</option><option value="Otro">Otro</option></select><input type="text" id="ie-tipo-otro" placeholder="Especifica el tipo de inmueble..." style="display:none;margin-top:6px;width:100%;"></div><div><label>Superficie (m²)</label><input type="number" id="ie-m2" min="1" placeholder="120"></div></div>
-      <div class="frow full"><label>Dirección</label><input type="text" id="ie-direccion" placeholder="Av. Reforma 200, Piso 3"></div>
-      <div class="frow full"><label>Colonia</label><input type="text" id="ie-colonia" placeholder="Cuauhtémoc"></div>
-      <div class="frow"><div><label>Municipio / Alcaldía</label><input type="text" id="ie-municipio" placeholder="Huixquilucan"></div><div><label>Estado</label><input type="text" id="ie-estado" placeholder="Estado de México"></div></div>
+      <div class="frow full"><label>Dirección</label><input type="text" id="ie-direccion" placeholder="Ej: Insurgentes Sur 1457, Piso 8"></div>
+      <div class="frow full"><label>Colonia</label><input type="text" id="ie-colonia" placeholder="Ej: Del Valle, Polanco, Providencia..."></div>
+      <div class="frow"><div><label>Municipio / Alcaldía</label><input type="text" id="ie-municipio" placeholder="Ej: Benito Juárez, Zapopan..."></div><div><label>Estado</label><input type="text" id="ie-estado" placeholder="Ej: CDMX, Jalisco, Nuevo León..."></div></div>
 
       <div class="div" style="margin:12px 0;"></div>
 
@@ -1145,9 +1145,9 @@
             <!-- 2. Inmueble -->
             <p class="inm-section-label">🏗️ Datos del inmueble</p>
             <div class="frow"><div><label>Tipo de inmueble</label><select id="inm-tipo" onchange="toggleTipoOtro('inm-tipo','inm-tipo-otro')"><option value="Oficina">Oficina</option><option value="Hotel">Hotel</option><option value="Departamento">Departamento</option><option value="Residencial">Residencial</option><option value="Condominio">Condominio</option><option value="Local comercial">Local comercial</option><option value="Bodega">Bodega</option><option value="Edificio">Edificio</option><option value="Casa">Casa</option><option value="Otro">Otro</option></select><input type="text" id="inm-tipo-otro" placeholder="Especifica el tipo de inmueble..." style="display:none;margin-top:6px;width:100%;"></div><div><label>Superficie (m²)</label><input type="number" id="inm-m2" placeholder="150" min="1"></div></div>
-            <div class="frow full"><label>Dirección</label><input type="text" id="inm-direccion" placeholder="Av. Reforma 200, Piso 3"></div>
-            <div class="frow full"><label>Colonia</label><input type="text" id="inm-colonia" placeholder="Cuauhtémoc"></div>
-            <div class="frow"><div><label>Municipio / Alcaldía</label><input type="text" id="inm-municipio" placeholder="Huixquilucan"></div><div><label>Estado</label><input type="text" id="inm-estado" placeholder="Estado de México"></div></div>
+            <div class="frow full"><label>Dirección</label><input type="text" id="inm-direccion" placeholder="Ej: Insurgentes Sur 1457, Piso 8"></div>
+            <div class="frow full"><label>Colonia</label><input type="text" id="inm-colonia" placeholder="Ej: Del Valle, Polanco, Providencia..."></div>
+            <div class="frow"><div><label>Municipio / Alcaldía</label><input type="text" id="inm-municipio" placeholder="Ej: Benito Juárez, Zapopan..."></div><div><label>Estado</label><input type="text" id="inm-estado" placeholder="Ej: CDMX, Jalisco, Nuevo León..."></div></div>
 
             <!-- 3. Servicio -->
             <p class="inm-section-label">🛠️ Datos del servicio</p>
@@ -1349,7 +1349,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=122"></script>
+<script src="js/app.js?v=123"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 

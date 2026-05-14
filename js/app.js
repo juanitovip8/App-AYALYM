@@ -6844,10 +6844,12 @@ async function _geocodeInmueble(ps){
   const mun=(ps.inmueble.municipio||'').trim();
   const est=(ps.inmueble.estado||'').trim();
 
-  /* Esperar a que cargue la API de Google Maps JS (hasta 9 seg) */
-  for(let i=0;i<30;i++){
+  /* Cargar la API de Google Maps si aún no está disponible */
+  if(typeof _loadGoogleMaps==='function') await _loadGoogleMaps();
+  /* Esperar hasta que el Geocoder específicamente esté listo (máx 10 seg) */
+  for(let i=0;i<40;i++){
     if(window.google&&window.google.maps&&window.google.maps.Geocoder) break;
-    await new Promise(r=>setTimeout(r,300));
+    await new Promise(r=>setTimeout(r,250));
   }
   if(!window.google||!window.google.maps||!window.google.maps.Geocoder){
     console.warn('[geo] Google Maps JS API no disponible');
