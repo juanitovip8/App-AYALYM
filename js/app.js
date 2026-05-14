@@ -5995,15 +5995,58 @@ function toggleInmRow(hdrEl){
   }
 }
 
-/* Restaurar filas abiertas después de re-render */
+/* Restaurar tarjeta seleccionada después de re-render */
 function _restoreOpenRows(scope){
   _openInmRows.forEach(id=>{
-    document.querySelectorAll(`${scope} .inm-row[data-id="${id}"]`).forEach(row=>{
-      const hdr=row.querySelector('.inm-row-hdr');
-      const body=row.querySelector('.inm-row-body');
-      if(hdr&&body){body.classList.add('open');hdr.classList.add('open');}
-    });
+    const btn=document.querySelector(`${scope} .inm-card-btn[data-id="${id}"]`);
+    if(btn)_selectInmCard(btn);
   });
+}
+
+/* ── Tarjeta compacta de contrato ── */
+function _buildInmCard(ps){
+  const sCol={activo:'#1A7A3B',pendiente:'#A05C00',completado:'#1A56DB',vencido:'#C0392B'}[ps.status]||'#888';
+  const sBg={activo:'#D4EDDA',pendiente:'#FFF3CD',completado:'#EEF5FF',vencido:'#FFF0F0'}[ps.status]||'#eee';
+  const sLbl={activo:'Activo',pendiente:'Pendiente',completado:'Completado',vencido:'Vencido'}[ps.status]||ps.status;
+  const dir=(ps.inmueble&&ps.inmueble.direccion)?ps.inmueble.direccion.split(',')[0]:'';
+  return'<div class="inm-card-btn" data-id="'+ps.id+'" onclick="_selectInmCard(this)"'
+    +' style="cursor:pointer;border-radius:10px;border:1px solid '+sCol+'44;border-left:3px solid '+sCol
+    +';padding:11px 13px;min-width:155px;max-width:190px;flex-shrink:0;transition:background .15s,box-shadow .15s;background:var(--card-bg,#fff);">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px;margin-bottom:5px;">'
+    +'<span style="font-size:11px;font-weight:700;color:#185FA5;white-space:nowrap;">'+ps.folio+(ps.parentId!=null?' ↻':'')+'</span>'
+    +'<span style="font-size:9px;font-weight:600;color:'+sCol+';background:'+sBg+';padding:1px 7px;border-radius:8px;white-space:nowrap;">'+sLbl+'</span>'
+    +'</div>'
+    +'<p style="font-size:12px;font-weight:600;color:var(--text-main,#042C53);margin:0 0 3px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+ps.cliente.nombre+'</p>'
+    +(dir?'<p style="font-size:10px;color:#7A9AB8;margin:0 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+dir+'</p>':'')
+    +'<p style="font-size:10px;color:#9CB5CC;margin:0;">'+formatDateShort(ps.fechaInicio)+' → '+formatDateShort(ps.fechaFin)+'</p>'
+    +'</div>';
+}
+
+/* ── Seleccionar tarjeta (admin y supervisor) ── */
+function _selectInmCard(btn){
+  const group=btn.closest('.inm-group');
+  if(!group)return;
+  const id=parseInt(btn.dataset.id);
+  const isActive=btn.classList.contains('inm-card-active');
+  group.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background='var(--card-bg,#fff)';});
+  const panel=group.querySelector('.inm-detail-wrap');
+  if(isActive){if(panel)panel.style.display='none';_openInmRows.delete(id);return;}
+  btn.classList.add('inm-card-active');btn.style.boxShadow='0 2px 12px rgba(24,95,165,.18)';btn.style.background='var(--blue-light,#EBF2FA)';
+  if(panel){
+    const inner=group.querySelector('.inm-detail-inner');
+    if(inner){
+      const ps=PROPERTY_SERVICES.find(p=>p.id===id);
+      if(ps){
+        const showActions=group.dataset.showActions==='1';
+        inner.innerHTML=(showActions?buildInmDetail(ps,true):buildInmDetailSV(ps));
+        // Restore header label
+        const hdrLabel=group.querySelector('.inm-detail-folio');
+        if(hdrLabel)hdrLabel.textContent=ps.folio+(ps.parentId!=null?' · Renovación':'')+' — '+ps.cliente.nombre;
+      }
+    }
+    panel.style.display='block';
+  }
+  _openInmRows.clear();_openInmRows.add(id);
 }
 
 /* ── Grupo de supervisor ── */
@@ -6012,19 +6055,26 @@ function buildSupervisorGroup(sv,services,showActions){
   const activos=services.filter(s=>s.status==='activo').length;
   const vencidos=services.filter(s=>s.status==='vencido').length;
   const zonasTxt=sv.zonas&&sv.zonas.length?sv.zonas.join(' · '):'';
-  const rows=services.map(ps=>buildInmRow(ps,showActions)).join('');
-  return`<div class="inm-group">
+  const cards=services.map(_buildInmCard).join('');
+  const gid='g'+(sv.id!=null?sv.id:'u');
+  return`<div class="inm-group" data-gid="${gid}" data-show-actions="${showActions?'1':'0'}">
     <div class="inm-group-hdr">
       <div style="display:flex;align-items:center;gap:10px;">
         <div class="av" style="width:34px;height:34px;font-size:${sv.photo?'0':'12px'};background:rgba(255,255,255,.18);">${sv.photo?'<img src="'+sv.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':sv.initials||'??'}</div>
-        <div>
-          <p>${sv.name}</p>
-          <span>${total} contrato${total!==1?'s':''}${activos?' &nbsp;·&nbsp; '+activos+' activo'+(activos!==1?'s':''):''}${vencidos?' &nbsp;·&nbsp; '+vencidos+' vencido'+(vencidos!==1?'s':''):''}</span>
-        </div>
+        <div><p>${sv.name}</p><span>${total} contrato${total!==1?'s':''}${activos?' &nbsp;·&nbsp; '+activos+' activo'+(activos!==1?'s':''):''}${vencidos?' &nbsp;·&nbsp; '+vencidos+' vencido'+(vencidos!==1?'s':''):''}</span></div>
       </div>
       ${zonasTxt?`<span style="font-size:10px;color:rgba(255,255,255,.55);">📍 ${zonasTxt}</span>`:''}
     </div>
-    <div class="inm-group-body">${rows}</div>
+    <div style="padding:14px 16px 10px;">
+      <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">${cards}</div>
+      <div class="inm-detail-wrap" style="display:none;margin-top:14px;border-top:.5px solid var(--blue-border,rgba(24,95,165,.18));padding-top:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
+          <span class="inm-detail-folio" style="font-size:12px;font-weight:700;color:#185FA5;"></span>
+          <button onclick="const g=this.closest('.inm-group');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background='var(--card-bg,#fff)';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
+        </div>
+        <div class="inm-detail-inner"></div>
+      </div>
+    </div>
   </div>`;
 }
 
@@ -6748,13 +6798,24 @@ function renderSVInmuebles(){
   const list=document.getElementById('sv-prop-list');
   if(!list)return;
   const mySvId=currentSupervisorRef?currentSupervisorRef.id:0;
-  const mine=PROPERTY_SERVICES.filter(ps=>ps.supervisorId===mySvId&&ps.status==='activo');
+  const mine=_sortActivos(PROPERTY_SERVICES.filter(ps=>ps.supervisorId===mySvId&&ps.status==='activo'));
   if(!mine.length){
     list.innerHTML=`<div style="text-align:center;padding:30px 0;color:#5C7A9A;font-size:13px;">No tienes servicios activos asignados.</div>`;
     return;
   }
-  const rows=mine.map(ps=>buildInmRowSV(ps)).join('');
-  list.innerHTML=`<div class="inm-group-body" style="border:.5px solid var(--blue-border);border-radius:10px;overflow:hidden;">${rows}</div>`;
+  const cards=mine.map(_buildInmCard).join('');
+  list.innerHTML=`<div class="inm-group" data-gid="sv-mine" data-show-actions="0" style="border:.5px solid var(--blue-border,#B5D4F4);border-radius:12px;overflow:hidden;">
+    <div style="padding:14px 16px 10px;">
+      <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">${cards}</div>
+      <div class="inm-detail-wrap" style="display:none;margin-top:14px;border-top:.5px solid var(--blue-border,rgba(24,95,165,.18));padding-top:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
+          <span class="inm-detail-folio" style="font-size:12px;font-weight:700;color:#185FA5;"></span>
+          <button onclick="const g=this.closest('.inm-group');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background='var(--card-bg,#fff)';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
+        </div>
+        <div class="inm-detail-inner"></div>
+      </div>
+    </div>
+  </div>`;
   _restoreOpenRows('#sv-prop-list');
 }
 

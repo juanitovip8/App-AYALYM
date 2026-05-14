@@ -750,6 +750,11 @@ textarea{resize:vertical;min-height:60px;}
 .inm-row-arrow{font-size:11px;color:var(--blue-mid);flex-shrink:0;transition:transform .2s;margin-left:4px;}
 .inm-row-hdr.open .inm-row-arrow{transform:rotate(180deg);}
 
+/* ── Tarjetas de contrato (nuevo diseño sin acordeón) ── */
+.inm-card-btn{transition:background .15s,box-shadow .15s,border-color .15s;}
+.inm-card-btn:hover{background:#EBF2FA!important;box-shadow:0 2px 10px rgba(24,95,165,.14);}
+.inm-card-btn.inm-card-active{background:var(--blue-light,#EBF2FA)!important;box-shadow:0 2px 12px rgba(24,95,165,.20)!important;}
+
 /* ── CHAT CONTACT BAR ── */
 .chat-contact-bar{display:flex;align-items:center;gap:10px;background:var(--blue-light);border-radius:8px;padding:10px 12px;margin-bottom:12px;}
 .chat-contact-bar p{font-size:13px;font-weight:500;color:var(--blue-dark);}
