@@ -5494,6 +5494,12 @@ function renderPIServicios(){
   const el=document.getElementById('pi-servicios-content');if(!el)return;
   const p=_getPIData();
   if(!p){el.innerHTML='';return;}
+  const _dark=document.documentElement.classList.contains('dark-mode');
+  const _txt=_dark?'#e8edf4':'#042C53';
+  const _lbl='#7A9AB8';
+  const _div=_dark?'rgba(255,255,255,0.10)':'rgba(24,95,165,0.12)';
+  const _chipBg=_dark?'rgba(107,170,255,0.15)':'rgba(24,95,165,0.10)';
+  const _chipCol=_dark?'#6BAAFF':'#185FA5';
   const svcs=PROPERTY_SERVICES.filter(ps=>p.serviciosAsignados.includes(ps.id));
   const svcsHtml=svcs.length
     ?svcs.map(ps=>{
@@ -5503,28 +5509,28 @@ function renderPIServicios(){
       const diasHtml=(ps.diasServicio&&ps.diasServicio.length)
         ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">'
           +ps.diasServicio.map(function(d){var n={lun:'Lunes',mar:'Martes',mie:'Mi\xE9rcoles',jue:'Jueves',vie:'Viernes',sab:'S\xE1bado',dom:'Domingo'}[d]||d;
-            return'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(24,95,165,0.12);color:#185FA5;">'+n+'</span>';}).join('')+'</div>'
+            return'<span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:10px;background:'+_chipBg+';color:'+_chipCol+';">'+n+'</span>';}).join('')+'</div>'
         :'';
       return`<div class="pi-svc-row" style="flex-direction:column;align-items:stretch;gap:0;padding:14px 16px;">
         <div style="display:flex;align-items:flex-start;gap:12px;">
           <div class="pi-svc-dot" style="background:${stBg};color:${stCol};flex-shrink:0;margin-top:2px;">${stLbl[0]}</div>
           <div class="pi-svc-info" style="flex:1;min-width:0;">
-            <p style="margin-bottom:2px;">${ps.folio} · ${ps.tipo}</p>
-            <span>${ps.cliente.nombre} · ${ps.inmueble.tipo}, ${ps.inmueble.colonia}</span>
+            <p style="margin-bottom:2px;color:${_txt};">${ps.folio} · ${ps.tipo}</p>
+            <span style="color:${_lbl};">${ps.cliente.nombre} · ${ps.inmueble.tipo}, ${ps.inmueble.colonia}</span>
           </div>
           <span class="pi-svc-badge" style="background:${stBg};color:${stCol};flex-shrink:0;">${stLbl}</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:.5px solid var(--blue-border,rgba(24,95,165,0.15));">
-          <div style="display:flex;flex-direction:column;gap:2px;">
-            <span style="font-size:10px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;">Frecuencia</span>
-            <span style="font-size:12px;font-weight:600;color:var(--text-main,#042C53);text-transform:capitalize;">${ps.frecuencia||'—'}</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:.5px solid ${_div};">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:10px;font-weight:600;color:${_lbl};text-transform:uppercase;letter-spacing:.5px;">Frecuencia</span>
+            <span style="font-size:12px;font-weight:600;color:${_txt};text-transform:capitalize;">${ps.frecuencia||'—'}</span>
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px;">
-            <span style="font-size:10px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;">Horario</span>
-            <span style="font-size:12px;font-weight:600;color:var(--text-main,#042C53);">⏰ ${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</span>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <span style="font-size:10px;font-weight:600;color:${_lbl};text-transform:uppercase;letter-spacing:.5px;">Horario</span>
+            <span style="font-size:12px;font-weight:600;color:${_txt};">⏰ ${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</span>
           </div>
         </div>
-        ${diasHtml?'<div style="margin-top:8px;"><span style="font-size:10px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;">D\xEDas de servicio</span>'+diasHtml+'</div>':''}
+        ${diasHtml?'<div style="margin-top:8px;"><span style="font-size:10px;font-weight:600;color:'+_lbl+';text-transform:uppercase;letter-spacing:.5px;">D\xEDas de servicio</span>'+diasHtml+'</div>':''}
       </div>`;}).join('')
     :'<p style="font-size:12px;color:#5C7A9A;text-align:center;padding:24px 0;">Sin servicios asignados aún.</p>';
   el.innerHTML=`
