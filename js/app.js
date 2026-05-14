@@ -3775,6 +3775,7 @@ let _adminAstClientFiltro='';
 let _adminAstSvFiltro='';
 let _adminAstView='supervisores'; /* 'supervisores' | 'personal_inm' */
 let _adminAstPIContratoFiltro=''; /* filtro contrato para personal_inm */
+let _adminAstPIPersonalFiltro=''; /* filtro por trabajador para personal_inm */
 
 /* Fecha local (no UTC) para evitar desfase de zona horaria México */
 function _localDateStr(){
@@ -3822,6 +3823,7 @@ function _setAstFiltro(f){
   _adminAstClientFiltro=''; /* resetear filtros al cambiar período */
   _adminAstSvFiltro='';
   _adminAstPIContratoFiltro='';
+  _adminAstPIPersonalFiltro='';
   renderAdminAstReport();
 }
 
@@ -3884,26 +3886,41 @@ function renderAdminAstReport(){
     const contratoKeys=contratos.map(ps=>ps.folio||String(ps.id));
     return(pi.asistencias||[])
       .filter(a=>a.fecha>=fromPI&&a.fecha<=toPI)
-      .map(a=>({...a,piId:pi.id,piNombre:pi.nombre,contratoLabel,contratoKeys}));
+      .map(a=>({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel,contratoKeys}));
   }).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.piNombre.localeCompare(b.piNombre));
-  /* Lista única de contratos para el dropdown */
+  /* Lista única de trabajadores y contratos para los dropdowns */
+  const piPersonales=[...new Set(piRowsAll.map(r=>r.piNombre))].sort();
   const piContratos=[...new Set(piRowsAll.map(r=>r.contratoLabel))].sort();
+  if(_adminAstPIPersonalFiltro&&!piPersonales.includes(_adminAstPIPersonalFiltro))_adminAstPIPersonalFiltro='';
   if(_adminAstPIContratoFiltro&&!piContratos.includes(_adminAstPIContratoFiltro))_adminAstPIContratoFiltro='';
-  const piRows=piRowsAll.filter(r=>!_adminAstPIContratoFiltro||r.contratoLabel===_adminAstPIContratoFiltro);
+  const piRows=piRowsAll.filter(r=>
+    (!_adminAstPIPersonalFiltro||r.piNombre===_adminAstPIPersonalFiltro)&&
+    (!_adminAstPIContratoFiltro||r.contratoLabel===_adminAstPIContratoFiltro)
+  );
+  const piPersonalOpts=['<option value="">— Todos los trabajadores —</option>',
+    ...piPersonales.map(p=>`<option value="${p}"${_adminAstPIPersonalFiltro===p?' selected':''}>${p}</option>`)
+  ].join('');
+  const piPersonalSel=`<select style="font-size:12px;padding:5px 8px;border-radius:6px;border:.5px solid #B5D4F4;color:#042C53;background:#fff;max-width:200px;"
+    onchange="_adminAstPIPersonalFiltro=this.value;renderAdminAstReport()">${piPersonalOpts}</select>`;
   const piContratoOpts=['<option value="">— Todos los contratos —</option>',
     ...piContratos.map(c=>`<option value="${c}"${_adminAstPIContratoFiltro===c?' selected':''}>${c}</option>`)
   ].join('');
   const piContratoSel=`<select style="font-size:12px;padding:5px 8px;border-radius:6px;border:.5px solid #B5D4F4;color:#042C53;background:#fff;max-width:260px;"
     onchange="_adminAstPIContratoFiltro=this.value;renderAdminAstReport()">${piContratoOpts}</select>`;
-  const piTbodyHtml=piRows.length?piRows.map(a=>`<tr>
-    <td>${a.piNombre}</td>
+  const piTbodyHtml=piRows.length?piRows.map(a=>{
+    const initials=(a.piNombre||'').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()||'PI';
+    const avCell=a.piPhoto
+      ?`<img src="${a.piPhoto}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;">`
+      :`<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#042C53;color:#fff;font-size:9px;font-weight:700;vertical-align:middle;margin-right:6px;">${initials}</span>`;
+    return`<tr>
+    <td style="white-space:nowrap;">${avCell}${a.piNombre}</td>
     <td style="font-size:11px;color:#5C7A9A;">${a.contratoLabel}</td>
     <td>${a.fecha}</td>
     <td>${a.entrada||'—'}</td>
     <td>${a.salida||'—'}</td>
     <td>${a.entrada&&a.salida?_fmtDur((()=>{const[eh,em]=(a.entrada||'0:0').split(':').map(Number);const[sh,sm]=(a.salida||'0:0').split(':').map(Number);return(sh*60+sm)-(eh*60+em);})()):'—'}</td>
     <td><button onclick="adminDeletePIAst('${a.piId}','${a.fecha}')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:2px 6px;color:#B91C1C;" title="Eliminar registro">🗑</button></td>
-  </tr>`).join('')
+  </tr>`;}).join('')
   :`<tr><td colspan="7" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
   const labelExtra=[_adminAstSvFiltro?`Supervisor: ${_adminAstSvFiltro}`:'',_adminAstClientFiltro?`Cliente: ${_adminAstClientFiltro}`:''].filter(Boolean).join(' · ');
   const viewTabs=`<div class="user-role-filter" style="margin:0 0 12px;">
@@ -3932,16 +3949,20 @@ function renderAdminAstReport(){
         <tbody>${tbodyHtml}</tbody>
       </table>
     </div>`;
+  const piLabelExtra=[_adminAstPIPersonalFiltro?`👤 ${_adminAstPIPersonalFiltro}`:'',_adminAstPIContratoFiltro?`📄 ${_adminAstPIContratoFiltro}`:''].filter(Boolean).join(' · ');
   const piContent=`
     <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
       <div class="user-role-filter" style="margin:0;">${filtBtns}</div>
       ${rangoInps}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+      <span style="font-size:12px;color:#185FA5;font-weight:500;">👤 Trabajador:</span>
+      ${piPersonalSel}
       <span style="font-size:12px;color:#185FA5;font-weight:500;">📄 Contrato:</span>
       ${piContratoSel}
+      <button class="btn-sm" style="margin-left:auto;font-size:11px;" onclick="exportPIAsistenciasPDF()">⬇ Exportar PDF</button>
     </div>
-    <p style="font-size:11px;color:#5C7A9A;margin-bottom:10px;">${piRows.length} registro${piRows.length!==1?'s':''} · ${label}${_adminAstPIContratoFiltro?' · '+_adminAstPIContratoFiltro:''}</p>
+    <p style="font-size:11px;color:#5C7A9A;margin-bottom:10px;">${piRows.length} registro${piRows.length!==1?'s':''} · ${label}${piLabelExtra?' · '+piLabelExtra:''}</p>
     <div style="overflow-x:auto;">
       <table class="rep-table">
         <thead><tr>
@@ -4031,6 +4052,90 @@ function exportAsistenciasPDF(){
   </table>
   <div class="footer">
     <span>Total: ${filtered.length} registro${filtered.length!==1?'s':''}${labelExtra?' · '+labelExtra:''}</span>
+    <span>AYALYM © ${new Date().getFullYear()}</span>
+  </div>
+  <script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+  const w=window.open('','_blank','width=960,height=720');
+  if(w){w.document.write(html);w.document.close();}
+  else{showToast('amber','⚠️','Permite ventanas emergentes para exportar PDF');}
+}
+
+function exportPIAsistenciasPDF(){
+  const{from,to,label}=_astDateRange();
+  const piRowsAll=PERSONAL_INM.flatMap(pi=>{
+    const contratos=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
+    const contratoLabel=contratos.length?contratos.map(ps=>`${ps.folio||'INM'} — ${ps.cliente.nombre}`).join(', '):'Sin contrato';
+    return(pi.asistencias||[])
+      .filter(a=>a.fecha>=from&&a.fecha<=to)
+      .map(a=>({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel}));
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.piNombre.localeCompare(b.piNombre));
+  const piRows=piRowsAll.filter(r=>
+    (!_adminAstPIPersonalFiltro||r.piNombre===_adminAstPIPersonalFiltro)&&
+    (!_adminAstPIContratoFiltro||r.contratoLabel===_adminAstPIContratoFiltro)
+  );
+  const badges=[_adminAstPIPersonalFiltro?`👤 ${_adminAstPIPersonalFiltro}`:'',_adminAstPIContratoFiltro?`📄 ${_adminAstPIContratoFiltro}`:''].filter(Boolean);
+  const labelExtra=badges.join(' · ');
+  const logoSrc=new URL('img/logo.png',window.location.href).href;
+  /* Si hay un solo trabajador filtrado, mostrar su foto grande en la cabecera */
+  const soloWorker=_adminAstPIPersonalFiltro&&piRows.length?piRows[0]:null;
+  const workerPhotoHtml=soloWorker&&soloWorker.piPhoto
+    ?`<img src="${soloWorker.piPhoto}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;border:3px solid #042C53;">`
+    :'';
+  const rows=piRows.map(a=>{
+    const initials=(a.piNombre||'').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()||'PI';
+    const avHtml=a.piPhoto
+      ?`<img src="${a.piPhoto}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;">`
+      :`<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#042C53;color:#fff;font-size:8px;font-weight:700;vertical-align:middle;margin-right:5px;">${initials}</span>`;
+    const dur=a.entrada&&a.salida?(()=>{const[eh,em]=(a.entrada||'0:0').split(':').map(Number);const[sh,sm]=(a.salida||'0:0').split(':').map(Number);return _fmtDur((sh*60+sm)-(eh*60+em));})():'—';
+    return`<tr>
+      <td style="white-space:nowrap;">${avHtml}${a.piNombre}</td>
+      <td style="font-size:10px;color:#5C7A9A;">${a.contratoLabel}</td>
+      <td>${a.fecha}</td><td>${a.entrada||'—'}</td><td>${a.salida||'—'}</td><td>${dur}</td>
+    </tr>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+<title>Asistencias Personal Inmuebles — ${label}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a2e;padding:24px;}
+  .header{display:flex;align-items:center;gap:14px;padding-bottom:14px;border-bottom:2px solid #042C53;margin-bottom:14px;}
+  .header img.logo-img{width:52px;height:52px;object-fit:contain;border-radius:10px;}
+  .logo{font-size:22px;font-weight:800;color:#042C53;letter-spacing:-0.5px;line-height:1;}
+  .logo span{color:#185FA5;}
+  .logo-tag{font-size:9px;color:#5C7A9A;margin-top:2px;letter-spacing:.5px;}
+  h2{font-size:13px;color:#042C53;margin:0 0 3px;}
+  p.sub{font-size:10px;color:#666;margin-bottom:0;}
+  .filter-badge{display:inline-block;background:#E1F5EE;color:#085041;border-radius:4px;padding:2px 8px;font-size:9px;font-weight:600;margin-top:4px;}
+  table{width:100%;border-collapse:collapse;margin-top:4px;}
+  th{background:#042C53;color:#fff;padding:7px 9px;text-align:left;font-size:10px;}
+  td{padding:6px 9px;border-bottom:1px solid #e0e7ef;font-size:10px;}
+  tr:nth-child(even) td{background:#f4f8fc;}
+  .footer{margin-top:14px;font-size:9px;color:#999;display:flex;justify-content:space-between;border-top:1px solid #e0e7ef;padding-top:8px;}
+  @media print{@page{margin:12mm 15mm;} button{display:none;}}
+</style></head><body>
+  <div class="header">
+    <img class="logo-img" src="${logoSrc}" alt="AYA Limpieza y Mantenimiento">
+    <div>
+      <div class="logo">AYA<span>LYM</span></div>
+      <div class="logo-tag">Limpieza y Mantenimiento Profesional</div>
+    </div>
+    ${workerPhotoHtml}
+    <div style="margin-left:auto;text-align:right;">
+      <h2>Reporte de Asistencias — Personal Inmuebles</h2>
+      <p class="sub">Período: ${label}</p>
+      ${badges.map(b=>`<span class="filter-badge">${b}</span>`).join(' ')}
+      <p class="sub" style="margin-top:4px;">Generado el ${new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'})}</p>
+    </div>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Trabajador</th><th>Contrato</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Duración</th>
+    </tr></thead>
+    <tbody>${rows||'<tr><td colspan="6" style="text-align:center;padding:1rem;color:#666;">Sin registros en este período</td></tr>'}</tbody>
+  </table>
+  <div class="footer">
+    <span>Total: ${piRows.length} registro${piRows.length!==1?'s':''}${labelExtra?' · '+labelExtra:''}</span>
     <span>AYALYM © ${new Date().getFullYear()}</span>
   </div>
   <script>window.onload=function(){window.print();}<\/script>
