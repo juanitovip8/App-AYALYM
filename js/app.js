@@ -3239,8 +3239,8 @@ async function _updateSVMapMarkers(locs){
     const pos={lat:parseFloat(loc.lat),lng:parseFloat(loc.lng)};
     const color=loc.rol==='personal_inm'?'#065041':'#D97706';
     const rolLabel=loc.rol==='personal_inm'?'🏢 Personal de Inmuebles':'🧹 Trabajador de Servicios';
-    const infoHtml=`<div style="font-family:system-ui,sans-serif;min-width:165px;padding:4px 2px;background:#fff;">
-      <p style="font-weight:700;font-size:13px;color:#042C53!important;margin:0 0 4px;">${loc.nombre}</p>
+    const infoHtml=`<div style="font-family:system-ui,sans-serif;min-width:170px;padding:10px 12px 10px;">
+      <p style="font-weight:700;font-size:13px;color:#042C53;margin:0 0 3px;">${loc.nombre}</p>
       <p style="font-size:11px;color:#5C7A9A;margin:0 0 3px;">${rolLabel}</p>
       ${loc.contratoNombre?`<p style="font-size:11px;color:#185FA5;margin:0 0 3px;">🔧 ${loc.contratoNombre}</p>`:''}
       <p style="font-size:11px;color:#065041;margin:0;">⏱ Inicio: <strong style="color:#042C53;">${loc.entrada||'—'}</strong></p>
@@ -4357,8 +4357,8 @@ async function _updateAdminMapMarkers(locs){
     const pos={lat:parseFloat(loc.lat),lng:parseFloat(loc.lng)};
     const color=loc.rol==='personal_inm'?'#065041':loc.rol==='trabajador'?'#D97706':'#185FA5';
     const rolLabel=loc.rol==='personal_inm'?'🏢 Personal de Inmuebles':loc.rol==='trabajador'?'🧹 Trabajador de Servicios':'🧑‍💼 Supervisor';
-    const infoHtml=`<div style="font-family:system-ui,sans-serif;min-width:175px;padding:4px 2px;background:#fff;">
-      <p style="font-weight:700;font-size:13px;color:#042C53;margin:0 0 4px;">${loc.nombre}</p>
+    const infoHtml=`<div style="font-family:system-ui,sans-serif;min-width:175px;padding:10px 12px 10px;">
+      <p style="font-weight:700;font-size:13px;color:#042C53;margin:0 0 3px;">${loc.nombre}</p>
       <p style="font-size:11px;color:#5C7A9A;margin:0 0 3px;">${rolLabel}</p>
       ${loc.contratoNombre?`<p style="font-size:11px;color:#185FA5;margin:0 0 3px;">🔧 ${loc.contratoNombre}</p>`:''}
       <p style="font-size:11px;color:#065041;margin:0;">⏱ Inicio: <strong style="color:#042C53;">${loc.entrada||'—'}</strong></p>
