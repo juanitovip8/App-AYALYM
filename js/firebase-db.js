@@ -427,8 +427,7 @@ function fbListenNotifs(role,callback){
   try{
     return _col('notificaciones')
       .where('destinatario','==',role)
-      .orderBy('createdAt','desc')
-      .limit(60)
+      .limit(80)
       .onSnapshot(function(snap){
         var notifs=[];
         snap.forEach(function(d){
@@ -436,6 +435,9 @@ function fbListenNotifs(role,callback){
           n._docId=d.id;
           notifs.push(n);
         });
+        /* Ordenar en cliente — evita requerir índice compuesto en Firestore */
+        notifs.sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
+        if(notifs.length>60)notifs=notifs.slice(0,60);
         callback(notifs);
       },function(e){console.warn('fbListenNotifs',e);});
   }catch(e){console.warn('fbListenNotifs',e);return function(){};}

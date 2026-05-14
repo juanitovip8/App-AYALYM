@@ -5007,6 +5007,9 @@ function iniciarServicioWorker(wid,jobIdx){
     }
     renderWorkerAgenda();
     renderTrabajadorResumen();
+    const _horaIni=_nowHM();
+    pushNotif('supervisor','🟢','green','Trabajador en camino',`${worker.name} inició servicio a las ${_horaIni} — ${job.svc}${job.zona?' · '+job.zona:''}`);
+    pushNotif('admin','🟢','green','Trabajador en camino',`${worker.name} inició servicio a las ${_horaIni} — ${job.svc}${job.zona?' · '+job.zona:''}`);
     showToast('green','▶','Servicio iniciado');
   };
   if(navigator.geolocation){
@@ -5033,6 +5036,8 @@ function completarServicioWorker(wid,jobIdx){
   renderWorkerAgenda();
   renderWorkerHistorial();
   renderTrabajadorResumen();
+  pushNotif('supervisor','✅','green','Servicio completado',`${worker.name} completó: ${job.svc}${job.zona?' · '+job.zona:''}`);
+  pushNotif('admin','✅','green','Servicio completado',`${worker.name} completó: ${job.svc}${job.zona?' · '+job.zona:''}`);
   showToast('green','✅','Servicio completado');
 }
 
@@ -6772,6 +6777,7 @@ function marcarEntradaSV(servicioId){
       }
       renderSVAstHoy();
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
+      pushNotif('admin','🟢','green','Entrada registrada',`${currentSupervisorRef.name} (Supervisor) registró entrada a las ${hora} — ${ps.folio||''} ${ps.cliente?.nombre||''}`);
       showToast('green','📍','Entrada registrada: '+hora+dtxt);
     },
     dist=>showToast('red','📍',`Te encuentras a ${_fmtDist(dist)} del inmueble, acércate para registrar tu entrada.`),
@@ -6802,6 +6808,7 @@ function marcarSalidaSV(servicioId){
       fbDeleteUbicActiva('sv_'+currentSupervisorRef.id); /* quitar del mapa */
       renderSVAstHoy();
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
+      pushNotif('admin','🔴','blue','Salida registrada',`${currentSupervisorRef.name} (Supervisor) registró salida a las ${hora} — ${ps.folio||''} ${ps.inmueble?.direccion?.split(',')[0]||''}`);
       showToast('green','🏁','Salida registrada: '+hora+dtxt);
     },
     dist=>showToast('red','📍',`Te encuentras a ${_fmtDist(dist)} del inmueble, acércate para registrar tu salida.`),
