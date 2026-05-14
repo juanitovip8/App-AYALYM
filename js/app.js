@@ -5348,6 +5348,7 @@ function quickLogin(role){
 let _propFilter='all';
 let _svPropFilter='all';
 let _openInmRows=new Set(); // IDs de servicios cuya fila debe permanecer abierta
+let _selSvId=null; // ID de supervisor seleccionado en panel admin
 let _reportPsId=null;       // ID del servicio al que se agrega un reporte de visita
 let _reportFotos=[];        // Fotos (base64) del reporte en curso
 
@@ -6483,6 +6484,13 @@ function saveInmEdit(){
 const _statusOrder={activo:0,pendiente:1,completado:2,vencido:3};
 const _sortActivos=arr=>[...arr].sort((a,b)=>(_statusOrder[a.status]??9)-(_statusOrder[b.status]??9));
 
+function _selectSv(btn){
+  const svId=parseInt(btn.dataset.svid);
+  _selSvId=btn.classList.contains('sv-pill-active')?null:svId;
+  _openInmRows.clear();
+  renderPropServices(_propFilter);
+}
+
 function renderPropServices(filter){
   _propFilter=filter||_propFilter;
   const list=document.getElementById('prop-services-list');
@@ -6490,23 +6498,61 @@ function renderPropServices(filter){
   const services=_propFilter==='all'?[...PROPERTY_SERVICES]:PROPERTY_SERVICES.filter(ps=>ps.status===_propFilter);
   if(!services.length){
     const lbl={all:'registrados',pendiente:'pendientes',activo:'activos',completado:'completados',vencido:'vencidos'}[_propFilter]||_propFilter;
-    list.innerHTML=`<div style="text-align:center;padding:30px 0;color:#5C7A9A;font-size:13px;">No hay contratos ${lbl} aún.</div>`;
+    list.innerHTML=`<div style="text-align:center;padding:30px 0;color:#5C7A9A;font-size:13px;">No hay contratos ${lbl} a\xFAn.</div>`;
     return;
   }
-  let html='';
-  // Sort supervisor groups: groups with active services appear first
   const svGroups=SUPERVISORS.map(sv=>({sv,svcs:_sortActivos(services.filter(ps=>ps.supervisorId===sv.id))}))
     .filter(g=>g.svcs.length)
-    .sort((a,b)=>{
-      const bestA=_statusOrder[a.svcs[0].status]??9;
-      const bestB=_statusOrder[b.svcs[0].status]??9;
-      return bestA-bestB;
-    });
-  svGroups.forEach(({sv,svcs})=>{html+=buildSupervisorGroup(sv,svcs,true);});
+    .sort((a,b)=>((_statusOrder[a.svcs[0].status]??9)-(_statusOrder[b.svcs[0].status]??9)));
   const unassigned=_sortActivos(services.filter(ps=>!SUPERVISORS.some(sv=>sv.id===ps.supervisorId)));
-  if(unassigned.length)html+=buildSupervisorGroup({name:'Sin asignar',initials:'??',zonas:[]},unassigned,true);
-  list.innerHTML=html;
-  _restoreOpenRows('#prop-services-list');
+  const allGroups=[...svGroups,...(unassigned.length?[{sv:{name:'Sin asignar',initials:'??',id:-1,photo:null,zonas:[]},svcs:unassigned}]:[])];
+  /* Validar selección */
+  if(_selSvId!=null&&!allGroups.some(g=>g.sv.id===_selSvId))_selSvId=null;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txtMain=dark?'#e8edf4':'#042C53';
+  const txtSub=dark?'#8AACCA':'#5C7A9A';
+  const bgPill=dark?'rgba(255,255,255,0.06)':'#fff';
+  const bgActive=dark?'rgba(24,95,165,0.22)':'#E8F1FB';
+  const borderPill=dark?'rgba(255,255,255,0.12)':'#DCE8F5';
+  /* Supervisor pills */
+  const svPillsHtml=allGroups.map(({sv,svcs})=>{
+    const activos=svcs.filter(s=>s.status==='activo').length;
+    const isActive=sv.id===_selSvId;
+    const border=isActive?'#185FA5':borderPill;
+    const bg=isActive?bgActive:bgPill;
+    const avContent=sv.photo?'<img src="'+sv.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':(sv.initials||'??');
+    return'<div class="sv-pill-btn'+(isActive?' sv-pill-active':'')+'" data-svid="'+sv.id+'" onclick="_selectSv(this)"'
+      +' style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;'
+      +'border:1.5px solid '+border+';background:'+bg+';transition:all .15s;">'
+      +'<div class="av" style="width:32px;height:32px;font-size:'+(sv.photo?'0':'11px')+';flex-shrink:0;background:rgba(24,95,165,0.25);color:#6BAAFF;">'+avContent+'</div>'
+      +'<div style="min-width:0;flex:1;">'
+      +'<p style="font-size:12px;font-weight:600;color:'+txtMain+';margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+sv.name+'</p>'
+      +'<span style="font-size:10px;color:'+txtSub+';">'+svcs.length+' contrato'+(svcs.length!==1?'s':'')+(activos?' \xB7 '+activos+' activo'+(activos!==1?'s':''):'')+'</span>'
+      +'</div>'
+      +(isActive?'<span style="font-size:12px;color:#185FA5;flex-shrink:0;">▾</span>':'')
+      +'</div>';
+  }).join('');
+  /* Contratos del supervisor seleccionado */
+  let contractsSection='';
+  if(_selSvId!=null){
+    const selGroup=allGroups.find(g=>g.sv.id===_selSvId);
+    if(selGroup){
+      const cards=selGroup.svcs.map(_buildInmCard).join('');
+      contractsSection='<div class="inm-group" data-gid="admin-sel" data-show-actions="1"'
+        +' style="border:.5px solid var(--blue-border,#B5D4F4);border-radius:12px;overflow:hidden;margin-top:16px;">'
+        +'<div style="padding:12px 16px 10px;">'
+        +'<p style="font-size:11px;font-weight:600;color:#5C7A9A;margin:0 0 10px;text-transform:uppercase;letter-spacing:.5px;">Contratos \xB7 '+selGroup.sv.name+'</p>'
+        +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;">'+cards+'</div>'
+        +'<div class="inm-detail-wrap" style="display:none;margin-top:14px;border-top:.5px solid var(--blue-border,rgba(24,95,165,.18));padding-top:14px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">'
+        +'<span class="inm-detail-folio" style="font-size:12px;font-weight:700;color:#185FA5;"></span>'
+        +'<button onclick="const g=this.closest(\'.inm-group\');g.querySelectorAll(\'.inm-card-btn\').forEach(b=>{b.classList.remove(\'inm-card-active\');b.style.boxShadow=\'\';});this.closest(\'.inm-detail-wrap\').style.display=\'none\';_openInmRows.clear();"'
+        +' style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>'
+        +'</div><div class="inm-detail-inner"></div></div></div></div>';
+    }
+  }
+  list.innerHTML='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;">'+svPillsHtml+'</div>'+contractsSection;
+  if(_selSvId!=null)_restoreOpenRows('#prop-services-list');
 }
 
 /* ── Detalle solo-lectura para supervisor (sin dinero, sin fiscal, sin acciones) ── */
