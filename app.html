@@ -1297,8 +1297,15 @@
           </div>
         </div>
 
+        <!-- Buscador de personal -->
+        <div style="position:relative;margin-top:12px;margin-bottom:8px;">
+          <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;">🔍</span>
+          <input type="text" id="pi-search" placeholder="Buscar por nombre, correo o teléfono…" oninput="renderPersonalInmAdmin()" autocomplete="off"
+            style="width:100%;box-sizing:border-box;padding:8px 12px 8px 34px;border-radius:8px;border:.5px solid var(--blue-border,#C5D8EC);font-size:13px;background:transparent;color:inherit;outline:none;">
+        </div>
+
         <!-- Lista de personal -->
-        <div id="personal-inm-list" style="margin-top:12px;"></div>
+        <div id="personal-inm-list"></div>
       </div>
 
       <!-- Overlay asignar servicio -->

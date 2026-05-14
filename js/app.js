@@ -5836,11 +5836,15 @@ function renderPersonalInmAdmin(){
   if(!PERSONAL_INM.length){
     el.innerHTML='<p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin personal registrado. Agrega al primero.</p>';return;
   }
-  el.innerHTML=PERSONAL_INM.map((p,i)=>{
+  const q=((document.getElementById('pi-search')||{}).value||'').trim().toLowerCase();
+  const lista=q?PERSONAL_INM.filter(p=>(p.nombre||'').toLowerCase().includes(q)||(p.email||'').toLowerCase().includes(q)||(p.tel||'').toLowerCase().includes(q)):PERSONAL_INM;
+  if(!lista.length){el.innerHTML='<p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin resultados para "'+q+'".</p>';return;}
+  el.innerHTML=lista.map((p,i)=>{
+    const i_real=PERSONAL_INM.indexOf(p);
     const isOn=p.activo!==false;
     const svcsChips=p.serviciosAsignados.map(sid=>{
       const ps=PROPERTY_SERVICES.find(x=>x.id===sid);
-      return ps?`<span class="pi-chip" onclick="desasignarPi(${i},${sid})" title="Quitar asignación">${ps.folio} ✕</span>`:'';
+      return ps?`<span class="pi-chip" onclick="desasignarPi(${i_real},${sid})" title="Quitar asignación">${ps.folio} ✕</span>`:'';
     }).join('');
     const hoyCaps=new Date().toISOString().split('T')[0];
     const todayAsis=p.asistencias.find(a=>a.fecha===hoyCaps);
@@ -5856,14 +5860,14 @@ function renderPersonalInmAdmin(){
           </div>
         </div>
         <div style="display:flex;gap:5px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end;">
-          <button class="toggle-btn${isOn?' on':''}" onclick="togglePersonalInm(${i})">${isOn?'Activo':'Inactivo'}</button>
-          <button class="btn-danger" onclick="removePersonalInm(${i})">Eliminar</button>
+          <button class="toggle-btn${isOn?' on':''}" onclick="togglePersonalInm(${i_real})">${isOn?'Activo':'Inactivo'}</button>
+          <button class="btn-danger" onclick="removePersonalInm(${i_real})">Eliminar</button>
         </div>
       </div>
       <div class="pi-admin-svcs">
         <span style="font-size:11px;color:#5C7A9A;margin-right:4px;">Servicios:</span>
         ${svcsChips||'<span style="font-size:11px;color:#5C7A9A;font-style:italic;">Sin asignar</span>'}
-        <button class="pi-assign-btn" onclick="openAsignarPi(${i})">+ Asignar</button>
+        <button class="pi-assign-btn" onclick="openAsignarPi(${i_real})">+ Asignar</button>
       </div>
       <div style="padding:4px 12px 8px;">
         <button class="pi-att-toggle" onclick="toggleAdmAtt(${p.id})">📋 Asistencias</button>
