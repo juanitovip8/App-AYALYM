@@ -4,28 +4,11 @@
    2. Web Push notifications
    ═══════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'ayalym-v5';
-const STATIC_ASSETS = [
-  '/app.html',
-  '/css/style.css',
-  '/css/dark.css',
-  '/css/theme-toggle.css',
-  '/css/landing-light.css',
-  '/js/app.js',
-  '/js/firebase-db.js',
-  '/js/theme.js',
-  '/img/logo.png',
-  '/img/hero-bg.jpg',
-  '/img/hero-bg2.jpg',
-  '/firebase-messaging-sw.js'
-];
+const CACHE_NAME = 'ayalym-v6';
 
-/* ── Instalar: pre-cachear activos estáticos ── */
+/* ── Instalar: activar inmediatamente sin pre-cachear (evita fallos de instalación) ── */
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
-  );
+  e.waitUntil(self.skipWaiting());
 });
 
 /* ── Activar: limpiar cachés viejas ── */
@@ -37,32 +20,34 @@ self.addEventListener('activate', e => {
   );
 });
 
-/* ── Fetch: cache-first para estáticos, network para Firestore/Firebase ── */
+/* ── Fetch: network-first con caché de respaldo ── */
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
   /* Siempre red para: Firestore, Firebase Auth, Firebase Storage, APIs externas */
-  const isFirebase = url.hostname.includes('googleapis.com')
+  const isExternal = url.hostname.includes('googleapis.com')
     || url.hostname.includes('firebaseio.com')
     || url.hostname.includes('firebasestorage.googleapis.com')
     || url.hostname.includes('identitytoolkit.googleapis.com')
+    || url.hostname.includes('maps.googleapis.com')
+    || url.hostname.includes('gstatic.com')
     || url.pathname.includes('/api/');
 
-  if (isFirebase || e.request.method !== 'GET') return;
+  /* Ignorar peticiones no-GET y externas: el navegador las maneja normalmente */
+  if (isExternal || e.request.method !== 'GET') return;
 
-  /* Cache-first para el resto (JS, CSS, HTML, imágenes) */
+  /* Network-first: intenta red, si falla usa caché, si no hay caché deja fallar limpiamente */
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(response => {
-        /* Cachear respuestas válidas de mismo origen */
+    fetch(e.request)
+      .then(response => {
+        /* Cachear solo respuestas válidas del mismo origen */
         if (response && response.status === 200 && url.origin === self.location.origin) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(e.request))
   );
 });
 
