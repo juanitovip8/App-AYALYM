@@ -6003,22 +6003,26 @@ function _restoreOpenRows(scope){
   });
 }
 
-/* ── Tarjeta compacta de contrato ── */
+/* ── Pill compacta de contrato ── */
 function _buildInmCard(ps){
-  const sCol={activo:'#1A7A3B',pendiente:'#A05C00',completado:'#1A56DB',vencido:'#C0392B'}[ps.status]||'#888';
-  const sBg={activo:'#D4EDDA',pendiente:'#FFF3CD',completado:'#EEF5FF',vencido:'#FFF0F0'}[ps.status]||'#eee';
-  const sLbl={activo:'Activo',pendiente:'Pendiente',completado:'Completado',vencido:'Vencido'}[ps.status]||ps.status;
-  const dir=(ps.inmueble&&ps.inmueble.direccion)?ps.inmueble.direccion.split(',')[0]:'';
+  var dark=document.documentElement.classList.contains('dark-mode');
+  var sCol={activo:'#22C55E',pendiente:'#F59E0B',completado:'#3B82F6',vencido:'#EF4444'}[ps.status]||'#888';
+  var sLbl={activo:'Activo',pendiente:'Pendiente',completado:'Completado',vencido:'Vencido'}[ps.status]||ps.status;
+  var txtMain=dark?'#e8edf4':'#042C53';
+  var txtSub=dark?'#8AACCA':'#5C7A9A';
+  var bg=dark?'rgba(255,255,255,0.05)':'#fff';
+  var border=dark?'rgba(255,255,255,0.10)':'#DCE8F5';
   return'<div class="inm-card-btn" data-id="'+ps.id+'" onclick="_selectInmCard(this)"'
-    +' style="cursor:pointer;border-radius:10px;border:1px solid '+sCol+'44;border-left:3px solid '+sCol
-    +';padding:11px 13px;min-width:155px;max-width:190px;flex-shrink:0;transition:background .15s,box-shadow .15s;background:var(--card-bg,#fff);">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px;margin-bottom:5px;">'
+    +' style="cursor:pointer;display:flex;align-items:center;gap:9px;padding:8px 12px;border-radius:8px;'
+    +'border:.5px solid '+border+';border-left:3px solid '+sCol+';background:'+bg+';min-width:0;transition:all .15s;">'
+    +'<span style="width:7px;height:7px;border-radius:50%;background:'+sCol+';flex-shrink:0;"></span>'
+    +'<div style="flex:1;min-width:0;overflow:hidden;">'
+    +'<div style="display:flex;align-items:center;gap:6px;">'
     +'<span style="font-size:11px;font-weight:700;color:#185FA5;white-space:nowrap;">'+ps.folio+(ps.parentId!=null?' ↻':'')+'</span>'
-    +'<span style="font-size:9px;font-weight:600;color:'+sCol+';background:'+sBg+';padding:1px 7px;border-radius:8px;white-space:nowrap;">'+sLbl+'</span>'
+    +'<span style="font-size:10px;color:'+txtSub+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+ps.cliente.nombre+'</span>'
     +'</div>'
-    +'<p style="font-size:12px;font-weight:600;color:var(--text-main,#042C53);margin:0 0 3px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+ps.cliente.nombre+'</p>'
-    +(dir?'<p style="font-size:10px;color:#7A9AB8;margin:0 0 3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+dir+'</p>':'')
-    +'<p style="font-size:10px;color:#9CB5CC;margin:0;">'+formatDateShort(ps.fechaInicio)+' → '+formatDateShort(ps.fechaFin)+'</p>'
+    +'<span style="font-size:9px;color:'+sCol+';font-weight:600;">'+sLbl+'</span>'
+    +'</div>'
     +'</div>';
 }
 
@@ -6026,12 +6030,15 @@ function _buildInmCard(ps){
 function _selectInmCard(btn){
   const group=btn.closest('.inm-group');
   if(!group)return;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const bgDefault=dark?'rgba(255,255,255,0.05)':'#fff';
+  const bgActive=dark?'rgba(24,95,165,0.18)':'#EBF2FA';
   const id=parseInt(btn.dataset.id);
   const isActive=btn.classList.contains('inm-card-active');
-  group.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background='var(--card-bg,#fff)';});
+  group.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background=bgDefault;});
   const panel=group.querySelector('.inm-detail-wrap');
   if(isActive){if(panel)panel.style.display='none';_openInmRows.delete(id);return;}
-  btn.classList.add('inm-card-active');btn.style.boxShadow='0 2px 12px rgba(24,95,165,.18)';btn.style.background='var(--blue-light,#EBF2FA)';
+  btn.classList.add('inm-card-active');btn.style.boxShadow='0 2px 10px rgba(24,95,165,.18)';btn.style.background=bgActive;
   if(panel){
     const inner=group.querySelector('.inm-detail-inner');
     if(inner){
@@ -6039,9 +6046,8 @@ function _selectInmCard(btn){
       if(ps){
         const showActions=group.dataset.showActions==='1';
         inner.innerHTML=(showActions?buildInmDetail(ps,true):buildInmDetailSV(ps));
-        // Restore header label
         const hdrLabel=group.querySelector('.inm-detail-folio');
-        if(hdrLabel)hdrLabel.textContent=ps.folio+(ps.parentId!=null?' · Renovación':'')+' — '+ps.cliente.nombre;
+        if(hdrLabel)hdrLabel.textContent=ps.folio+(ps.parentId!=null?' \xB7 Renovaci\xF3n':'')+' — '+ps.cliente.nombre;
       }
     }
     panel.style.display='block';
@@ -6065,12 +6071,12 @@ function buildSupervisorGroup(sv,services,showActions){
       </div>
       ${zonasTxt?`<span style="font-size:10px;color:rgba(255,255,255,.55);">📍 ${zonasTxt}</span>`:''}
     </div>
-    <div style="padding:14px 16px 10px;">
-      <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">${cards}</div>
+    <div style="padding:12px 16px 10px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;">${cards}</div>
       <div class="inm-detail-wrap" style="display:none;margin-top:14px;border-top:.5px solid var(--blue-border,rgba(24,95,165,.18));padding-top:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
           <span class="inm-detail-folio" style="font-size:12px;font-weight:700;color:#185FA5;"></span>
-          <button onclick="const g=this.closest('.inm-group');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background='var(--card-bg,#fff)';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
+          <button onclick="const g=this.closest('.inm-group');const dk=document.documentElement.classList.contains('dark-mode');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background=dk?'rgba(255,255,255,0.05)':'#fff';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
         </div>
         <div class="inm-detail-inner"></div>
       </div>
@@ -6805,12 +6811,12 @@ function renderSVInmuebles(){
   }
   const cards=mine.map(_buildInmCard).join('');
   list.innerHTML=`<div class="inm-group" data-gid="sv-mine" data-show-actions="0" style="border:.5px solid var(--blue-border,#B5D4F4);border-radius:12px;overflow:hidden;">
-    <div style="padding:14px 16px 10px;">
-      <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;">${cards}</div>
+    <div style="padding:12px 16px 10px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px;">${cards}</div>
       <div class="inm-detail-wrap" style="display:none;margin-top:14px;border-top:.5px solid var(--blue-border,rgba(24,95,165,.18));padding-top:14px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
           <span class="inm-detail-folio" style="font-size:12px;font-weight:700;color:#185FA5;"></span>
-          <button onclick="const g=this.closest('.inm-group');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background='var(--card-bg,#fff)';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
+          <button onclick="const g=this.closest('.inm-group');const dk=document.documentElement.classList.contains('dark-mode');g.querySelectorAll('.inm-card-btn').forEach(b=>{b.classList.remove('inm-card-active');b.style.boxShadow='';b.style.background=dk?'rgba(255,255,255,0.05)':'#fff';});this.closest('.inm-detail-wrap').style.display='none';_openInmRows.clear();" style="font-size:11px;padding:3px 10px;border-radius:8px;border:.5px solid var(--blue-border,#B5D4F4);background:transparent;color:#5C7A9A;cursor:pointer;">✕ Cerrar</button>
         </div>
         <div class="inm-detail-inner"></div>
       </div>
