@@ -5500,14 +5500,31 @@ function renderPIServicios(){
       const stLbl={activo:'Activo',pendiente:'Pendiente',completado:'Completado',vencido:'Vencido'}[ps.status]||ps.status;
       const stBg={activo:'#D4EDDA',pendiente:'#FFF3CD',completado:'#EEF5FF',vencido:'#FFF0F0'}[ps.status]||'#eee';
       const stCol={activo:'#1A7A3B',pendiente:'#A05C00',completado:'#1A56DB',vencido:'#C0392B'}[ps.status]||'#333';
-      return`<div class="pi-svc-row">
-        <div class="pi-svc-dot" style="background:${stBg};color:${stCol};">${stLbl[0]}</div>
-        <div class="pi-svc-info">
-          <p>${ps.folio} · ${ps.tipo}</p>
-          <span>${ps.cliente.nombre} · ${ps.inmueble.tipo}, ${ps.inmueble.colonia}</span>
-          <span>📅 ${ps.frecuencia||'—'} · ⏰ ${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs${(ps.diasServicio&&ps.diasServicio.length)?' · 📆 '+_fmtDiasServicio(ps.diasServicio,'short'):''}</span>
+      const diasHtml=(ps.diasServicio&&ps.diasServicio.length)
+        ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">'
+          +ps.diasServicio.map(function(d){var n={lun:'Lunes',mar:'Martes',mie:'Mi\xE9rcoles',jue:'Jueves',vie:'Viernes',sab:'S\xE1bado',dom:'Domingo'}[d]||d;
+            return'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:rgba(24,95,165,0.12);color:#185FA5;">'+n+'</span>';}).join('')+'</div>'
+        :'';
+      return`<div class="pi-svc-row" style="flex-direction:column;align-items:stretch;gap:0;padding:14px 16px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div class="pi-svc-dot" style="background:${stBg};color:${stCol};flex-shrink:0;margin-top:2px;">${stLbl[0]}</div>
+          <div class="pi-svc-info" style="flex:1;min-width:0;">
+            <p style="margin-bottom:2px;">${ps.folio} · ${ps.tipo}</p>
+            <span>${ps.cliente.nombre} · ${ps.inmueble.tipo}, ${ps.inmueble.colonia}</span>
+          </div>
+          <span class="pi-svc-badge" style="background:${stBg};color:${stCol};flex-shrink:0;">${stLbl}</span>
         </div>
-        <span class="pi-svc-badge" style="background:${stBg};color:${stCol};">${stLbl}</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:.5px solid var(--blue-border,rgba(24,95,165,0.15));">
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:10px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;">Frecuencia</span>
+            <span style="font-size:12px;font-weight:600;color:var(--text-main,#042C53);text-transform:capitalize;">${ps.frecuencia||'—'}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <span style="font-size:10px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;">Horario</span>
+            <span style="font-size:12px;font-weight:600;color:var(--text-main,#042C53);">⏰ ${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</span>
+          </div>
+        </div>
+        ${diasHtml?'<div style="margin-top:8px;"><span style="font-size:10px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;">D\xEDas de servicio</span>'+diasHtml+'</div>':''}
       </div>`;}).join('')
     :'<p style="font-size:12px;color:#5C7A9A;text-align:center;padding:24px 0;">Sin servicios asignados aún.</p>';
   el.innerHTML=`
