@@ -1019,3 +1019,9 @@ select option {
   .header-urole { color: rgba(255,255,255,.55) !important; }
   .header-brand-name { color: #ffffff !important; }
 }
+
+/* ── Install banner dark mode ─── */
+.dark-mode .install-banner{
+  background:linear-gradient(135deg,#0e2540 0%,#1a3a6a 100%) !important;
+  box-shadow:0 4px 24px rgba(0,0,0,.45) !important;
+}

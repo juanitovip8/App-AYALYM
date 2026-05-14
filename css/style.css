@@ -2011,3 +2011,45 @@ textarea{resize:vertical;min-height:60px;}
 /* Ocultar botón de cierre nativo para que no ocupe espacio */
 .gm-style .gm-ui-hover-effect{top:2px!important;right:2px!important;opacity:.6;}
 .gm-style .gm-style-iw-tc{display:none!important;}
+
+/* ── Banner de instalación PWA ─────────────────────────── */
+.install-banner{
+  display:flex;align-items:flex-start;gap:14px;
+  background:linear-gradient(135deg,#042C53 0%,#185FA5 100%);
+  color:#fff;border-radius:16px;padding:18px 16px;margin:0 0 16px;
+  position:relative;box-shadow:0 4px 20px rgba(4,44,83,.25);
+  animation:ib-in .35s cubic-bezier(.22,1,.36,1) both;
+  transition:opacity .3s,transform .3s;
+}
+.install-banner-dark{
+  background:linear-gradient(135deg,#0e2540 0%,#1a3a6a 100%);
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+@keyframes ib-in{from{opacity:0;transform:translateY(-14px);}to{opacity:1;transform:none;}}
+.ib-icon{font-size:32px;flex-shrink:0;line-height:1;margin-top:2px;}
+.ib-body{flex:1;min-width:0;}
+.ib-title{font-size:15px;font-weight:700;margin:0 0 4px;color:#fff;}
+.ib-sub{font-size:12px;color:rgba(255,255,255,.8);margin:0 0 10px;}
+.ib-step{font-size:12px;color:rgba(255,255,255,.9);margin:0 0 5px;line-height:1.4;}
+.ib-step strong{color:#fff;}
+.ib-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center;}
+.ib-btn-main{
+  background:#fff;color:#042C53;border:none;border-radius:10px;
+  padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;
+  flex-shrink:0;transition:transform .15s,box-shadow .15s;
+}
+.ib-btn-main:active{transform:scale(.97);}
+.ib-btn-sec{
+  background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.35);
+  border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;
+}
+.ib-btn-dismiss{
+  background:none;color:rgba(255,255,255,.6);border:none;
+  font-size:11px;cursor:pointer;padding:4px 0;text-decoration:underline;
+}
+.ib-close{
+  position:absolute;top:10px;right:10px;background:rgba(255,255,255,.2);
+  border:none;color:#fff;border-radius:50%;width:24px;height:24px;
+  font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}

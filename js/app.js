@@ -443,6 +443,65 @@ async function installPWA(){
   }
 })();
 
+/* ── Banner de instalación prominente (se muestra tras el login) ── */
+function _showInstallBanner(){
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+  if(isStandalone)return; /* ya instalada */
+  if(document.getElementById('install-banner'))return;
+  const snoozeUntil=parseInt(localStorage.getItem('_installBannerSnooze')||'0');
+  if(Date.now()<snoozeUntil)return; /* descartado recientemente */
+
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isMobile=/android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  const dark=document.documentElement.classList.contains('dark-mode');
+
+  /* Contenido según plataforma */
+  let steps='';
+  let actionBtn='';
+  if(isIOS){
+    steps=`<p class="ib-step">1. Toca el botón <strong>Compartir</strong> ⬆️ en Safari</p>
+           <p class="ib-step">2. Elige <strong>"Agregar a pantalla de inicio"</strong></p>
+           <p class="ib-step">3. Toca <strong>"Agregar"</strong></p>`;
+    actionBtn=`<button class="ib-btn-main" onclick="_showIOSInstallModal()">Ver instrucciones</button>`;
+  } else if(_pwaPrompt){
+    steps=`<p class="ib-step">Toca <strong>"Instalar"</strong> para agregar AYALYM a tu pantalla de inicio y recibir notificaciones aunque el navegador esté cerrado.</p>`;
+    actionBtn=`<button class="ib-btn-main" onclick="installPWA();document.getElementById('install-banner')?.remove()">📲 Instalar ahora</button>`;
+  } else {
+    /* Desktop o Android sin prompt (Chrome ya la tiene instalada o bloqueada) */
+    steps=`<p class="ib-step">En Chrome: toca el ícono <strong>⊕</strong> en la barra de direcciones.</p>
+           <p class="ib-step">En Edge: toca <strong>···</strong> → <strong>"Instalar"</strong>.</p>`;
+    actionBtn=`<button class="ib-btn-main" onclick="installPWA();document.getElementById('install-banner')?.remove()">📲 Instalar</button>`;
+  }
+
+  const banner=document.createElement('div');
+  banner.id='install-banner';
+  banner.className='install-banner'+(dark?' install-banner-dark':'');
+  banner.innerHTML=`
+    <div class="ib-icon">📲</div>
+    <div class="ib-body">
+      <p class="ib-title">Instala AYALYM en tu dispositivo</p>
+      <p class="ib-sub">Recibe notificaciones en tiempo real aunque el navegador esté cerrado.</p>
+      ${steps}
+      <div class="ib-actions">
+        ${actionBtn}
+        <button class="ib-btn-sec" onclick="_snoozeInstallBanner(7)">Ahora no</button>
+        <button class="ib-btn-dismiss" onclick="_snoozeInstallBanner(365)">No mostrar</button>
+      </div>
+    </div>
+    <button class="ib-close" onclick="_snoozeInstallBanner(7)" title="Cerrar">✕</button>`;
+
+  /* Insertar al inicio del contenido activo */
+  const activeRole=document.querySelector('.role-section[style*="block"],.role-section:not([style*="none"])');
+  if(activeRole)activeRole.prepend(banner);
+  else document.body.prepend(banner);
+}
+
+function _snoozeInstallBanner(days){
+  localStorage.setItem('_installBannerSnooze', Date.now()+days*86400000);
+  const b=document.getElementById('install-banner');
+  if(b){b.style.opacity='0';b.style.transform='translateY(-12px)';setTimeout(()=>b.remove(),300);}
+}
+
 /* VAPID public key (debe coincidir con la del servidor) */
 const _VAPID_PUBLIC='BODy9QBNnNx_TyTwD62uDqYfszR9dBtz_qO6umCLHcqUHPza6cuJIj_9enoiY-wdR2L6JLQWtjmbUsjL7mzHRZ8';
 
@@ -1243,6 +1302,8 @@ function launchApp(role,nombre,zona){
   }
   /* ── Inicializar chat flotante ── */
   setTimeout(initChatFab, 200);
+  /* ── Banner instalación PWA ── */
+  setTimeout(_showInstallBanner, 3000);
 }
 
 function doLogout(){
