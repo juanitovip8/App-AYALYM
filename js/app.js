@@ -6767,7 +6767,13 @@ function createPropertyService(){
     if(USERS.find(u=>u.email===ciEmail)){
       /* Correo ya registrado — solo vincular contrato */
       const existCI=CLIENTS_INM.find(c=>c.email===ciEmail);
-      if(existCI){existCI.contratoId=newId;PROPERTY_SERVICES[PROPERTY_SERVICES.length-1].clienteInmId=existCI.id;}
+      if(existCI){
+        /* Solo actualizar contratoId si no tiene uno todavía (primer contrato) */
+        if(existCI.contratoId==null)existCI.contratoId=newId;
+        /* clienteInmId en el PS es la fuente principal para múltiples contratos */
+        PROPERTY_SERVICES[PROPERTY_SERVICES.length-1].clienteInmId=existCI.id;
+        fbSaveClientsInm();
+      }
       showToast('amber','ℹ️',`Correo ya registrado — contrato vinculado a ${ciEmail}`);
     }else{
       const ciNewId=CLIENTS_INM.length?Math.max(...CLIENTS_INM.map(c=>c.id))+1:0;
@@ -6887,26 +6893,83 @@ function svUpdatePropStatus(id,status){
 /* ── helper ── */
 function _cinmData(){
   const ci=CLIENTS_INM[currentClientInmId];
-  const ps=ci?PROPERTY_SERVICES.find(p=>p.id===ci.contratoId):null;
-  return{ci,ps};
+  if(!ci) return{ci:null,ps:null,psList:[]};
+  /* Buscar todos los contratos por clienteInmId (fuente principal) */
+  let psList=PROPERTY_SERVICES.filter(p=>p.clienteInmId===ci.id);
+  /* Retrocompatibilidad: si no hay ninguno por clienteInmId, usar contratoId */
+  if(!psList.length&&ci.contratoId!=null){
+    const leg=PROPERTY_SERVICES.find(p=>p.id===ci.contratoId);
+    if(leg) psList=[leg];
+  }
+  /* Contrato activo: usar _cinmActivePsId si es válido, si no el primero */
+  const ps=(_cinmActivePsId!=null?psList.find(p=>p.id===_cinmActivePsId):null)||psList[0]||null;
+  return{ci,ps,psList};
 }
 function _cinmStatusClass(s){return{activo:'cinm-st-activo',pendiente:'cinm-st-pendiente',vencido:'cinm-st-vencido',completado:'cinm-st-vencido'}[s]||'cinm-st-pendiente';}
 function _cinmStatusLabel(s){return{activo:'Activo',pendiente:'Pendiente',vencido:'Vencido',completado:'Completado'}[s]||s;}
 function _cinmFreqLabel(f){return{diaria:'Diaria',semanal:'Semanal',quincenal:'Quincenal',mensual:'Mensual','única':'Única'}[f]||f;}
 
+/* ── selector de inmueble cuando hay más de uno ── */
+function _cinmPsSelector(psList,activeId){
+  if(psList.length<=1)return'';
+  return`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+    ${psList.map(p=>`<button onclick="_cinmActivePsId=${p.id};renderClienteInmInicio();renderClienteInmContrato();renderClienteInmReportes();renderClienteInmAsistencias();"
+      style="font-size:11px;padding:5px 12px;border-radius:20px;border:1.5px solid ${p.id===activeId?'#042C53':'#B5D4F4'};
+      background:${p.id===activeId?'#042C53':'#fff'};color:${p.id===activeId?'#fff':'#042C53'};
+      font-weight:${p.id===activeId?'700':'500'};cursor:pointer;">
+      🏢 ${p.folio}${p.inmueble?.direccion?' — '+(p.inmueble.direccion.split(',')[0]):''}
+    </button>`).join('')}
+  </div>`;
+}
+
 /* ── INICIO ── */
 function renderClienteInmInicio(){
-  const {ci,ps}=_cinmData();
+  const {ci,ps,psList}=_cinmData();
   const el=document.getElementById('cinm-inicio-content');
   if(!el)return;
   if(!ci){el.innerHTML='<div class="card"><p class="csub">Sin datos de usuario.</p></div>';return;}
-  if(!ps){el.innerHTML=`<div class="card"><p class="ctitle">Bienvenida, ${ci.nombre.split(' ')[0]} 👋</p><p class="csub">${ci.empresa}</p><div style="text-align:center;padding:2rem;"><span style="font-size:32px;">📄</span><p style="font-size:13px;color:#185FA5;margin-top:8px;">Sin contrato asignado aún.</p></div></div>`;return;}
+  if(!psList.length){el.innerHTML=`<div class="card"><p class="ctitle">Bienvenida, ${ci.nombre.split(' ')[0]} 👋</p><p class="csub">${ci.empresa}</p><div style="text-align:center;padding:2rem;"><span style="font-size:32px;">📄</span><p style="font-size:13px;color:#185FA5;margin-top:8px;">Sin contrato asignado aún.</p></div></div>`;return;}
+
+  const selector=_cinmPsSelector(psList,ps?.id);
+
+  /* Si hay múltiples inmuebles y ninguno activo seleccionado, mostrar resumen de todos */
+  if(psList.length>1&&_cinmActivePsId==null){
+    const inmCards=psList.map(p=>{
+      const reps=(p.reportes||[]).length;
+      const personal=PERSONAL_INM.filter(x=>x.activo&&x.serviciosAsignados.includes(p.id)).length;
+      return`<div onclick="_cinmActivePsId=${p.id};renderClienteInmInicio();renderClienteInmContrato();renderClienteInmReportes();renderClienteInmAsistencias();"
+        style="cursor:pointer;border:1.5px solid #B5D4F4;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;background:#F7FBFF;transition:border-color .2s;"
+        onmouseover="this.style.borderColor='#042C53'" onmouseout="this.style.borderColor='#B5D4F4'">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;font-weight:700;color:#042C53;">📄 ${p.folio}</span>
+          <span class="cinm-status-badge ${_cinmStatusClass(p.status)}">${_cinmStatusLabel(p.status)}</span>
+        </div>
+        <p style="font-size:12px;color:#1C2B3A;margin:0;">🏢 ${p.inmueble?.direccion||'—'}</p>
+        <p style="font-size:11px;color:#5C7A9A;margin:0;">${p.tipo} · ${_cinmFreqLabel(p.frecuencia)} · ${reps} reporte${reps!==1?'s':''} · ${personal} personal</p>
+      </div>`;
+    }).join('');
+    el.innerHTML=`<div class="card">
+      <p class="ctitle" style="margin-bottom:2px;">Bienvenida, ${ci.nombre.split(' ')[0]} 👋</p>
+      <p class="csub" style="margin-bottom:14px;">${ci.empresa} · ${psList.length} inmuebles</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">${inmCards}</div>
+    </div>`;
+    return;
+  }
+
+  if(!ps) return;
   const sv=SUPERVISORS.find(s=>s.id===ps.supervisorId);
   const personal=PERSONAL_INM.filter(p=>p.activo&&p.serviciosAsignados.includes(ps.id));
   const reps=(ps.reportes||[]).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
   const lastRep=reps[0];
   const navBtn3=`document.querySelectorAll('#nav-cliente_inm .bnav-btn')[2]`;
   el.innerHTML=`
+  ${psList.length>1?`<div class="card" style="padding:12px 16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <p style="font-size:12px;font-weight:600;color:#5C7A9A;margin:0;">🏢 Seleccionar inmueble</p>
+      <button onclick="_cinmActivePsId=null;renderClienteInmInicio();" style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid #B5D4F4;background:#fff;color:#185FA5;cursor:pointer;">← Ver todos</button>
+    </div>
+    ${selector}
+  </div>`:''}
   <div class="card">
     <div class="cinm-welcome-hdr">
       <div>
@@ -6971,12 +7034,13 @@ function renderClienteInmInicio(){
 
 /* ── CONTRATO ── */
 function renderClienteInmContrato(){
-  const {ci,ps}=_cinmData();
+  const {ci,ps,psList}=_cinmData();
   const el=document.getElementById('cinm-contrato-content');
   if(!el)return;
   if(!ps){el.innerHTML='<div class="card"><p class="ctitle">Sin contrato asignado</p><p class="csub">Contacta al administrador.</p></div>';return;}
+  const selector=psList.length>1?`<div class="card" style="padding:12px 16px;">${_cinmPsSelector(psList,ps.id)}</div>`:'';
   const cs={firmado:'✅ Firmado',por_firmar:'⏳ Por firmar',sin_contrato:'📄 Sin contrato'}[ps.contratoStatus]||ps.contratoStatus;
-  el.innerHTML=`<div class="card">
+  el.innerHTML=selector+`<div class="card">
     <div class="cinm-contract-header">
       <div><p class="ctitle" style="margin-bottom:2px;">${ps.folio}</p><p class="csub" style="margin-bottom:0;">${ps.tipo}</p></div>
       <span class="cinm-status-badge ${_cinmStatusClass(ps.status)}">${_cinmStatusLabel(ps.status)}</span>
@@ -7018,6 +7082,16 @@ function renderClienteInmContrato(){
     <p class="cinm-section-title">📝 Notas del servicio</p>
     <div style="background:#EEF5FF;border-radius:8px;padding:10px 12px;font-size:13px;color:#042C53;line-height:1.6;">${ps.notas}</div>`:''}
   </div>`;
+}
+
+/* ── Inmueble activo cuando el cliente tiene más de uno ── */
+let _cinmActivePsId=null;
+function _setCinmActivePs(id){
+  _cinmActivePsId=id;
+  renderClienteInmInicio();
+  renderClienteInmContrato();
+  renderClienteInmReportes();
+  renderClienteInmAsistencias();
 }
 
 /* ── REPORTES cliente_inm ── */
@@ -7068,10 +7142,11 @@ function applyCinmRptRango(){
 }
 
 function renderClienteInmReportes(){
-  const {ci,ps}=_cinmData();
+  const {ci,ps,psList}=_cinmData();
   const el=document.getElementById('cinm-reportes-content');
   if(!el)return;
   if(!ps){el.innerHTML='<div class="card"><p class="ctitle">Sin contrato asignado</p></div>';return;}
+  const selector=psList.length>1?`<div class="card" style="padding:12px 16px;">${_cinmPsSelector(psList,ps.id)}</div>`:'';
   const allReps=(ps.reportes||[]).slice().sort((a,b)=>b.fecha.localeCompare(a.fecha));
   const {filtered,label}=_cinmGetFilteredReps(allReps);
   const tabStyle=(id)=>_cinmRptFilter===id
@@ -7105,7 +7180,7 @@ function renderClienteInmReportes(){
       ${thumbs?`<div class="cinm-fotos-grid" style="margin-top:6px;">${thumbs}</div>`:''}
     </div>`;
   }).join(''):`<div style="text-align:center;padding:1.8rem 1rem;"><span style="font-size:32px;">📋</span><p style="font-size:12px;color:#185FA5;margin-top:8px;">Sin reportes en este periodo.</p></div>`;
-  el.innerHTML=`<div class="card">
+  el.innerHTML=selector+`<div class="card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
       <p class="ctitle" style="margin:0;">📋 Reportes de visita</p>
       ${filtered.length?`<button class="btn-sm" style="background:#042C53;color:#fff;font-size:11px;padding:4px 11px;" onclick="downloadClienteInmPeriodoPDF(${ps.id})">⬇️ PDF</button>`:''}
@@ -7350,10 +7425,11 @@ function _renderAsisPDF(asis,workerName,label,ps,logoB64){
 }
 
 function renderClienteInmAsistencias(){
-  const {ci,ps}=_cinmData();
+  const {ci,ps,psList}=_cinmData();
   const el=document.getElementById('cinm-asistencias-content');
   if(!el)return;
   if(!ps){el.innerHTML='<div class="card"><p class="ctitle">Sin contrato asignado</p></div>';return;}
+  const selector=psList.length>1?`<div class="card" style="padding:12px 16px;">${_cinmPsSelector(psList,ps.id)}</div>`:'';
 
   /* ── Sección: asistencias del supervisor ── */
   const svAsts=SUPERVISOR_ASISTENCIAS.filter(a=>a.servicioId===ps.id).sort((a,b)=>b.fecha.localeCompare(a.fecha));
@@ -7382,7 +7458,7 @@ function renderClienteInmAsistencias(){
 
   const personal=PERSONAL_INM.filter(p=>p.serviciosAsignados.includes(ps.id));
   if(!personal.length){
-    el.innerHTML=svSection+'<div class="card"><p class="ctitle">Asistencias del personal</p><div style="text-align:center;padding:2.5rem 1rem;"><span style="font-size:36px;">👷</span><p style="font-size:13px;color:#185FA5;margin-top:10px;">Sin personal asignado a este contrato.</p></div></div>';
+    el.innerHTML=selector+svSection+'<div class="card"><p class="ctitle">Asistencias del personal</p><div style="text-align:center;padding:2.5rem 1rem;"><span style="font-size:36px;">👷</span><p style="font-size:13px;color:#185FA5;margin-top:10px;">Sin personal asignado a este contrato.</p></div></div>';
     return;
   }
 
@@ -7390,7 +7466,7 @@ function renderClienteInmAsistencias(){
   if(_attTabId===null||!personal.find(p=>p.id===_attTabId)) _attTabId=personal[0].id;
 
   // Renderizar el contenedor con pestañas + panel
-  el.innerHTML=svSection+`
+  el.innerHTML=selector+svSection+`
     <div class="card att-card" style="padding-bottom:8px;">
       <p class="ctitle" style="margin-bottom:12px;">🕐 Asistencias del personal</p>
       <div class="att-tabs" id="att-tab-bar">
