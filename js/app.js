@@ -6544,6 +6544,8 @@ function openInmEdit(id){
   set('ie-m2',ps.inmueble.m2);
   set('ie-direccion',ps.inmueble.direccion);
   set('ie-colonia',ps.inmueble.colonia);
+  set('ie-municipio',ps.inmueble.municipio||'');
+  set('ie-estado',ps.inmueble.estado||'');
   // Servicio
   set('ie-svc-tipo',ps.tipo);
   set('ie-svc-desc',ps.descripcion);
@@ -6580,6 +6582,8 @@ function saveInmEdit(){
   /* Capturar dirección anterior para detectar cambio */
   const _oldDir=ps.inmueble.direccion;
   const _oldCol=ps.inmueble.colonia;
+  const _oldMun=ps.inmueble.municipio;
+  const _oldEst=ps.inmueble.estado;
   // Cliente
   ps.cliente.nombre=g('ie-cli-nombre')||ps.cliente.nombre;
   ps.cliente.contacto=g('ie-cli-contacto');
@@ -6594,6 +6598,8 @@ function saveInmEdit(){
   ps.inmueble.m2=parseInt(document.getElementById('ie-m2').value)||ps.inmueble.m2;
   ps.inmueble.direccion=g('ie-direccion');
   ps.inmueble.colonia=g('ie-colonia');
+  ps.inmueble.municipio=g('ie-municipio');
+  ps.inmueble.estado=g('ie-estado');
   // Servicio
   ps.tipo=g('ie-svc-tipo')||ps.tipo;
   ps.descripcion=g('ie-svc-desc');
@@ -6620,7 +6626,7 @@ function saveInmEdit(){
   // Notas
   ps.notas=g('ie-notas');
   /* Si cambió la dirección, limpiar coords viejas y re-geocodificar */
-  const _dirChanged=_oldDir!==ps.inmueble.direccion||_oldCol!==ps.inmueble.colonia;
+  const _dirChanged=_oldDir!==ps.inmueble.direccion||_oldCol!==ps.inmueble.colonia||_oldMun!==ps.inmueble.municipio||_oldEst!==ps.inmueble.estado;
   if(_dirChanged){ps.inmueble.lat=null;ps.inmueble.lng=null;}
   fbSavePropertyServices(); /* persistir cambios */
   closeInmEdit();
@@ -6835,6 +6841,8 @@ function _haversineDistance(lat1,lng1,lat2,lng2){
 async function _geocodeInmueble(ps){
   const dir=(ps.inmueble.direccion||'').trim();
   const col=(ps.inmueble.colonia||'').trim();
+  const mun=(ps.inmueble.municipio||'').trim();
+  const est=(ps.inmueble.estado||'').trim();
 
   /* Esperar a que cargue la API de Google Maps JS (hasta 9 seg) */
   for(let i=0;i<30;i++){
@@ -6860,12 +6868,18 @@ async function _geocodeInmueble(ps){
   }
 
   let loc=null;
-  /* E1: dirección + colonia + CDMX */
-  loc=await _tryAddr([dir,col,'Ciudad de México','México'].filter(Boolean).join(', '));
-  /* E2: solo dirección + CDMX */
-  if(!loc&&dir) loc=await _tryAddr(`${dir}, Ciudad de México, México`);
-  /* E3: colonia + CDMX (al menos ubica la zona) */
-  if(!loc&&col) loc=await _tryAddr(`${col}, Ciudad de México, México`);
+  /* E1: dirección completa + municipio + estado + México (más preciso) */
+  if(dir&&mun&&est) loc=await _tryAddr([dir,col,mun,est,'México'].filter(Boolean).join(', '));
+  /* E2: dirección + colonia + municipio + México */
+  if(!loc&&dir&&mun) loc=await _tryAddr([dir,col,mun,'México'].filter(Boolean).join(', '));
+  /* E3: dirección tal como está guardada + México (la dirección puede ser completa) */
+  if(!loc&&dir) loc=await _tryAddr(`${dir}, México`);
+  /* E4: dirección + colonia + México */
+  if(!loc&&dir&&col) loc=await _tryAddr([dir,col,'México'].filter(Boolean).join(', '));
+  /* E5: solo colonia + municipio/estado como último recurso para ubicar la zona */
+  if(!loc&&col&&(mun||est)) loc=await _tryAddr([col,mun,est,'México'].filter(Boolean).join(', '));
+  /* E6: solo colonia + México */
+  if(!loc&&col) loc=await _tryAddr(`${col}, México`);
 
   if(loc){
     ps.inmueble.lat=loc.lat();
@@ -7042,7 +7056,7 @@ function toggleTipoOtro(selId, inputId){
 }
 
 function clearPropForm(){
-  ['inm-cli-nombre','inm-cli-contacto','inm-cli-tel','inm-cli-email','inm-cli-pass','inm-direccion','inm-colonia',
+  ['inm-cli-nombre','inm-cli-contacto','inm-cli-tel','inm-cli-email','inm-cli-pass','inm-direccion','inm-colonia','inm-municipio','inm-estado',
    'inm-svc-tipo','inm-svc-desc','inm-notas','inm-fiscal-razon','inm-fiscal-rfc',
    'inm-fiscal-regimen','inm-fiscal-cfdi','inm-fiscal-dir','inm-fecha-inicio','inm-fecha-fin','inm-pago-monto'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.value='';
@@ -7076,7 +7090,7 @@ function createPropertyService(){
     descripcion:_gv('inm-svc-desc'),
     cliente:{nombre,contacto:_gv('inm-cli-contacto'),tel:_gv('inm-cli-tel'),email:_gv('inm-cli-email')},
     inmueble:{tipo:(()=>{const _s=(document.getElementById('inm-tipo')||{}).value||'Oficina';return _s==='Otro'?(_gv('inm-tipo-otro')||'Otro'):_s;})(),
-              direccion:dir,colonia:_gv('inm-colonia'),m2},
+              direccion:dir,colonia:_gv('inm-colonia'),municipio:_gv('inm-municipio'),estado:_gv('inm-estado'),m2},
     frecuencia:(document.getElementById('inm-frecuencia')||{}).value||'única',
     fechaInicio,
     fechaFin:_gv('inm-fecha-fin'),
