@@ -1363,7 +1363,7 @@ function navGo(role,sec,btn){
   if(role==='admin'&&sec==='soporte-admin'){renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');renderConvs();}
   if(role==='admin'&&sec==='resumen'){renderAdminResumen();renderTopCards();renderAdminKPIs();}
   if(role==='admin'&&sec==='inmuebles'){switchPropTab('all',document.getElementById('inm-ftab-all'));switchInmMainTab('contratos',document.getElementById('inm-main-tab-contratos'));renderPropServices('all');populatePropSupervisorSelect();}
-  if(role==='admin'&&sec==='personal-inm'){renderPersonalInmAdmin();renderAdminInsumos();}
+  if(role==='admin'&&sec==='personal-inm')renderPersonalInmAdmin();
   if(role==='admin'&&sec==='usuarios'){renderUsersPanel();renderSupervisorsPanel();}
   if(role==='admin'&&sec==='supervisores')renderSupervisorsPanel();
   if(role==='admin'&&sec==='facturacion')renderFacturacionAdmin();
@@ -2012,7 +2012,8 @@ function renderUsersPanel(filter){
             </div>
             <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn-sm" style="flex:1;" onclick="saveAdminProfile(${i})">Guardar</button><button class="btn-sec" onclick="toggleEditUser(${i})">Cancelar</button></div>`
           :`<div class="frow"><div><label>Nombre</label><input type="text" id="ue-nombre-${i}" value="${u.nombre}"></div><div><label>Teléfono</label><input type="text" id="ue-tel-${i}" value="${u.tel||''}"></div></div>
-            <div class="frow"><div><label>Correo</label><input type="email" id="ue-email-${i}" value="${u.email}"></div><div><label>Rol</label><select id="ue-rol-${i}"><option value="admin" ${u.rol==='admin'?'selected':''}>Administrador</option><option value="supervisor" ${u.rol==='supervisor'?'selected':''}>Supervisor</option><option value="trabajador" ${u.rol==='trabajador'?'selected':''}>Trabajador</option><option value="cliente" ${u.rol==='cliente'?'selected':''}>Cliente</option><option value="cliente_inm" ${u.rol==='cliente_inm'?'selected':''}>Cliente Inmuebles</option><option value="personal_inm" ${u.rol==='personal_inm'?'selected':''}>Personal Inmuebles</option></select></div></div>
+            <div class="frow"><div><label>Correo</label><input type="email" id="ue-email-${i}" value="${u.email}"></div><div><label>Rol</label><select id="ue-rol-${i}" onchange="togglePIEditFields(${i},this.value)"><option value="admin" ${u.rol==='admin'?'selected':''}>Administrador</option><option value="supervisor" ${u.rol==='supervisor'?'selected':''}>Supervisor</option><option value="trabajador" ${u.rol==='trabajador'?'selected':''}>Trabajador</option><option value="cliente" ${u.rol==='cliente'?'selected':''}>Cliente</option><option value="cliente_inm" ${u.rol==='cliente_inm'?'selected':''}>Cliente Inmuebles</option><option value="personal_inm" ${u.rol==='personal_inm'?'selected':''}>Personal Inmuebles</option></select></div></div>
+            ${(()=>{const pi=PERSONAL_INM.find(p=>p.email===u.email);return u.rol==='personal_inm'?`<div id="ue-pi-fields-${i}" class="frow" style="flex-direction:column;gap:10px;"><div><label>Puesto</label><select id="ue-pi-puesto-${i}"><option value="aux_limpieza" ${(pi?.puesto||'aux_limpieza')==='aux_limpieza'?'selected':''}>Aux. de limpieza</option><option value="pulidor" ${pi?.puesto==='pulidor'?'selected':''}>Pulidor</option><option value="encargado" ${pi?.puesto==='encargado'?'selected':''}>Encargado de servicio</option></select></div><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;"><input type="checkbox" id="ue-pi-insumos-${i}" ${pi?.puedeInsumos?'checked':''} style="width:15px;height:15px;accent-color:#042C53;">📦 Panel de solicitud de insumos habilitado</label></div>`:`<div id="ue-pi-fields-${i}" style="display:none;"></div>`;})()}
             <div style="border-top:.5px solid #B5D4F4;margin-top:10px;padding-top:10px;">
               <p style="font-size:11px;font-weight:600;color:#042C53;margin-bottom:6px;">🔑 Contraseña temporal <span style="font-weight:400;color:#5A8CB0;">(opcional — dejar vacío para no cambiar)</span></p>
               <div class="frow"><div style="grid-column:1/-1;"><label>Nueva contraseña</label><input type="password" id="ue-tmppass-${i}" placeholder="Mínimo 8 caracteres"></div></div>
@@ -2204,6 +2205,16 @@ function deleteUser(i){
 }
 function filterUsers(role,btn){userRoleFilter=role;document.querySelectorAll('.urf-btn').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderUsersPanel(role);}
 function toggleEditUser(i){const el=document.getElementById('uep-'+i);if(el)el.classList.toggle('open');}
+function togglePIEditFields(i,rol){
+  const el=document.getElementById('ue-pi-fields-'+i);if(!el)return;
+  if(rol==='personal_inm'){
+    const pi=PERSONAL_INM.find(p=>p.email===(USERS[i]?.email||''));
+    el.style.display='';
+    el.innerHTML=`<div><label>Puesto</label><select id="ue-pi-puesto-${i}"><option value="aux_limpieza" ${(pi?.puesto||'aux_limpieza')==='aux_limpieza'?'selected':''}>Aux. de limpieza</option><option value="pulidor" ${pi?.puesto==='pulidor'?'selected':''}>Pulidor</option><option value="encargado" ${pi?.puesto==='encargado'?'selected':''}>Encargado de servicio</option></select></div><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;"><input type="checkbox" id="ue-pi-insumos-${i}" ${pi?.puedeInsumos?'checked':''} style="width:15px;height:15px;accent-color:#042C53;">📦 Panel de solicitud de insumos habilitado</label>`;
+  } else {
+    el.style.display='none';el.innerHTML='';
+  }
+}
 function saveUser(i){
   if(USERS[i].rolProtegido===true){showToast('amber','⚠️','El administrador principal no puede ser editado');return;}
   const nombre=document.getElementById('ue-nombre-'+i).value.trim(),email=document.getElementById('ue-email-'+i).value.trim(),tel=document.getElementById('ue-tel-'+i).value.trim(),rol=document.getElementById('ue-rol-'+i).value;
@@ -2236,6 +2247,16 @@ function saveUser(i){
       SUPERVISORS.push({id:svNewId,name:nombre,initials:svInit,zonas:[],assignedWorkers:[],photo:null});
     } else if(svExists.name!==nombre){svExists.name=nombre;svExists.initials=nombre.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();}
     fbSaveSupervisors();
+  }
+  /* ── Si es personal_inm, guardar puesto y puedeInsumos en PERSONAL_INM ── */
+  if(rol==='personal_inm'){
+    const pi=PERSONAL_INM.find(p=>p.email===email||p.email===USERS[i].email);
+    if(pi){
+      const puesto=(document.getElementById('ue-pi-puesto-'+i)||{}).value||pi.puesto||'aux_limpieza';
+      const puedeInsumos=!!(document.getElementById('ue-pi-insumos-'+i)||{}).checked;
+      pi.puesto=puesto;pi.puedeInsumos=puedeInsumos;
+      fbSavePersonalInm();
+    }
   }
   document.getElementById('uep-'+i).classList.remove('open');
   renderUsersPanel();
@@ -8317,9 +8338,12 @@ function switchInmMainTab(tab,btn){
   if(btn)btn.classList.add('active');
   const panContratos=document.getElementById('inm-panel-contratos');
   const panClientes=document.getElementById('inm-panel-clientes');
+  const panInsumos=document.getElementById('inm-panel-insumos');
   if(panContratos)panContratos.style.display=tab==='contratos'?'':'none';
   if(panClientes)panClientes.style.display=tab==='clientes'?'':'none';
+  if(panInsumos)panInsumos.style.display=tab==='insumos'?'':'none';
   if(tab==='clientes'){populateCiContratoSelect();renderAdminClientesInm();}
+  if(tab==='insumos')renderAdminInsumos();
 }
 
 function toggleCiForm(){

@@ -1138,6 +1138,7 @@
         <div class="msg-tabs" style="margin-bottom:14px;">
           <button class="msg-tab active" id="inm-main-tab-contratos" onclick="switchInmMainTab('contratos',this)">📋 Contratos</button>
           <button class="msg-tab" id="inm-main-tab-clientes" onclick="switchInmMainTab('clientes',this)">👤 Clientes</button>
+          <button class="msg-tab" id="inm-main-tab-insumos" onclick="switchInmMainTab('insumos',this)">📦 Solicitudes de Insumos</button>
         </div>
 
         <!-- PANEL: Contratos (contenido original) -->
@@ -1259,6 +1260,12 @@
           <div id="admin-clients-inm-list" style="margin-top:10px;"></div>
         </div><!-- /inm-panel-clientes -->
 
+        <!-- PANEL: Solicitudes de Insumos -->
+        <div id="inm-panel-insumos" style="display:none;">
+          <p class="csub">Solicitudes de insumos realizadas por el personal de inmuebles.</p>
+          <div id="admin-insumos-content"></div>
+        </div><!-- /inm-panel-insumos -->
+
       </div>
     </div>
 
@@ -1304,12 +1311,6 @@
               <button class="btn-sec" style="flex:1;" onclick="togglePiForm()">Cancelar</button>
             </div>
           </div>
-        </div>
-
-        <!-- Panel insumos admin -->
-        <div style="margin-top:16px;border-top:.5px solid var(--blue-border,#DCE8F5);padding-top:14px;">
-          <p class="ctitle" style="font-size:13px;margin:0 0 10px;">📦 Solicitudes de insumos</p>
-          <div id="admin-insumos-content"></div>
         </div>
 
         <!-- Buscador de personal -->
