@@ -1223,20 +1223,12 @@ function launchApp(role,nombre,zona){
     // ── Mostrar foto del supervisor en header si existe ──
     const svHeaderAv=document.getElementById('header-av');
     if(svHeaderAv&&currentSupervisorRef&&currentSupervisorRef.photo){svHeaderAv.innerHTML=`<img src="${currentSupervisorRef.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;svHeaderAv.style.fontSize='0';}
-    renderSVWorkers();renderSVChatSelector();renderSVNotes();renderSupervisorResumen();
-    renderChatBox('sv-a','sv','chat-sv-a');
-    renderChatBox('c-t','sv','chat-sv-ct');
-    renderChatBox('c-a','sv','chat-sv-ca');
-    renderSVAstHoy();renderSVInmuebles();
+    renderSVWorkers();renderSupervisorResumen(); /* Solo sección visible + header stats */
     _startAstListeners('supervisor');
   }
   if(role==='admin'){
-    renderZonasAdmin();renderStaffList('all');renderLowReviews();renderRevBreakdown();renderUrgencias();
-    renderSvcDurationList();renderCleaningTypesAdmin();drawMap('admin-map-svg',WORKERS);renderWorkerLocList();
-    renderUsersPanel('all');renderQReport();renderConvs();renderSupervisorsPanel();renderAdminResumen();
-    renderAdminNotes();renderTopCards();renderAdminKPIs();renderPropServices('all');
-    renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');
-    populatePropSupervisorSelect();
+    /* Solo renderizar la sección visible (resumen). Las demás se renderizan al abrirlas via navGo. */
+    renderAdminResumen();renderTopCards();renderAdminKPIs();
     _startAstListeners('admin');
   }
   if(role==='personal_inm'){
@@ -1301,18 +1293,22 @@ function navGo(role,sec,btn){
   if(role==='supervisor'&&sec==='resumen')renderSupervisorResumen();
   if(role==='supervisor'&&sec==='mapa-sv'){setTimeout(()=>renderSVMap(),50);}
   else if(_svMapListener&&role==='supervisor'){_stopSVMapListener();}
+  if(role==='supervisor'&&sec==='trabajadores')renderSVWorkers();
   if(role==='supervisor'&&sec==='eval-sv')renderSVEval();
   if(role==='supervisor'&&sec==='mensajes-sv'){renderSVChatSelector();renderChatBox('sv-a','sv','chat-sv-a');renderChatBox('c-t','sv','chat-sv-ct');renderChatBox('c-a','sv','chat-sv-ca');}
   if(role==='admin'&&sec==='mapa'){setTimeout(()=>renderAdminMapa(),50);}
   else if(_adminMapListener&&role==='admin'){_stopAdminMapListener();}
   if(role==='admin'&&sec==='notas-admin')renderAdminNotes();
-  if(role==='admin'&&sec==='soporte-admin'){renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');}
-  if(role==='admin'&&sec==='resumen'){renderTopCards();renderAdminKPIs();}
-  if(role==='admin'&&sec==='inmuebles'){switchPropTab('all',document.getElementById('inm-ftab-all'));switchInmMainTab('contratos',document.getElementById('inm-main-tab-contratos'));}
+  if(role==='admin'&&sec==='soporte-admin'){renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');renderConvs();}
+  if(role==='admin'&&sec==='resumen'){renderAdminResumen();renderTopCards();renderAdminKPIs();}
+  if(role==='admin'&&sec==='inmuebles'){switchPropTab('all',document.getElementById('inm-ftab-all'));switchInmMainTab('contratos',document.getElementById('inm-main-tab-contratos'));renderPropServices('all');populatePropSupervisorSelect();}
   if(role==='admin'&&sec==='personal-inm')renderPersonalInmAdmin();
   if(role==='admin'&&sec==='usuarios'){renderUsersPanel();renderSupervisorsPanel();}
   if(role==='admin'&&sec==='supervisores')renderSupervisorsPanel();
   if(role==='admin'&&sec==='facturacion')renderFacturacionAdmin();
+  if(role==='admin'&&sec==='personal')renderStaffList('all');
+  if(role==='admin'&&sec==='quincenas')renderQReport();
+  if(role==='admin'&&sec==='servicios'){renderZonasAdmin();renderUrgencias();renderSvcDurationList();renderCleaningTypesAdmin();}
   if(role==='supervisor'&&sec==='asistencias-sv')renderSVAstHoy();
   if(role==='supervisor'&&sec==='inmuebles-sv')renderSVInmuebles();
   // Personal Inmuebles
