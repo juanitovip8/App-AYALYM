@@ -1288,6 +1288,7 @@
           </div>
           <div class="inm-form-body" id="pi-form-body">
             <div class="frow"><div><label>Nombre completo</label><input type="text" id="pi-nombre" placeholder="Pedro Ramírez"></div><div><label>Iniciales</label><input type="text" id="pi-initials" placeholder="PR" maxlength="2" style="text-transform:uppercase;"></div></div>
+            <div class="frow full"><label>Puesto</label><select id="pi-puesto"><option value="aux_limpieza">Aux. de limpieza</option><option value="pulidor">Pulidor</option><option value="encargado">Encargado de servicio</option></select></div>
             <div class="frow"><div><label>Correo</label><input type="email" id="pi-email" placeholder="pedro@ayalym.com"></div><div><label>Teléfono</label><input type="text" id="pi-tel" placeholder="+52 55 0000 0000"></div></div>
             <div class="frow full"><label>Contraseña</label><input type="password" id="pi-pass" placeholder="Mínimo 8 caracteres"></div>
             <div style="display:flex;gap:8px;margin-top:10px;">
@@ -1330,15 +1331,17 @@
 
 <!-- ── PANEL: PERSONAL DE INMUEBLES ── -->
 <div id="role-personal_inm" class="role-section" style="display:none">
-  <!-- Nav superior -->
+  <!-- Nav superior — columnas se ajustan dinámicamente por JS según puesto -->
   <div class="bottom-nav" id="nav-personal_inm" style="grid-template-columns:repeat(4,1fr)">
     <div class="bnav-btn active" onclick="navGo('personal_inm','inicio',this)"><span class="bnav-icon">🏠</span>Inicio</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','servicios',this)"><span class="bnav-icon">🏢</span>Servicios</div>
+    <div class="bnav-btn" id="pi-nav-equipo" style="display:none;" onclick="navGo('personal_inm','equipo',this)"><span class="bnav-icon">👥</span>Mi equipo</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','asistencias',this)"><span class="bnav-icon">📋</span>Asistencias</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
   </div>
   <div id="pi-inicio" class="sec active"><div id="pi-inicio-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
   <div id="pi-servicios" class="sec"><div id="pi-servicios-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
+  <div id="pi-equipo" class="sec"><div id="pi-equipo-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
   <div id="pi-asistencias" class="sec"><div id="pi-asistencias-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
   <div id="pi-perfil" class="sec"><div id="pi-perfil-content" style="padding:16px;max-width:480px;margin:0 auto;"></div></div>
 </div>

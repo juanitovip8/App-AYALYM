@@ -1375,6 +1375,7 @@ function navGo(role,sec,btn){
   // Personal Inmuebles
   if(role==='personal_inm'&&sec==='inicio')renderPIInicio();
   if(role==='personal_inm'&&sec==='servicios')renderPIServicios();
+  if(role==='personal_inm'&&sec==='equipo')renderPIEquipo();
   if(role==='personal_inm'&&sec==='asistencias')renderPIAsistencias();
   if(role==='personal_inm'&&sec==='perfil')renderPIPerfil();
   // Cliente Inmuebles
@@ -5599,14 +5600,29 @@ function toggleInmFiscal(btnEl){
 /* ═══════════════════════════════════════════════
    PERSONAL DE INMUEBLES
 ═══════════════════════════════════════════════ */
+const _puestoLabel={encargado:'Encargado de servicio',aux_limpieza:'Aux. de limpieza',pulidor:'Pulidor'};
+const _puestoBg={encargado:'#FFE8CC',aux_limpieza:'#E8F5FF',pulidor:'#EEF5FF'};
+const _puestoCol={encargado:'#A05C00',aux_limpieza:'#185FA5',pulidor:'#5A3DB5'};
+
 function renderPersonalInmPanel(){
   // Reset to Inicio tab on every login
   document.querySelectorAll('#role-personal_inm .sec').forEach(s=>s.classList.remove('active'));
   const ini=document.getElementById('pi-inicio');if(ini)ini.classList.add('active');
   const nav=document.getElementById('nav-personal_inm');
   if(nav){nav.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));const first=nav.querySelector('.bnav-btn');if(first)first.classList.add('active');}
+  /* Mostrar tab "Mi equipo" solo si es Encargado */
+  const p=_getPIData();
+  const isEncargado=p&&p.puesto==='encargado';
+  const tabEquipo=document.getElementById('pi-nav-equipo');
+  if(tabEquipo){
+    tabEquipo.style.display=isEncargado?'flex':'none';
+    /* Ajustar columnas del nav */
+    const navEl=document.getElementById('nav-personal_inm');
+    if(navEl)navEl.style.gridTemplateColumns=isEncargado?'repeat(5,1fr)':'repeat(4,1fr)';
+  }
   renderPIInicio();
   renderPIServicios();
+  if(isEncargado)renderPIEquipo();
 }
 
 function _getPIData(){
@@ -5698,6 +5714,45 @@ function renderPIServicios(){
       <div class="pi-section-title">🏢 Servicios asignados</div>
       <div class="pi-svc-list">${svcsHtml}</div>
     </div>`;
+}
+
+function renderPIEquipo(){
+  const el=document.getElementById('pi-equipo-content');if(!el)return;
+  const p=_getPIData();if(!p||p.puesto!=='encargado'){el.innerHTML='';return;}
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const cardBg=dark?'rgba(255,255,255,0.05)':'#F8FAFF';const bdr=dark?'rgba(255,255,255,0.10)':'#DCE8F5';
+  const today=_localDateStr();
+  /* Servicios del encargado */
+  const misSvcs=PROPERTY_SERVICES.filter(ps=>p.serviciosAsignados.includes(ps.id));
+  if(!misSvcs.length){el.innerHTML='<p style="text-align:center;color:'+lbl+';padding:40px 0;font-size:13px;">Sin servicios asignados aún.</p>';return;}
+  const html=misSvcs.map(ps=>{
+    /* Compañeros en este mismo servicio */
+    const compas=PERSONAL_INM.filter(x=>x.id!==p.id&&x.serviciosAsignados.includes(ps.id));
+    const compasHtml=compas.length?compas.map(c=>{
+      const asis=c.asistencias.find(a=>a.fecha===today);
+      const estado=asis?.salida?'🔴 Salida: '+asis.salida:asis?.entrada?'🟢 Entrada: '+asis.entrada:'⚪ Sin registro';
+      const avBg={encargado:'#A05C00',aux_limpieza:'#085041',pulidor:'#5A3DB5'}[c.puesto]||'#085041';
+      return`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid ${bdr};">
+        <div class="av" style="width:34px;height:34px;font-size:${c.photo?'0':'12px'};background:${avBg};color:#fff;flex-shrink:0;">${c.photo?'<img src="'+c.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':c.initials}</div>
+        <div style="flex:1;min-width:0;">
+          <p style="font-size:13px;font-weight:600;color:${txt};margin:0;">${c.nombre}</p>
+          <span style="font-size:11px;color:${lbl};">${_puestoLabel[c.puesto]||'Personal'} · ${estado}</span>
+        </div>
+      </div>`;
+    }).join(''):'<p style="font-size:12px;color:'+lbl+';font-style:italic;padding:8px 0;">Solo tú asignado a este servicio.</p>';
+    return`<div style="border:.5px solid ${bdr};border-radius:12px;overflow:hidden;margin-bottom:14px;">
+      <div style="background:${cardBg};padding:12px 14px;border-bottom:.5px solid ${bdr};">
+        <p style="font-size:13px;font-weight:700;color:${txt};margin:0;">${ps.folio} · ${ps.tipo}</p>
+        <span style="font-size:11px;color:${lbl};">${ps.cliente.nombre} · ${ps.inmueble.tipo||''}, ${ps.inmueble.colonia||''}</span>
+      </div>
+      <div style="padding:10px 14px;">
+        <p style="font-size:10px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;">👥 Equipo en este servicio</p>
+        ${compasHtml}
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML=`<div style="padding-bottom:16px;"><p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">👷 Mi equipo hoy</p>${html}</div>`;
 }
 
 function renderPIAsistencias(){
@@ -5854,7 +5909,7 @@ function renderPersonalInmAdmin(){
         <div style="display:flex;align-items:center;gap:10px;">
           <div class="av" style="width:38px;height:38px;font-size:${p.photo?'0':'13px'};font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
           <div>
-            <p style="font-size:13px;font-weight:600;color:#042C53;">${p.nombre}</p>
+            <p style="font-size:13px;font-weight:600;color:#042C53;">${p.nombre} <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:${_puestoBg[p.puesto]||'#F0F4F8'};color:${_puestoCol[p.puesto]||'#5C7A9A'};">${_puestoLabel[p.puesto]||'Personal'}</span></p>
             <span style="font-size:11px;color:#185FA5;">${p.email}</span>
             <span style="font-size:11px;color:#5C7A9A;display:block;">${p.tel||'—'} · Hoy: ${statusAsis}</span>
           </div>
@@ -5902,13 +5957,14 @@ function addPersonalInm(){
   const email=document.getElementById('pi-email').value.trim();
   const tel=document.getElementById('pi-tel').value.trim();
   const pass=document.getElementById('pi-pass').value;
+  const puesto=(document.getElementById('pi-puesto')||{}).value||'aux_limpieza';
   if(!nombre||!email){showToast('amber','⚠️','Nombre y correo son obligatorios');return;}
   if(pass&&pass.length<8){showToast('amber','⚠️','La contraseña debe tener mínimo 8 caracteres');return;}
   if(USERS.find(u=>u.email.toLowerCase()===email.toLowerCase())){showToast('amber','⚠️','Este correo ya está registrado');return;}
   if(tel&&USERS.find(u=>u.tel&&u.tel.replace(/\s/g,'')===tel.replace(/\s/g,''))){showToast('amber','⚠️','Este teléfono ya está registrado en otro usuario');return;}
   const newId=PERSONAL_INM.length?Math.max(...PERSONAL_INM.map(p=>p.id))+1:0;
   const newUserId=USERS.length?Math.max(...USERS.map(u=>u.id))+1:0;
-  PERSONAL_INM.push({id:newId,nombre,initials,email,password:pass||'ayalym123',tel,activo:true,serviciosAsignados:[],asistencias:[]});
+  PERSONAL_INM.push({id:newId,nombre,initials,email,password:pass||'ayalym123',tel,puesto,activo:true,serviciosAsignados:[],asistencias:[]});
   USERS.push({id:newUserId,nombre,email,rol:'personal_inm',tel,activo:true,accesoRevocado:false,password:pass||'ayalym123'});
   ['pi-nombre','pi-initials','pi-email','pi-tel','pi-pass'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   togglePiForm();
