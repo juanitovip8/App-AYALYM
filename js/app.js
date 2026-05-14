@@ -6960,20 +6960,26 @@ function renderClienteInmInicio(){
     const inmCards=psList.map(p=>{
       const reps=(p.reportes||[]).length;
       const personal=PERSONAL_INM.filter(x=>x.activo&&x.serviciosAsignados.includes(p.id)).length;
+      const dir=p.inmueble&&p.inmueble.direccion?p.inmueble.direccion:'—';
       return`<div onclick="_cinmActivePsId=${p.id};renderClienteInmInicio();renderClienteInmContrato();renderClienteInmReportes();renderClienteInmAsistencias();"
-        style="cursor:pointer;border:1.5px solid rgba(255,255,255,0.15);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px;background:rgba(255,255,255,0.07);transition:border-color .2s;"
-        onmouseover="this.style.borderColor='rgba(255,255,255,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)'"
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:13px;font-weight:700;color:#042C53;">📄 ${p.folio}</span>
+        style="cursor:pointer;border:1.5px solid rgba(255,255,255,0.18);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.08);transition:all .2s;"
+        onmouseover="this.style.background='rgba(255,255,255,0.14)';this.style.borderColor='rgba(255,255,255,0.45)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.borderColor='rgba(255,255,255,0.18)'">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+          <span style="font-size:14px;font-weight:700;color:#fff;letter-spacing:.2px;">📄 ${p.folio}</span>
           <span class="cinm-status-badge ${_cinmStatusClass(p.status)}">${_cinmStatusLabel(p.status)}</span>
         </div>
-        <p style="font-size:12px;color:#1C2B3A;margin:0;">🏢 ${p.inmueble?.direccion||'—'}</p>
-        <p style="font-size:11px;color:#5C7A9A;margin:0;">${p.tipo} · ${_cinmFreqLabel(p.frecuencia)} · ${reps} reporte${reps!==1?'s':''} · ${personal} personal</p>
+        <p style="font-size:12px;color:rgba(255,255,255,0.85);margin:0;line-height:1.4;">🏢 ${dir}</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:10px;">${_cinmFreqLabel(p.frecuencia)}</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:10px;">📋 ${reps} reporte${reps!==1?'s':''}</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:10px;">👷 ${personal} personal</span>
+        </div>
       </div>`;
     }).join('');
     el.innerHTML=`<div class="card">
       <p class="ctitle" style="margin-bottom:2px;">Bienvenida, ${ci.nombre.split(' ')[0]} 👋</p>
-      <p class="csub" style="margin-bottom:14px;">${ci.empresa} · ${psList.length} inmuebles</p>
+      <p class="csub" style="margin-bottom:16px;">${ci.empresa} · <strong style="color:#6BAAFF;">${psList.length} inmuebles</strong></p>
       <div style="display:flex;flex-direction:column;gap:10px;">${inmCards}</div>
     </div>`;
     return;
