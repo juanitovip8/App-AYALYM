@@ -1218,6 +1218,7 @@ function launchApp(role,nombre,zona){
     renderChatBox('c-t','sv','chat-sv-ct');
     renderChatBox('c-a','sv','chat-sv-ca');
     renderSVAstHoy();renderSVInmuebles();
+    _startAstListeners('supervisor');
   }
   if(role==='admin'){
     renderZonasAdmin();renderStaffList('all');renderLowReviews();renderRevBreakdown();renderUrgencias();
@@ -1226,6 +1227,7 @@ function launchApp(role,nombre,zona){
     renderAdminNotes();renderTopCards();renderAdminKPIs();renderPropServices('all');
     renderChatBox('c-a','a','chat-a-c');renderChatBox('sv-a','a','chat-a-sv');renderChatBox('t-a','a','chat-a-t');
     populatePropSupervisorSelect();
+    _startAstListeners('admin');
   }
   if(role==='personal_inm'){
     const pi=PERSONAL_INM.find(p=>p.email===currentUserEmail||p.nombre===nombre);
@@ -1254,6 +1256,7 @@ function doLogout(){
   uploadedFiles=[];clientDiscount=0;workerDeductions=[];selectedTimeSlot='';selectedWorkerId=null;fichaWorkerId=null;currentWorkerRef=null;currentSupervisorRef=null;currentUserEmail='';clearSession();
   if(typeof _stopAdminMapListener==='function')_stopAdminMapListener();
   if(typeof _stopSVMapListener==='function')_stopSVMapListener();
+  _stopAstListeners();
   _stopNotifListener();
   if(_fcmDeviceId)fbDeletePushSub(_fcmDeviceId);
   ['prev-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
@@ -3227,6 +3230,42 @@ function renderSVEval(){
 let _svMapInstance=null;
 let _svMapMarkers={};
 let _svMapListener=null;
+
+/* ── Listeners en tiempo real para asistencias ──────────────── */
+let _svAstListener=null;
+let _piAstListener=null;
+
+function _startAstListeners(role){
+  /* sv_asistencias — usado por admin (reporte) y supervisor (su panel) */
+  if(_svAstListener){_svAstListener();_svAstListener=null;}
+  _svAstListener=fbListenSvAsistencias(function(list){
+    SUPERVISOR_ASISTENCIAS.length=0;
+    list.forEach(function(a){SUPERVISOR_ASISTENCIAS.push(a);});
+    /* Re-renderizar si el reporte de asistencias está visible */
+    if(role==='admin'){
+      const rep=document.getElementById('rep-panel-asistencias');
+      if(rep&&rep.style.display!=='none')renderAdminAstReport();
+    }
+    if(role==='supervisor'){
+      const el=document.getElementById('sv-ast-hoy');
+      if(el)renderSVAstHoy();
+    }
+  });
+  /* personal_inm — solo admin necesita escuchar asistencias PI en tiempo real */
+  if(role==='admin'){
+    if(_piAstListener){_piAstListener();_piAstListener=null;}
+    _piAstListener=fbListenPersonalInm(function(list){
+      PERSONAL_INM.length=0;
+      list.forEach(function(p){PERSONAL_INM.push(p);});
+      const rep=document.getElementById('rep-panel-asistencias');
+      if(rep&&rep.style.display!=='none')renderAdminAstReport();
+    });
+  }
+}
+function _stopAstListeners(){
+  if(_svAstListener){_svAstListener();_svAstListener=null;}
+  if(_piAstListener){_piAstListener();_piAstListener=null;}
+}
 
 function renderSVMap(){
   const mapDiv=document.getElementById('sv-map-div');if(!mapDiv)return;

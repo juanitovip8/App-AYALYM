@@ -393,6 +393,39 @@ function fbListenUbicActivas(callback){
   }catch(e){console.warn('fbListenUbicActivas',e);return function(){};}
 }
 
+/* Escucha cambios en tiempo real en asistencias de supervisores */
+function fbListenSvAsistencias(callback){
+  try{
+    return _col('sv_asistencias').onSnapshot(function(snap){
+      var list=[];
+      snap.forEach(function(d){list.push(d.data());});
+      callback(list);
+    },function(e){console.warn('fbListenSvAsistencias',e);});
+  }catch(e){console.warn('fbListenSvAsistencias',e);return function(){};}
+}
+
+/* Escucha cambios en tiempo real en personal_inm (asistencias embebidas) */
+function fbListenPersonalInm(callback){
+  try{
+    return _col('personal_inm').onSnapshot(function(snap){
+      var list=[];
+      snap.forEach(function(d){list.push(d.data());});
+      callback(list);
+    },function(e){console.warn('fbListenPersonalInm',e);});
+  }catch(e){console.warn('fbListenPersonalInm',e);return function(){};}
+}
+
+/* Escucha cambios en tiempo real en trabajadores */
+function fbListenTrabajadores(callback){
+  try{
+    return _col('trabajadores').onSnapshot(function(snap){
+      var list=[];
+      snap.forEach(function(d){list.push(d.data());});
+      callback(list);
+    },function(e){console.warn('fbListenTrabajadores',e);});
+  }catch(e){console.warn('fbListenTrabajadores',e);return function(){};}
+}
+
 /* ══════════════════════════════════════════════════════════
    NOTIFICACIONES PERSISTENTES
    ══════════════════════════════════════════════════════════ */
