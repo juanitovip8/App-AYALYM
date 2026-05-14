@@ -574,6 +574,14 @@ function markRead(role,docId){
   renderNotifications();updateNotifBadge();
 }
 
+function deleteAllNotifs(){
+  if(!currentRole)return;
+  NOTIFICATIONS[currentRole]=[];
+  fbDeleteAllNotifs(currentRole);
+  updateNotifBadge();
+  renderNotifications();
+}
+
 function markAllRead(){
   const list=NOTIFICATIONS[currentRole]||[];
   const unread=list.filter(n=>!n.read);

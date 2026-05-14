@@ -456,6 +456,30 @@ function fbMarkAllNotifsRead(role){
   }catch(e){console.warn('fbMarkAllNotifsRead',e);}
 }
 
+/* Borra todas las notificaciones de un rol de Firestore */
+function fbDeleteAllNotifs(role){
+  try{
+    _col('notificaciones')
+      .where('destinatario','==',role)
+      .get().then(function(snap){
+        if(snap.empty)return;
+        /* Firestore batch max 500 docs */
+        var chunks=[];
+        var chunk=[];
+        snap.forEach(function(d){
+          chunk.push(d.ref);
+          if(chunk.length===499){chunks.push(chunk);chunk=[];}
+        });
+        if(chunk.length)chunks.push(chunk);
+        return Promise.all(chunks.map(function(refs){
+          var b=_db.batch();
+          refs.forEach(function(r){b.delete(r);});
+          return b.commit();
+        }));
+      }).catch(function(e){console.warn('fbDeleteAllNotifs',e);});
+  }catch(e){console.warn('fbDeleteAllNotifs',e);}
+}
+
 function fbListenNotifs(role,callback){
   try{
     return _col('notificaciones')
