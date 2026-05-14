@@ -6937,10 +6937,14 @@ function svUpdatePropStatus(id,status){
    ═══════════════════════════════════════════ */
 
 /* ── helper: formato de días de servicio ── */
-function _fmtDiasServicio(dias,short){
-  var m=short?{lun:'L',mar:'M',mie:'X',jue:'J',vie:'V',sab:'S',dom:'D'}:{lun:'Lun',mar:'Mar',mie:'Mi\xE9',jue:'Jue',vie:'Vie',sab:'S\xE1b',dom:'Dom'};
-  var sep=short?' ':' \xB7 ';
-  return(dias||[]).map(function(d){return m[d]||d;}).join(sep);
+/* mode: 'short'=iniciales, 'abbr'=abreviado, 'full'=nombre completo */
+function _fmtDiasServicio(dias,mode){
+  var mShort={lun:'L',mar:'M',mie:'X',jue:'J',vie:'V',sab:'S',dom:'D'};
+  var mAbbr={lun:'Lun',mar:'Mar',mie:'Mi\xE9',jue:'Jue',vie:'Vie',sab:'S\xE1b',dom:'Dom'};
+  var mFull={lun:'Lunes',mar:'Martes',mie:'Mi\xE9rcoles',jue:'Jueves',vie:'Viernes',sab:'S\xE1bado',dom:'Domingo'};
+  if(mode===true||mode==='short'){return(dias||[]).map(function(d){return mShort[d]||d;}).join(' ');}
+  if(mode==='full'){return(dias||[]).map(function(d){return mFull[d]||d;}).join('<br>');}
+  return(dias||[]).map(function(d){return mAbbr[d]||d;}).join(' \xB7 ');
 }
 
 /* ── helper ── */
@@ -6971,11 +6975,12 @@ function _cinmFreqLabel(f){return{diaria:'Diaria',semanal:'Semanal',quincenal:'Q
 /* ── selector de inmueble cuando hay más de uno ── */
 function _cinmPsSelector(psList,activeId){
   if(psList.length<=1)return'';
+  var dark=document.documentElement.classList.contains('dark-mode');
   var btns=psList.map(function(p){
     var active=p.id===activeId;
-    var bg=active?'#185FA5':'rgba(255,255,255,0.10)';
-    var col=active?'#fff':'var(--text-main,#e8edf4)';
-    var border=active?'#185FA5':'rgba(255,255,255,0.25)';
+    var bg=active?'#185FA5':(dark?'rgba(255,255,255,0.10)':'#EBF2FA');
+    var col=active?'#fff':(dark?'#e8edf4':'#042C53');
+    var border=active?'#185FA5':(dark?'rgba(255,255,255,0.25)':'#B5D4F4');
     var fw=active?'700':'500';
     var label='🏢 '+p.folio+(p.inmueble&&p.inmueble.direccion?' — '+p.inmueble.direccion.split(',')[0]:'');
     return'<button onclick="_cinmActivePsId='+p.id+';renderClienteInmInicio();renderClienteInmContrato();renderClienteInmReportes();renderClienteInmAsistencias();" '
@@ -6997,23 +7002,32 @@ function renderClienteInmInicio(){
 
   /* Si hay múltiples inmuebles y ninguno activo seleccionado, mostrar resumen de todos */
   if(psList.length>1&&_cinmActivePsId==null){
+    const _isDark=document.documentElement.classList.contains('dark-mode');
+    const _cardBg=_isDark?'rgba(255,255,255,0.08)':'#EBF2FA';
+    const _cardBorder=_isDark?'rgba(255,255,255,0.18)':'#B5D4F4';
+    const _cardBgHov=_isDark?'rgba(255,255,255,0.14)':'#D6E8F7';
+    const _cardBorderHov=_isDark?'rgba(255,255,255,0.45)':'#185FA5';
+    const _folioCol=_isDark?'#fff':'#042C53';
+    const _dirCol=_isDark?'rgba(255,255,255,0.85)':'#1C2B3A';
+    const _chipCol=_isDark?'rgba(255,255,255,0.55)':'#185FA5';
+    const _chipBg=_isDark?'rgba(255,255,255,0.08)':'rgba(24,95,165,0.08)';
     const inmCards=psList.map(p=>{
       const reps=(p.reportes||[]).length;
       const personal=PERSONAL_INM.filter(x=>x.activo&&x.serviciosAsignados.includes(p.id)).length;
       const dir=p.inmueble&&p.inmueble.direccion?p.inmueble.direccion:'—';
       return`<div onclick="_cinmActivePsId=${p.id};renderClienteInmInicio();renderClienteInmContrato();renderClienteInmReportes();renderClienteInmAsistencias();"
-        style="cursor:pointer;border:1.5px solid rgba(255,255,255,0.18);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,0.08);transition:all .2s;"
-        onmouseover="this.style.background='rgba(255,255,255,0.14)';this.style.borderColor='rgba(255,255,255,0.45)'"
-        onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.borderColor='rgba(255,255,255,0.18)'">
+        style="cursor:pointer;border:1.5px solid ${_cardBorder};border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;background:${_cardBg};transition:all .2s;"
+        onmouseover="this.style.background='${_cardBgHov}';this.style.borderColor='${_cardBorderHov}'"
+        onmouseout="this.style.background='${_cardBg}';this.style.borderColor='${_cardBorder}'">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span style="font-size:14px;font-weight:700;color:#fff;letter-spacing:.2px;">📄 ${p.folio}</span>
+          <span style="font-size:14px;font-weight:700;color:${_folioCol};letter-spacing:.2px;">📄 ${p.folio}</span>
           <span class="cinm-status-badge ${_cinmStatusClass(p.status)}">${_cinmStatusLabel(p.status)}</span>
         </div>
-        <p style="font-size:12px;color:rgba(255,255,255,0.85);margin:0;line-height:1.4;">🏢 ${dir}</p>
+        <p style="font-size:12px;color:${_dirCol};margin:0;line-height:1.4;">🏢 ${dir}</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <span style="font-size:11px;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:10px;">${_cinmFreqLabel(p.frecuencia)}</span>
-          <span style="font-size:11px;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:10px;">📋 ${reps} reporte${reps!==1?'s':''}</span>
-          <span style="font-size:11px;color:rgba(255,255,255,0.55);background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:10px;">👷 ${personal} personal</span>
+          <span style="font-size:11px;color:${_chipCol};background:${_chipBg};padding:2px 8px;border-radius:10px;">${_cinmFreqLabel(p.frecuencia)}</span>
+          <span style="font-size:11px;color:${_chipCol};background:${_chipBg};padding:2px 8px;border-radius:10px;">📋 ${reps} reporte${reps!==1?'s':''}</span>
+          <span style="font-size:11px;color:${_chipCol};background:${_chipBg};padding:2px 8px;border-radius:10px;">👷 ${personal} personal</span>
         </div>
       </div>`;
     }).join('');
@@ -7064,7 +7078,7 @@ function renderClienteInmInicio(){
         <span class="cinm-si-icon">🕐</span>
         <div><p>Horario</p><span>${ps.hora}${ps.horaSalida?' – '+ps.horaSalida:''} hrs</span></div>
       </div>
-      ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="cinm-summary-item"><span class="cinm-si-icon">📆</span><div><p>D\xEDas</p><span>'+_fmtDiasServicio(ps.diasServicio,true)+'</span></div></div>':''}
+      ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="cinm-summary-item"><span class="cinm-si-icon">📆</span><div><p>D\xEDas</p><span style="line-height:1.7;">'+_fmtDiasServicio(ps.diasServicio,'full')+'</span></div></div>':''}
       <div class="cinm-summary-item">
         <span class="cinm-si-icon">📋</span>
         <div><p>Visitas</p><span>${reps.length} reportes</span></div>
@@ -7136,7 +7150,7 @@ function renderClienteInmContrato(){
       ${ps.horaSalida?'<div class="cinm-dg-item"><span>Hora salida</span><p>'+ps.horaSalida+' hrs</p></div>':''}
       <div class="cinm-dg-item"><span>Inicio</span><p>${formatDateShort(ps.fechaInicio)}</p></div>
       <div class="cinm-dg-item"><span>Fin</span><p>${formatDateShort(ps.fechaFin)}</p></div>
-      ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="cinm-dg-item cinm-full"><span>D\xEDas de servicio</span><p>'+_fmtDiasServicio(ps.diasServicio)+'</p></div>':''}
+      ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="cinm-dg-item cinm-full"><span>D\xEDas de servicio</span><p style="line-height:1.7;">'+_fmtDiasServicio(ps.diasServicio,'full')+'</p></div>':''}
       <div class="cinm-dg-item cinm-full"><span>Descripción</span><p>${ps.descripcion}</p></div>
     </div>
 
