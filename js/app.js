@@ -6808,7 +6808,7 @@ function marcarSalidaSV(servicioId){
       fbDeleteUbicActiva('sv_'+currentSupervisorRef.id); /* quitar del mapa */
       renderSVAstHoy();
       const dtxt=typeof info==='number'?` · ${info}m del inmueble`:'';
-      pushNotif('admin','🔴','blue','Salida registrada',`${currentSupervisorRef.name} (Supervisor) registró salida a las ${hora} — ${ps.folio||''} ${ps.inmueble?.direccion?.split(',')[0]||''}`);
+      pushNotif('admin','🔴','blue','Salida registrada',`${currentSupervisorRef.name} (Supervisor) registró salida a las ${hora}${ps?' — '+(ps.folio||'')+(ps.inmueble?.direccion?' · '+ps.inmueble.direccion.split(',')[0]:''):''}`);
       showToast('green','🏁','Salida registrada: '+hora+dtxt);
     },
     dist=>showToast('red','📍',`Te encuentras a ${_fmtDist(dist)} del inmueble, acércate para registrar tu salida.`),
