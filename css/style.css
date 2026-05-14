@@ -140,14 +140,32 @@ input,select,textarea,a{-webkit-tap-highlight-color:transparent;}
 .notif-bell{position:relative;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);border-radius:8px;}
 .notif-badge{position:absolute;top:-3px;right:-3px;background:#E24B4A;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:500;display:none;align-items:center;justify-content:center;}
 .notif-badge.show{display:flex;}
-.notif-panel{display:none;background:#fff;border-bottom:.5px solid var(--blue-border);margin-bottom:0;overflow:hidden;box-shadow:0 4px 16px rgba(4,44,83,.10);}
-.notif-panel.open{display:block;}
-.notif-header{display:flex;align-items:center;justify-content:space-between;padding:12px 1.25rem;background:var(--blue-dark);}
-.notif-header p{font-size:13px;font-weight:500;color:#fff;}
-.notif-header span{font-size:11px;color:rgba(255,255,255,.7);cursor:pointer;}
-.notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 1.25rem;border-bottom:.5px solid var(--blue-border);cursor:pointer;}
+.notif-panel{
+  display:none;
+  position:fixed;
+  top:58px;
+  right:10px;
+  width:340px;
+  max-width:calc(100vw - 20px);
+  max-height:70vh;
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 8px 32px rgba(4,44,83,.22);
+  z-index:9000;
+  overflow:hidden;
+  flex-direction:column;
+}
+.notif-panel.open{display:flex;}
+.notif-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--blue-dark);flex-shrink:0;border-radius:14px 14px 0 0;}
+.notif-header p{font-size:13px;font-weight:600;color:#fff;}
+.notif-header span{font-size:11px;color:rgba(255,255,255,.7);cursor:pointer;white-space:nowrap;}
+#notif-list{overflow-y:auto;flex:1;}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:.5px solid var(--blue-border);cursor:pointer;}
 .notif-item:last-child{border-bottom:none;}
 .notif-item.unread{background:var(--blue-light);}
+/* Backdrop para cerrar el panel al tocar fuera */
+.notif-backdrop{display:none;position:fixed;inset:0;z-index:8999;}
+.notif-backdrop.open{display:block;}
 .notif-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
 .notif-body{flex:1;}
 .notif-body p{font-size:13px;color:var(--blue-dark);margin-bottom:2px;}

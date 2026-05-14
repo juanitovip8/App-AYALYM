@@ -532,6 +532,8 @@ function updateNotifBadge(){
 function toggleNotifPanel(){
   notifPanelOpen=!notifPanelOpen;
   document.getElementById('notif-panel').classList.toggle('open',notifPanelOpen);
+  const bd=document.getElementById('notif-backdrop');
+  if(bd)bd.classList.toggle('open',notifPanelOpen);
   if(notifPanelOpen)renderNotifications();
 }
 
@@ -1261,7 +1263,7 @@ function doLogout(){
   if(_fcmDeviceId)fbDeletePushSub(_fcmDeviceId);
   ['prev-wrap'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   facturaOn=false;const ft=document.getElementById('ftoggle');if(ft)ft.classList.remove('on');const ff=document.getElementById('ffields');if(ff)ff.classList.remove('show');
-  document.getElementById('ficha-ov').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');notifPanelOpen=false;
+  document.getElementById('ficha-ov').classList.remove('open');document.getElementById('notif-panel').classList.remove('open');const _nbd=document.getElementById('notif-backdrop');if(_nbd)_nbd.classList.remove('open');notifPanelOpen=false;
   document.getElementById('reg-step-1').style.display='block';document.getElementById('reg-step-2').style.display='none';document.getElementById('reg-step-3').style.display='none';
   ['sd-1','sd-2','sd-3'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.classList.toggle('done',i===0);});
   [1,2,3,4].forEach(i=>{const el=document.getElementById('res-step-'+i);if(el)el.style.display=i===1?'block':'none';});

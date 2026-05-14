@@ -186,8 +186,9 @@ select option {
 .notif-panel {
   background: var(--dk-panel) !important;
   border-color: var(--dk-border) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.45) !important;
 }
-.notif-header { background: #0d0d0d !important; }
+.notif-header { background: #0a1628 !important; border-radius:14px 14px 0 0; }
 .notif-header p { color: var(--dk-text) !important; }
 .notif-header span { color: var(--dk-sub) !important; }
 .notif-item { border-color: var(--dk-border) !important; }
