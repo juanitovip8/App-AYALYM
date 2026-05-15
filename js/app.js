@@ -1300,7 +1300,7 @@ function launchApp(role,nombre,zona){
     const _sc=document.getElementById('w-avg-score');if(_sc)_sc.textContent=_wRating.toFixed(1);
     const _rv=document.getElementById('w-avg-reviews');if(_rv)_rv.textContent=_wReviews+' reseña'+(_wReviews===1?'':'s');
     renderWorkerQuincena();renderWorkerNotes();renderTrabajadorResumen();
-    renderSolicitudes();renderWorkerAgenda();renderWorkerHistorial();
+    renderSolicitudes();renderWorkerAgenda();renderTrabajadorAgendaExtra();renderWorkerHistorial();
     renderChatBox('c-t','t','chat-t-c');renderChatBox('t-sv','t','chat-t-sv');renderChatBox('t-a','t','chat-t-a');
   }
   if(role==='supervisor'){
@@ -1406,6 +1406,7 @@ function navGo(role,sec,btn){
   if(role==='supervisor'&&sec==='trabajadores')renderSVWorkers();
   if(role==='supervisor'&&sec==='eval-sv')renderSVEval();
   if(role==='supervisor'&&sec==='mensajes-sv'){renderSVChatSelector();renderChatBox('sv-a','sv','chat-sv-a');renderChatBox('c-t','sv','chat-sv-ct');renderChatBox('c-a','sv','chat-sv-ca');}
+  if(role==='admin'&&sec==='agenda')renderAdminAgenda();
   if(role==='admin'&&sec==='mapa'){setTimeout(()=>renderAdminMapa(),50);}
   else if(_adminMapListener&&role==='admin'){_stopAdminMapListener();}
   if(role==='admin'&&sec==='notas-admin')renderAdminNotes();
@@ -1430,6 +1431,7 @@ function navGo(role,sec,btn){
   if(role==='personal_inm'&&sec==='perfil')renderPIPerfil();
   if(role==='supervisor'&&sec==='insumos-sv')renderSVInsumos();
   if(role==='supervisor'&&sec==='personal-inm-sv')renderSVPersonalInm();
+  if(role==='supervisor'&&sec==='agenda-sv')renderSupervisorAgenda();
   if(role==='cliente_inm'&&sec==='insumos-ci')renderCIInsumos();
   // Cliente Inmuebles
   if(role==='cliente_inm'&&sec==='inicio')renderClienteInmInicio();
@@ -5239,6 +5241,7 @@ function renderTrabajadorResumen(){selectTrabajadorTab('hoy',document.querySelec
 
 function renderWorkerAgenda(){
   const el=document.getElementById('t-agenda');if(!el)return;
+  renderTrabajadorAgendaExtra();
   const worker=currentWorkerRef||WORKERS[0];
   const fmt=(h,m)=>`${h}:${String(m).padStart(2,'0')}`;
   const todayISO=new Date().toISOString().split('T')[0];
@@ -5846,6 +5849,8 @@ function renderPIInicio(){
         </button>
       </div>
     </div>`;
+  /* Inyectar servicios de agenda asignados debajo de la card de asistencia */
+  setTimeout(()=>renderPersonalInmAgenda(),50);
 }
 
 function renderPIServicios(){
@@ -10781,4 +10786,383 @@ function endTour(){
 }
 function _checkAutoTour(role){
   try{if(!localStorage.getItem('ayalym-tour-v1-'+role))setTimeout(()=>startTour(role),1400);}catch(e){}
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MÓDULO AGENDA — Servicios especiales asignados por admin/supervisor
+   ══════════════════════════════════════════════════════════════════ */
+
+const AGENDA_ROL_COLORS={trabajador:'#1A56DB',supervisor:'#7C3AED',personal_inm:'#059669',cliente:'#D97706'};
+const AGENDA_TIPO_LABELS={limpieza:'Limpieza',mantenimiento:'Mantenimiento',inspeccion:'Inspección',capacitacion:'Capacitación',reunion:'Reunión',otro:'Otro'};
+const AGENDA_ESTADO_LABELS={pendiente:'⏳ Pendiente',confirmado:'✅ Confirmado',en_curso:'🔄 En curso',completado:'✔️ Completado',cancelado:'❌ Cancelado'};
+
+let _agYear=new Date().getFullYear(),_agMonth=new Date().getMonth(),_agSelDate=null,_agFilter='all',_agEditId=null;
+
+function _agNextId(){return AGENDA_ITEMS.length?Math.max(...AGENDA_ITEMS.map(a=>a.id||0))+1:1;}
+
+/* ── Admin Agenda ─────────────────────────────────────────────── */
+function renderAdminAgenda(){
+  const el=document.getElementById('a-agenda');if(!el)return;
+  const rolLabels={all:'Todos',trabajador:'Trabajadores',supervisor:'Supervisores',personal_inm:'Personal Inm.'};
+  el.innerHTML=`<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <p class="ctitle" style="margin:0;">📅 Agenda</p>
+      <button class="btn-sm" onclick="openAgendaModal(null)">+ Nuevo servicio</button>
+    </div>
+    <div class="svc-tabs" style="margin-bottom:14px;">
+      ${Object.keys(rolLabels).map(r=>`<div class="svc-tab${_agFilter===r?' active':''}" onclick="_agFilter='${r}';renderAdminAgenda()">${rolLabels[r]}</div>`).join('')}
+    </div>
+    ${_renderAgUpcoming('admin')}
+    ${_renderAgCalendar()}
+    <div id="ag-day-events" style="margin-top:14px;">${_renderAgDayEvents('admin')}</div>
+  </div>`;
+}
+
+function _renderAgUpcoming(ctx){
+  const todayStr=new Date().toISOString().split('T')[0];
+  let items=AGENDA_ITEMS.filter(a=>a.fecha>=todayStr&&a.estado!=='cancelado'&&a.estado!=='completado');
+  if(ctx==='supervisor'&&currentSupervisorRef){
+    const myIds=currentSupervisorRef.assignedWorkers||[];
+    items=items.filter(a=>(a.asignadoA?.rol==='trabajador'&&myIds.includes(a.asignadoA?.id))||(a.asignadoA?.rol==='supervisor'&&a.asignadoA?.id===currentSupervisorRef.id));
+  } else if(_agFilter!=='all'){
+    items=items.filter(a=>a.asignadoA?.rol===_agFilter);
+  }
+  items=items.sort((a,b)=>{const da=a.fecha+' '+(a.horaInicio||'00:00'),db=b.fecha+' '+(b.horaInicio||'00:00');return da<db?-1:da>db?1:0;}).slice(0,3);
+  if(!items.length)return'';
+  const todayISO=todayStr;
+  return`<div style="margin-bottom:14px;"><p class="csub" style="margin-bottom:8px;font-weight:600;">⚡ Próximos</p><div style="display:flex;flex-direction:column;gap:6px;">
+    ${items.map(a=>{const c=AGENDA_ROL_COLORS[a.asignadoA?.rol]||'#6B7280';const isT=a.fecha===todayISO;
+      return`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--blue-light,#EFF6FF);cursor:pointer;" onclick="_agSelDate='${a.fecha}';renderAdminAgenda()">
+        <div style="width:4px;height:36px;border-radius:2px;background:${c};flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;"><p style="font-size:12px;font-weight:600;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_esc(a.titulo)}</p>
+        <p style="font-size:11px;color:#5C7A9A;margin:0;">${_esc(a.asignadoA?.nombre||'')} · ${isT?'Hoy':fmtDate(a.fecha)} ${a.horaInicio||''}</p></div>
+        <span style="font-size:10px;color:#fff;background:${c};padding:2px 6px;border-radius:4px;flex-shrink:0;">${AGENDA_ESTADO_LABELS[a.estado]||'⏳'}</span>
+      </div>`;}).join('')}
+  </div></div>`;
+}
+
+function _renderAgCalendar(){
+  const y=_agYear,m=_agMonth,todayStr=new Date().toISOString().split('T')[0];
+  const firstDow=(new Date(y,m,1).getDay()+6)%7;
+  const lastDate=new Date(y,m+1,0).getDate();
+  const monPad=String(m+1).padStart(2,'0');
+  const dateColors={};
+  AGENDA_ITEMS.forEach(a=>{
+    if(!a.fecha||a.estado==='cancelado')return;
+    const [ay,am]=a.fecha.split('-').map(Number);
+    if(ay!==y||am!==m+1)return;
+    if(_agFilter!=='all'&&a.asignadoA?.rol!==_agFilter)return;
+    if(!dateColors[a.fecha])dateColors[a.fecha]=new Set();
+    dateColors[a.fecha].add(AGENDA_ROL_COLORS[a.asignadoA?.rol]||'#6B7280');
+  });
+  const days=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+  let cells='';
+  for(let i=0;i<firstDow;i++)cells+=`<div class="ag-cal-cell ag-cal-empty"></div>`;
+  for(let d=1;d<=lastDate;d++){
+    const ds=y+'-'+monPad+'-'+String(d).padStart(2,'0');
+    const isT=ds===todayStr,isSel=ds===_agSelDate;
+    const colors=dateColors[ds]?[...dateColors[ds]]:[];
+    cells+=`<div class="ag-cal-cell${isT?' ag-today':''}${isSel?' ag-selected':''}" onclick="_agSelDate='${ds}';document.getElementById('ag-day-events').innerHTML=_renderAgDayEvents('${currentRole}')">
+      <span class="ag-cal-num">${d}</span>
+      ${colors.length?`<div class="ag-dots">${colors.slice(0,4).map(c=>`<div class="ag-dot" style="background:${c};"></div>`).join('')}</div>`:''}
+    </div>`;
+  }
+  return`<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <button class="btn-sm" style="padding:4px 12px;" onclick="_agMonth--;if(_agMonth<0){_agMonth=11;_agYear--;}renderAdminAgenda()">‹</button>
+    <p style="font-weight:600;font-size:13px;margin:0;">${MESES[m]} ${y}</p>
+    <button class="btn-sm" style="padding:4px 12px;" onclick="_agMonth++;if(_agMonth>11){_agMonth=0;_agYear++;}renderAdminAgenda()">›</button>
+  </div>
+  <div class="ag-cal-grid">${days.map(d=>`<div class="ag-cal-head">${d}</div>`).join('')}${cells}</div></div>`;
+}
+
+function _renderAgDayEvents(ctx){
+  const ds=_agSelDate;
+  if(!ds)return`<p style="font-size:12px;color:#5C7A9A;text-align:center;padding:8px 0;">Selecciona un día en el calendario</p>`;
+  let items=AGENDA_ITEMS.filter(a=>a.fecha===ds);
+  if(_agFilter!=='all')items=items.filter(a=>a.asignadoA?.rol===_agFilter);
+  if(ctx==='supervisor'&&currentSupervisorRef){
+    const myIds=currentSupervisorRef.assignedWorkers||[];
+    items=items.filter(a=>(a.asignadoA?.rol==='trabajador'&&myIds.includes(a.asignadoA?.id))||(a.asignadoA?.rol==='supervisor'&&a.asignadoA?.id===currentSupervisorRef.id));
+  }
+  const[yr,mo,dy]=ds.split('-');
+  const lbl=`${parseInt(dy)} de ${MESES[parseInt(mo)-1]} ${yr}`;
+  if(!items.length)return`<p style="font-size:12px;color:#5C7A9A;text-align:center;padding:8px 0;">Sin servicios el ${lbl}</p>`;
+  items=items.sort((a,b)=>(a.horaInicio||'')>(b.horaInicio||'')?1:-1);
+  return`<p class="csub" style="margin-bottom:8px;font-weight:600;">📋 ${lbl}</p><div style="display:flex;flex-direction:column;gap:8px;">
+    ${items.map(a=>{const c=AGENDA_ROL_COLORS[a.asignadoA?.rol]||'#6B7280';
+      const canEdit=currentRole==='admin'||(currentRole==='supervisor'&&a.asignadoPor?.rol==='supervisor'&&a.asignadoPor?.id===currentSupervisorRef?.id);
+      return`<div style="border-radius:10px;border-left:4px solid ${c};background:var(--card-bg,#fff);box-shadow:0 1px 4px rgba(0,0,0,.08);padding:10px 12px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+          <div style="flex:1;min-width:0;">
+            <p style="font-size:13px;font-weight:600;margin:0 0 2px;">${_esc(a.titulo)}</p>
+            <p style="font-size:11px;color:#5C7A9A;margin:0;">👤 ${_esc(a.asignadoA?.nombre||'—')} · ${a.horaInicio||''}${a.horaFin?'–'+a.horaFin:''}</p>
+            ${a.descripcion?`<p style="font-size:11px;color:#5C7A9A;margin:2px 0 0;">${_esc(a.descripcion)}</p>`:''}
+            ${a.notas?`<p style="font-size:11px;color:#8a9bb0;margin:2px 0 0;font-style:italic;">${_esc(a.notas)}</p>`:''}
+            <span style="font-size:10px;color:#fff;background:${c};padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px;">${AGENDA_ESTADO_LABELS[a.estado]||'⏳'}</span>
+          </div>
+          ${canEdit?`<div style="display:flex;gap:4px;flex-shrink:0;">
+            <button class="btn-sm" style="padding:3px 8px;font-size:11px;" onclick="openAgendaModal(${a.id})">✏️</button>
+            <button class="btn-sm btn-danger" style="padding:3px 8px;font-size:11px;" onclick="deleteAgendaItem(${a.id})">✕</button>
+          </div>`:''}
+        </div>
+      </div>`;}).join('')}
+  </div>`;
+}
+
+/* ── Modal alta/edición ───────────────────────────────────────── */
+function openAgendaModal(id){
+  _agEditId=id;
+  const item=id!=null?AGENDA_ITEMS.find(a=>a.id===id):null;
+  const assignees=[];
+  WORKERS.forEach(w=>assignees.push({id:w.id,nombre:w.name,rol:'trabajador'}));
+  SUPERVISORS.forEach(s=>assignees.push({id:s.id,nombre:s.name,rol:'supervisor'}));
+  PERSONAL_INM.forEach(p=>assignees.push({id:p.id,nombre:p.nombre,rol:'personal_inm'}));
+  let list=assignees;
+  if(currentRole==='supervisor'&&currentSupervisorRef){
+    const myIds=currentSupervisorRef.assignedWorkers||[];
+    list=assignees.filter(a=>a.rol==='trabajador'&&myIds.includes(a.id));
+  }
+  const tipos=['limpieza','mantenimiento','inspeccion','capacitacion','reunion','otro'];
+  const estados=['pendiente','confirmado','en_curso','completado','cancelado'];
+  const selA=item?.asignadoA?`${item.asignadoA.rol}:${item.asignadoA.id}`:'';
+  const modal=document.getElementById('modal-agenda');if(!modal)return;
+  modal.innerHTML=`<div class="modal-card" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <p class="ctitle" style="margin:0;">${item?'✏️ Editar servicio':'➕ Nuevo servicio en agenda'}</p>
+      <button class="btn-sec" style="padding:4px 10px;" onclick="document.getElementById('modal-agenda').style.display='none'">✕</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="fld"><label>Título *</label><input type="text" id="ag-titulo" placeholder="Ej: Limpieza de oficinas" value="${_esc(item?.titulo||'')}"></div>
+      <div class="fld"><label>Tipo de servicio</label><select id="ag-tipo">${tipos.map(t=>`<option value="${t}"${item?.tipo===t?' selected':''}>${AGENDA_TIPO_LABELS[t]}</option>`).join('')}</select></div>
+      <div class="fld"><label>Asignar a *</label><select id="ag-asignado" onchange="_checkAgDisp()">
+        <option value="">-- Selecciona persona --</option>
+        ${list.map(a=>{const rl={trabajador:'Trabajador',supervisor:'Supervisor',personal_inm:'Personal Inm.'}[a.rol]||a.rol;return`<option value="${a.rol}:${a.id}"${selA===`${a.rol}:${a.id}`?' selected':''}>${_esc(a.nombre)} (${rl})</option>`;}).join('')}
+      </select></div>
+      <div class="frow">
+        <div class="fld"><label>Fecha *</label><input type="date" id="ag-fecha" value="${item?.fecha||new Date().toISOString().split('T')[0]}" onchange="_checkAgDisp()"></div>
+      </div>
+      <div class="frow">
+        <div class="fld"><label>Hora inicio</label><input type="time" id="ag-hora-ini" value="${item?.horaInicio||''}" onchange="_checkAgDisp()"></div>
+        <div class="fld"><label>Hora fin</label><input type="time" id="ag-hora-fin" value="${item?.horaFin||''}"></div>
+      </div>
+      <div class="fld"><label>Descripción / Notas</label><textarea id="ag-notas" rows="2" placeholder="Instrucciones o detalles adicionales...">${_esc(item?.notas||'')}</textarea></div>
+      ${item?`<div class="fld"><label>Estado</label><select id="ag-estado">${estados.map(s=>`<option value="${s}"${item.estado===s?' selected':''}>${AGENDA_ESTADO_LABELS[s]}</option>`).join('')}</select></div>`:''}
+      <div id="ag-disp-msg" style="display:none;padding:8px 10px;border-radius:8px;font-size:12px;"></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn-royal" style="flex:1;" onclick="saveAgendaItem()">Guardar</button>
+        <button class="btn-sec" onclick="document.getElementById('modal-agenda').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+  </div>`;
+  modal.style.display='flex';
+}
+
+function _checkAgDisp(){
+  const aVal=(document.getElementById('ag-asignado')||{}).value||'';
+  const fecha=(document.getElementById('ag-fecha')||{}).value||'';
+  const horaIni=(document.getElementById('ag-hora-ini')||{}).value||'';
+  const horaFin=(document.getElementById('ag-hora-fin')||{}).value||'23:59';
+  const div=document.getElementById('ag-disp-msg');if(!div)return;
+  if(!aVal||!fecha){div.style.display='none';return;}
+  const[rol,idStr]=aVal.split(':');const id=parseInt(idStr);
+  const conflicts=AGENDA_ITEMS.filter(a=>{
+    if(_agEditId!=null&&a.id===_agEditId)return false;
+    if(!a.asignadoA||a.asignadoA.rol!==rol||a.asignadoA.id!==id)return false;
+    if(a.fecha!==fecha||a.estado==='cancelado'||!a.horaInicio)return false;
+    const aI=a.horaInicio,aF=a.horaFin||'23:59';
+    const bI=horaIni||'00:00',bF=horaFin;
+    return!(bF<=aI||bI>=aF);
+  });
+  let wConf=false;
+  if(rol==='trabajador'){const w=WORKERS.find(x=>x.id===id);if(w&&w.todayJobs?.length&&fecha===new Date().toISOString().split('T')[0])wConf=true;}
+  div.style.display='block';
+  if(conflicts.length||wConf){
+    div.style.cssText='display:block;padding:8px 10px;border-radius:8px;font-size:12px;background:#FEF3C7;color:#92400E;';
+    div.innerHTML='⚠️ '+(conflicts.length?`Tiene ${conflicts.length} servicio(s) asignado(s) en conflicto de horario.`:'')+' '+(wConf?'Tiene servicios de reserva activos ese día.':'');
+  } else {
+    div.style.cssText='display:block;padding:8px 10px;border-radius:8px;font-size:12px;background:#D1FAE5;color:#065F46;';
+    div.innerHTML='✅ Disponible en el horario seleccionado';
+  }
+}
+
+function saveAgendaItem(){
+  const titulo=((document.getElementById('ag-titulo')||{}).value||'').trim();
+  const tipo=(document.getElementById('ag-tipo')||{}).value||'otro';
+  const aVal=(document.getElementById('ag-asignado')||{}).value||'';
+  const fecha=(document.getElementById('ag-fecha')||{}).value||'';
+  const horaIni=(document.getElementById('ag-hora-ini')||{}).value||'';
+  const horaFin=(document.getElementById('ag-hora-fin')||{}).value||'';
+  const notas=((document.getElementById('ag-notas')||{}).value||'').trim();
+  const estadoEl=document.getElementById('ag-estado');
+  const estado=estadoEl?estadoEl.value:'pendiente';
+  if(!titulo){showToast('amber','⚠️','Escribe un título');return;}
+  if(!aVal){showToast('amber','⚠️','Selecciona a quién asignar');return;}
+  if(!fecha){showToast('amber','⚠️','Selecciona una fecha');return;}
+  const[rol,idStr]=aVal.split(':');const assigneeId=parseInt(idStr);
+  let nombre='';
+  if(rol==='trabajador'){const w=WORKERS.find(x=>x.id===assigneeId);nombre=w?.name||'';}
+  else if(rol==='supervisor'){const s=SUPERVISORS.find(x=>x.id===assigneeId);nombre=s?.name||'';}
+  else if(rol==='personal_inm'){const p=PERSONAL_INM.find(x=>x.id===assigneeId);nombre=p?.nombre||'';}
+  let porNombre='Admin',porRol=currentRole,porId=0;
+  if(currentRole==='supervisor'&&currentSupervisorRef){porNombre=currentSupervisorRef.name;porId=currentSupervisorRef.id;}
+  if(_agEditId!=null){
+    const idx=AGENDA_ITEMS.findIndex(a=>a.id===_agEditId);
+    if(idx>=0){Object.assign(AGENDA_ITEMS[idx],{titulo,tipo,fecha,horaInicio:horaIni,horaFin,notas,estado,asignadoA:{id:assigneeId,nombre,rol}});fbSaveAgendaItem(AGENDA_ITEMS[idx]);showToast('green','✅','Servicio actualizado');}
+  } else {
+    const newId=_agNextId();
+    const it={id:newId,titulo,tipo,descripcion:'',fecha,horaInicio:horaIni,horaFin,notas,estado:'pendiente',asignadoA:{id:assigneeId,nombre,rol},asignadoPor:{id:porId,nombre:porNombre,rol:porRol},redirectedBy:null,createdAt:Date.now()};
+    AGENDA_ITEMS.push(it);fbSaveAgendaItem(it);
+    const notifRol=rol==='personal_inm'?'personal_inm':rol==='supervisor'?'supervisor':'trabajador';
+    pushNotif(notifRol,'📅','blue',`Nuevo servicio asignado: ${titulo}`,`Fecha: ${fecha}${horaIni?' a las '+horaIni:''}`);
+    showToast('green','📅',`Servicio asignado a ${nombre}`);
+  }
+  document.getElementById('modal-agenda').style.display='none';
+  _agSelDate=fecha;
+  if(currentRole==='admin')renderAdminAgenda();
+  else if(currentRole==='supervisor')renderSupervisorAgenda();
+}
+
+function deleteAgendaItem(id){
+  if(!confirm('¿Eliminar este servicio de la agenda?'))return;
+  const idx=AGENDA_ITEMS.findIndex(a=>a.id===id);
+  if(idx>=0){fbDeleteAgendaItem(AGENDA_ITEMS[idx].id);AGENDA_ITEMS.splice(idx,1);showToast('green','🗑️','Servicio eliminado');}
+  if(currentRole==='admin'){renderAdminAgenda();}
+  else if(currentRole==='supervisor'){renderSupervisorAgenda();}
+}
+
+/* ── Supervisor Agenda ────────────────────────────────────────── */
+function renderSupervisorAgenda(){
+  const el=document.getElementById('sv-agenda-sv');if(!el||!currentSupervisorRef)return;
+  const myIds=currentSupervisorRef.assignedWorkers||[];
+  const todayStr=new Date().toISOString().split('T')[0];
+  let all=AGENDA_ITEMS.filter(a=>{
+    if(!a.asignadoA)return false;
+    if(a.asignadoA.rol==='trabajador'&&myIds.includes(a.asignadoA.id))return true;
+    if(a.asignadoA.rol==='supervisor'&&a.asignadoA.id===currentSupervisorRef.id)return true;
+    return false;
+  });
+  const upcoming=all.filter(a=>a.fecha>=todayStr&&a.estado!=='cancelado'&&a.estado!=='completado')
+    .sort((a,b)=>(a.fecha+' '+(a.horaInicio||''))>(b.fecha+' '+(b.horaInicio||''))?1:-1);
+  const past=all.filter(a=>a.fecha<todayStr||a.estado==='completado'||a.estado==='cancelado')
+    .sort((a,b)=>(a.fecha+' '+(a.horaInicio||''))>(b.fecha+' '+(b.horaInicio||''))?-1:1).slice(0,8);
+  const card=a=>{
+    const c=AGENDA_ROL_COLORS[a.asignadoA?.rol]||'#6B7280';
+    const byAdmin=a.asignadoPor?.rol==='admin';
+    const isMine=a.asignadoPor?.rol==='supervisor'&&a.asignadoPor?.id===currentSupervisorRef.id;
+    const canEdit=isMine;
+    const canRedirect=byAdmin&&a.asignadoA?.rol==='trabajador';
+    return`<div style="border-radius:10px;border-left:4px solid ${c};background:var(--card-bg,#fff);box-shadow:0 1px 4px rgba(0,0,0,.08);padding:10px 12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <p style="font-size:13px;font-weight:600;margin:0 0 2px;">${_esc(a.titulo)}</p>
+          <p style="font-size:11px;color:#5C7A9A;margin:0;">👤 ${_esc(a.asignadoA?.nombre||'—')} · ${a.fecha} ${a.horaInicio?'• '+a.horaInicio:''}</p>
+          ${byAdmin?`<span style="font-size:10px;color:#5C7A9A;">📋 Asignado por Admin</span>`:''}
+          <span style="font-size:10px;color:#fff;background:${c};padding:2px 6px;border-radius:4px;display:inline-block;margin-top:3px;">${AGENDA_ESTADO_LABELS[a.estado]||'⏳'}</span>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          ${canEdit?`<button class="btn-sm" style="padding:3px 8px;font-size:11px;" onclick="openAgendaModal(${a.id})">✏️</button>`:''}
+          ${canRedirect?`<button class="btn-sm" style="padding:3px 8px;font-size:11px;background:#7C3AED;color:#fff;" onclick="openRedirectModal(${a.id})" title="Redirigir a otro trabajador">↪️</button>`:''}
+          ${canEdit?`<button class="btn-sm btn-danger" style="padding:3px 8px;font-size:11px;" onclick="deleteAgendaItem(${a.id})">✕</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  };
+  el.innerHTML=`<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <p class="ctitle" style="margin:0;">📅 Agenda de mi equipo</p>
+      <button class="btn-sm" onclick="openAgendaModal(null)">+ Asignar servicio</button>
+    </div>
+    ${_renderAgUpcoming('supervisor')}
+    ${upcoming.length?`<p class="csub" style="font-weight:600;margin:12px 0 8px;">📅 Próximos (${upcoming.length})</p>${upcoming.map(card).join('')}`:'<p style="font-size:13px;color:#5C7A9A;text-align:center;padding:1rem 0;">Sin servicios próximos asignados</p>'}
+    ${past.length?`<p class="csub" style="font-weight:600;margin:12px 0 8px;">📋 Historial reciente</p>${past.map(card).join('')}`:''}
+  </div>`;
+}
+
+function openRedirectModal(agendaId){
+  const item=AGENDA_ITEMS.find(a=>a.id===agendaId);if(!item||!currentSupervisorRef)return;
+  const myIds=currentSupervisorRef.assignedWorkers||[];
+  const myWorkers=WORKERS.filter(w=>myIds.includes(w.id)&&w.id!==item.asignadoA?.id);
+  const modal=document.getElementById('modal-agenda');if(!modal)return;
+  modal.innerHTML=`<div class="modal-card" style="max-width:380px;">
+    <p class="ctitle">↪️ Redirigir servicio</p>
+    <p style="font-size:12px;color:#5C7A9A;margin-bottom:14px;">Reasignar "<strong>${_esc(item.titulo)}</strong>" (actualmente: ${_esc(item.asignadoA?.nombre||'—')}) a otro trabajador de tu equipo.</p>
+    <div class="fld"><label>Reasignar a</label><select id="redir-wid">
+      <option value="">-- Selecciona trabajador --</option>
+      ${myWorkers.map(w=>`<option value="${w.id}">${_esc(w.name)}</option>`).join('')}
+    </select></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn-royal" style="flex:1;" onclick="confirmRedirect(${agendaId})">Redirigir</button>
+      <button class="btn-sec" onclick="document.getElementById('modal-agenda').style.display='none'">Cancelar</button>
+    </div>
+  </div>`;
+  modal.style.display='flex';
+}
+
+function confirmRedirect(agendaId){
+  const wId=parseInt((document.getElementById('redir-wid')||{}).value||'');
+  if(!wId){showToast('amber','⚠️','Selecciona un trabajador');return;}
+  const w=WORKERS.find(x=>x.id===wId);if(!w)return;
+  const idx=AGENDA_ITEMS.findIndex(a=>a.id===agendaId);if(idx<0)return;
+  const old=AGENDA_ITEMS[idx].asignadoA;
+  AGENDA_ITEMS[idx].redirectedBy={id:old?.id,nombre:old?.nombre};
+  AGENDA_ITEMS[idx].asignadoA={id:w.id,nombre:w.name,rol:'trabajador'};
+  fbSaveAgendaItem(AGENDA_ITEMS[idx]);
+  pushNotif('trabajador','📅','blue',`Servicio redirigido: ${AGENDA_ITEMS[idx].titulo}`,`Fecha: ${AGENDA_ITEMS[idx].fecha}`);
+  showToast('green','↪️',`Servicio redirigido a ${w.name}`);
+  document.getElementById('modal-agenda').style.display='none';
+  renderSupervisorAgenda();
+}
+
+/* ── Personal Inmuebles — card en inicio ──────────────────────── */
+function renderPersonalInmAgenda(){
+  const myId=currentPersonalId;
+  const todayStr=new Date().toISOString().split('T')[0];
+  const myItems=AGENDA_ITEMS.filter(a=>a.asignadoA?.id===myId&&a.asignadoA?.rol==='personal_inm'&&a.estado!=='cancelado')
+    .sort((a,b)=>(a.fecha+' '+(a.horaInicio||''))>(b.fecha+' '+(b.horaInicio||''))?1:-1);
+  // Inject into pi-inicio-content as an extra card
+  const cont=document.getElementById('pi-inicio-content');if(!cont)return;
+  const existing=document.getElementById('pi-agenda-inject');
+  if(existing)existing.remove();
+  if(!myItems.length)return;
+  const div=document.createElement('div');div.id='pi-agenda-inject';
+  div.innerHTML=`<div class="card" style="margin-top:12px;border-left:4px solid #059669;">
+    <p class="ctitle" style="color:#059669;">📅 Servicios asignados</p>
+    ${myItems.slice(0,5).map(a=>{
+      const isT=a.fecha===todayStr,isPast=a.fecha<todayStr;
+      const c=isPast?'#6B7280':isT?'#059669':'#1A56DB';
+      return`<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border,#E5EAF1);">
+        <div style="width:4px;height:36px;border-radius:2px;background:${c};flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <p style="font-size:13px;font-weight:600;margin:0;">${_esc(a.titulo)}</p>
+          <p style="font-size:11px;color:#5C7A9A;margin:0;">${isT?'<strong>Hoy</strong>':fmtDate(a.fecha)}${a.horaInicio?' · '+a.horaInicio:''}</p>
+          ${a.notas?`<p style="font-size:11px;color:#8a9bb0;margin:0;font-style:italic;">${_esc(a.notas)}</p>`:''}
+        </div>
+        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${c};color:#fff;flex-shrink:0;">${isPast?'Pasado':isT?'Hoy':'Próximo'}</span>
+      </div>`;}).join('')}
+  </div>`;
+  cont.appendChild(div);
+}
+
+/* ── Trabajador — servicios especiales en su panel de agenda ───── */
+function renderTrabajadorAgendaExtra(){
+  const el=document.getElementById('t-agenda-especiales');if(!el||!currentWorkerRef)return;
+  const myId=currentWorkerRef.id;const todayStr=new Date().toISOString().split('T')[0];
+  const myItems=AGENDA_ITEMS.filter(a=>a.asignadoA?.id===myId&&a.asignadoA?.rol==='trabajador'&&a.estado!=='cancelado')
+    .sort((a,b)=>(a.fecha+' '+(a.horaInicio||''))>(b.fecha+' '+(b.horaInicio||''))?1:-1);
+  if(!myItems.length){el.style.display='none';return;}
+  el.style.display='block';
+  el.innerHTML=`<div class="card" style="border-left:4px solid #7C3AED;">
+    <p class="ctitle" style="color:#7C3AED;">🗓️ Servicios especiales asignados</p>
+    ${myItems.map(a=>{
+      const isT=a.fecha===todayStr,isPast=a.fecha<todayStr;
+      const c=isPast?'#6B7280':isT?'#7C3AED':'#1A56DB';
+      return`<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border,#E5EAF1);">
+        <div style="flex:1;">
+          <p style="font-size:13px;font-weight:600;margin:0;">${_esc(a.titulo)}</p>
+          <p style="font-size:11px;color:#5C7A9A;margin:0;">${isT?'<strong style="color:#7C3AED;">Hoy</strong>':isPast?fmtDate(a.fecha):fmtDate(a.fecha)}${a.horaInicio?' · '+a.horaInicio:''}</p>
+          ${a.notas?`<p style="font-size:11px;color:#8a9bb0;margin:0;font-style:italic;">${_esc(a.notas)}</p>`:''}
+        </div>
+        <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${c};color:#fff;">${AGENDA_ESTADO_LABELS[a.estado]||'⏳'}</span>
+      </div>`;}).join('')}
+  </div>`;
 }

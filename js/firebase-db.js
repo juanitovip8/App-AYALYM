@@ -238,6 +238,15 @@ async function loadAllData() {
     localStorage.setItem('ayalym-promos', JSON.stringify(PROMOTIONS.filter(function(p){ return p.activo !== false; })));
   } catch(ex){}
 
+  /* 8b. AGENDA_ITEMS — servicios especiales asignados */
+  try {
+    var agendaSnap = await _col('agenda').get();
+    if (!agendaSnap.empty) {
+      AGENDA_ITEMS.length = 0;
+      agendaSnap.docs.forEach(function(d){ AGENDA_ITEMS.push(d.data()); });
+    }
+  } catch(e) { console.warn('AGENDA_ITEMS load', e); }
+
   /* 9. SUPERVISOR ASISTENCIAS — siempre cargar desde Firestore (datos operativos, nunca purgar) */
   var svAstSnap = await _col('sv_asistencias').get();
   if (!svAstSnap.empty) {
@@ -454,6 +463,20 @@ function fbSaveSupervisorAsistencias() {
     });
     b.commit().catch(function(e){ console.warn('fbSaveSupervisorAsistencias', e); });
   } catch(e) { console.warn('fbSaveSupervisorAsistencias', e); }
+}
+
+function fbSaveAgendaItem(item) {
+  try {
+    _col('agenda').doc(String(item.id)).set(_clone(item))
+      .catch(function(e){ console.warn('fbSaveAgendaItem', e); });
+  } catch(e) { console.warn('fbSaveAgendaItem', e); }
+}
+
+function fbDeleteAgendaItem(id) {
+  try {
+    _col('agenda').doc(String(id)).delete()
+      .catch(function(e){ console.warn('fbDeleteAgendaItem', e); });
+  } catch(e) { console.warn('fbDeleteAgendaItem', e); }
 }
 
 function fbSavePromotions() {

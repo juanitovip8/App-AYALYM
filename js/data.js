@@ -224,6 +224,16 @@ const PRICES={
    ──────────────────────────────────────────────────────────── */
 let PROMOTIONS = [];
 
+/* ── AGENDA ───────────────────────────────────────────────────
+   Servicios especiales asignados por admin/supervisor a cualquier
+   rol (trabajador, supervisor, personal_inm).
+   Estructura: {id, titulo, tipo, descripcion, fecha, horaInicio,
+     horaFin, notas, estado, asignadoA:{id,nombre,rol},
+     asignadoPor:{id,nombre,rol}, redirectedBy:null|{id,nombre},
+     createdAt}
+   ──────────────────────────────────────────────────────────── */
+let AGENDA_ITEMS = [];
+
 /* ── SITE CONFIG ──────────────────────────────────────────────
    Textos, redes y datos editables de la landing page.
    Se persiste en Firestore config/site y localStorage.
