@@ -271,7 +271,15 @@ async function loadAllData() {
         if (sc.values)    SITE_CONFIG.values  = sc.values;
         if (sc.repse)     Object.assign(SITE_CONFIG.repse,    sc.repse);
         if (sc.contacto)  Object.assign(SITE_CONFIG.contacto, sc.contacto);
-        if (sc.social)    Object.assign(SITE_CONFIG.social,   sc.social);
+        if (sc.social) {
+          if (Array.isArray(sc.social)) {
+            SITE_CONFIG.social = sc.social;
+          } else {
+            /* Migrar formato legacy {fb,ig,tiktok} → array */
+            var _legMap=[{emoji:'📘',label:'Facebook',key:'fb'},{emoji:'📷',label:'Instagram',key:'ig'},{emoji:'🎵',label:'TikTok',key:'tiktok'}];
+            SITE_CONFIG.social=_legMap.filter(function(m){return sc.social[m.key];}).map(function(m){return{emoji:m.emoji,label:m.label,url:sc.social[m.key]};});
+          }
+        }
         /* Persist to localStorage for landing page (cross-tab) */
         try { localStorage.setItem('ayalym-site-config', JSON.stringify(SITE_CONFIG)); } catch(ex){}
       }

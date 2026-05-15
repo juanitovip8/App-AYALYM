@@ -1172,30 +1172,26 @@
       <!-- ── PANEL: REDES SOCIALES ── -->
       <div id="web-panel-redes" style="display:none;">
         <div class="card">
-          <p class="ctitle">📱 Redes sociales</p>
-          <div class="fld">
-            <label>📘 Facebook</label>
-            <input type="url" id="we-social-fb" placeholder="https://www.facebook.com/ayalym23">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <p class="ctitle" style="margin:0;">📱 Redes sociales</p>
+            <button class="btn-sec" style="font-size:12px;padding:5px 12px;" onclick="weAddSocial()">➕ Agregar red</button>
           </div>
-          <div class="fld">
-            <label>📷 Instagram</label>
-            <input type="url" id="we-social-ig" placeholder="https://www.instagram.com/ayalym23">
-          </div>
-          <div class="fld">
-            <label>🎵 TikTok</label>
-            <input type="url" id="we-social-tiktok" placeholder="https://www.tiktok.com/@ayalym23">
-          </div>
-          <button class="btn-royal" style="width:100%;margin-top:8px;" onclick="saveWebRedes()">💾 Guardar redes</button>
+          <p style="font-size:12px;color:#5C7A9A;margin-bottom:14px;">Agrega o elimina tus perfiles. Los cambios se reflejan en el sitio web.</p>
+          <div id="we-redes-list"></div>
+          <button class="btn-royal" style="width:100%;margin-top:10px;" onclick="saveWebRedes()">💾 Guardar redes</button>
         </div>
       </div>
 
       <!-- ── PANEL: VALORES ── -->
       <div id="web-panel-valores" style="display:none;">
         <div class="card">
-          <p class="ctitle">💡 Valores de la empresa</p>
-          <p style="font-size:12px;color:#5C7A9A;margin-bottom:14px;">Estos aparecen en la sección "Nosotros" de la página web.</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <p class="ctitle" style="margin:0;">💡 Valores de la empresa</p>
+            <button class="btn-sec" style="font-size:12px;padding:5px 12px;" onclick="weAddValor()">➕ Agregar valor</button>
+          </div>
+          <p style="font-size:12px;color:#5C7A9A;margin-bottom:14px;">Aparecen en la sección "Nosotros" del sitio web. Toca para expandir y editar.</p>
           <div id="we-values-list"></div>
-          <button class="btn-royal" style="width:100%;margin-top:8px;" onclick="saveWebValores()">💾 Guardar valores</button>
+          <button class="btn-royal" style="width:100%;margin-top:10px;" onclick="saveWebValores()">💾 Guardar valores</button>
         </div>
       </div>
     </div>
@@ -1476,7 +1472,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=144"></script>
+<script src="js/app.js?v=145"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 

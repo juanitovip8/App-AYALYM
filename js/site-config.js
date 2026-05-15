@@ -42,11 +42,11 @@
       horario:   'Lunes a Viernes: 8:00 — 18:00 hrs\nSábado: 9:00 — 14:00 hrs',
       whatsapp:  'https://wa.me/521XXXXXXXXXX'
     },
-    social: {
-      fb:     'https://www.facebook.com/ayalym23',
-      ig:     'https://www.instagram.com/ayalym23',
-      tiktok: 'https://www.tiktok.com/@ayalym23'
-    }
+    social: [
+      {emoji:'📘', label:'Facebook',  url:'https://www.facebook.com/ayalym23'},
+      {emoji:'📷', label:'Instagram', url:'https://www.instagram.com/ayalym23'},
+      {emoji:'🎵', label:'TikTok',    url:'https://www.tiktok.com/@ayalym23'}
+    ]
   };
 
   function set(id, text){
@@ -92,13 +92,16 @@
     set('lp-nosotros-p1',        n.p1        || DEFAULTS.nosotros.p1);
     set('lp-nosotros-p2',        n.p2        || DEFAULTS.nosotros.p2);
 
-    // Values
+    // Values (dynamic count — update existing elements, ignore extras beyond what HTML has)
     var vals = cfg.values || DEFAULTS.values;
-    for(var i=0;i<4;i++){
-      var v = vals[i] || DEFAULTS.values[i];
-      set('lp-val-'+(i+1)+'-icon',  v.icon);
-      set('lp-val-'+(i+1)+'-title', v.title);
-      set('lp-val-'+(i+1)+'-desc',  v.desc);
+    for(var i=0;i<vals.length;i++){
+      var v = vals[i];
+      if(!v) continue;
+      // Elements lp-val-N-* use 1-based index for the first 4 (hardcoded in HTML)
+      var n = i + 1;
+      set('lp-val-'+n+'-icon',  v.icon);
+      set('lp-val-'+n+'-title', v.title);
+      set('lp-val-'+n+'-desc',  v.desc);
     }
 
     // REPSE
@@ -118,11 +121,32 @@
     }
     setHref('lp-contacto-whatsapp', c.whatsapp || DEFAULTS.contacto.whatsapp);
 
-    // Social
-    var so = cfg.social || {};
-    setHref('lp-social-fb',    so.fb     || DEFAULTS.social.fb);
-    setHref('lp-social-ig',    so.ig     || DEFAULTS.social.ig);
-    setHref('lp-social-tiktok',so.tiktok || DEFAULTS.social.tiktok);
+    // Social (array format — map known platforms, inject extras)
+    var soArr = cfg.social;
+    if(Array.isArray(soArr)){
+      var platformMap = {facebook:'lp-social-fb', instagram:'lp-social-ig', tiktok:'lp-social-tiktok'};
+      var extras = [];
+      soArr.forEach(function(item){
+        if(!item || !item.url) return;
+        var lbl = (item.label || '').toLowerCase();
+        var matched = false;
+        Object.keys(platformMap).forEach(function(kw){
+          if(lbl.indexOf(kw) !== -1){ setHref(platformMap[kw], item.url); matched = true; }
+        });
+        if(!matched) extras.push(item);
+      });
+      var extraEl = document.getElementById('lp-social-extra');
+      if(extraEl){
+        extraEl.innerHTML = extras.map(function(item){
+          return '<a href="'+(item.url||'#')+'" class="social-link" target="_blank" rel="noopener" aria-label="'+(item.label||'')+'" title="'+(item.label||'')+'" style="font-size:20px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);">'+(item.emoji||'🔗')+'</a>';
+        }).join('');
+      }
+    } else if(soArr && typeof soArr === 'object'){
+      /* Legacy object format */
+      setHref('lp-social-fb',    soArr.fb    || DEFAULTS.social[0].url);
+      setHref('lp-social-ig',    soArr.ig    || DEFAULTS.social[1].url);
+      setHref('lp-social-tiktok',soArr.tiktok|| DEFAULTS.social[2].url);
+    }
   }
 
   // Load from localStorage and apply on DOMContentLoaded

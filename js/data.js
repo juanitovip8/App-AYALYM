@@ -264,9 +264,9 @@ let SITE_CONFIG = {
     horario:'Lunes a Viernes: 8:00 — 18:00 hrs\nSábado: 9:00 — 14:00 hrs',
     whatsapp:'https://wa.me/521XXXXXXXXXX'
   },
-  social:{
-    fb:'https://www.facebook.com/ayalym23',
-    ig:'https://www.instagram.com/ayalym23',
-    tiktok:'https://www.tiktok.com/@ayalym23'
-  }
+  social:[
+    {emoji:'📘', label:'Facebook',  url:'https://www.facebook.com/ayalym23'},
+    {emoji:'📷', label:'Instagram', url:'https://www.instagram.com/ayalym23'},
+    {emoji:'🎵', label:'TikTok',    url:'https://www.tiktok.com/@ayalym23'}
+  ]
 };

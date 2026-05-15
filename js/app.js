@@ -10124,26 +10124,142 @@ function _wePopulateContacto() {
   _v('we-repse-empresa', r.empresa || '');
 }
 
-function _wePopulateRedes() {
-  const so = SITE_CONFIG.social || {};
-  _v('we-social-fb',    so.fb     || '');
-  _v('we-social-ig',    so.ig     || '');
-  _v('we-social-tiktok',so.tiktok || '');
+/* ── Accordion state ── */
+let _weValOpen = new Set();
+let _weSocOpen = new Set();
+const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+
+function _wePopulateRedes()  { _renderWeRedes(); }
+function _wePopulateValores(){ _renderWeValores(); }
+
+/* ── VALORES accordion ── */
+function _renderWeValores(){
+  const list = document.getElementById('we-values-list');
+  if(!list) return;
+  const vals = SITE_CONFIG.values || [];
+  if(!vals.length){
+    list.innerHTML='<p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin valores. Agrega el primero.</p>';
+    return;
+  }
+  list.innerHTML = vals.map((v,i)=>{
+    const open = _weValOpen.has(i);
+    return`<div style="border:1px solid #D8E8F5;border-radius:10px;margin-bottom:8px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none;background:${open?'#EFF6FF':'transparent'};" onclick="weToggleValor(${i})">
+        <span style="font-size:20px;min-width:28px;text-align:center;line-height:1;">${v.icon||'💡'}</span>
+        <span style="font-size:13px;font-weight:600;flex:1;color:#042C53;">${_esc(v.title||'Sin título')}</span>
+        <button onclick="event.stopPropagation();weDeleteValor(${i})" style="background:none;border:none;cursor:pointer;font-size:15px;color:#B91C1C;padding:2px 6px;flex-shrink:0;" title="Eliminar">🗑</button>
+        <span style="font-size:11px;color:#5C7A9A;flex-shrink:0;">${open?'▲':'▼'}</span>
+      </div>
+      <div style="display:${open?'block':'none'};padding:12px 14px;border-top:1px solid #D8E8F5;background:#FAFCFF;">
+        <div class="frow">
+          <div style="flex:0 0 80px;"><label>Icono</label><input type="text" id="we-val${i}-icon" value="${_esc(v.icon||'')}" maxlength="4" style="font-size:20px;text-align:center;width:100%;"></div>
+          <div style="flex:1;"><label>Título</label><input type="text" id="we-val${i}-title" value="${_esc(v.title||'')}"></div>
+        </div>
+        <div class="fld"><label>Descripción</label><input type="text" id="we-val${i}-desc" value="${_esc(v.desc||'')}"></div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function _wePopulateValores() {
-  const list = document.getElementById('we-values-list');
-  if (!list) return;
-  const vals = SITE_CONFIG.values || [];
-  list.innerHTML = vals.map((v,i) => `
-    <div style="border:1px solid #D8E8F5;border-radius:10px;padding:12px;margin-bottom:10px;">
-      <p style="font-size:11px;font-weight:700;color:#5C7A9A;text-transform:uppercase;margin-bottom:8px;">Valor ${i+1}</p>
-      <div class="frow">
-        <div><label>Icono (emoji)</label><input type="text" id="we-val${i}-icon" value="${v.icon||''}" maxlength="4" style="font-size:18px;text-align:center;width:60px;"></div>
-        <div><label>Título</label><input type="text" id="we-val${i}-title" value="${v.title||''}"></div>
+function _weSaveAllValorFields(){
+  (SITE_CONFIG.values||[]).forEach((v,i)=>{
+    const icon=(document.getElementById(`we-val${i}-icon`)||{}).value;
+    const title=(document.getElementById(`we-val${i}-title`)||{}).value;
+    const desc=(document.getElementById(`we-val${i}-desc`)||{}).value;
+    if(icon!==undefined) v.icon=icon;
+    if(title!==undefined) v.title=title;
+    if(desc!==undefined) v.desc=desc;
+  });
+}
+
+function weToggleValor(i){
+  _weSaveAllValorFields();
+  if(_weValOpen.has(i)) _weValOpen.delete(i); else _weValOpen.add(i);
+  _renderWeValores();
+}
+
+function weDeleteValor(i){
+  if(!confirm('¿Eliminar este valor?')) return;
+  _weSaveAllValorFields();
+  SITE_CONFIG.values.splice(i,1);
+  _weValOpen.clear();
+  _renderWeValores();
+}
+
+function weAddValor(){
+  _weSaveAllValorFields();
+  if(!SITE_CONFIG.values) SITE_CONFIG.values=[];
+  const idx = SITE_CONFIG.values.length;
+  SITE_CONFIG.values.push({icon:'✨', title:'Nuevo valor', desc:'Descripción del valor.'});
+  _weValOpen.clear();
+  _weValOpen.add(idx);
+  _renderWeValores();
+}
+
+/* ── REDES SOCIALES accordion ── */
+function _renderWeRedes(){
+  const list = document.getElementById('we-redes-list');
+  if(!list) return;
+  const redes = Array.isArray(SITE_CONFIG.social) ? SITE_CONFIG.social : [];
+  if(!redes.length){
+    list.innerHTML='<p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin redes. Agrega la primera.</p>';
+    return;
+  }
+  list.innerHTML = redes.map((s,i)=>{
+    const open = _weSocOpen.has(i);
+    return`<div style="border:1px solid #D8E8F5;border-radius:10px;margin-bottom:8px;overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none;background:${open?'#EFF6FF':'transparent'};" onclick="weToggleSocial(${i})">
+        <span style="font-size:20px;min-width:28px;text-align:center;line-height:1;">${s.emoji||'🔗'}</span>
+        <span style="font-size:13px;font-weight:600;flex:1;color:#042C53;">${_esc(s.label||'Sin nombre')}</span>
+        <span style="font-size:11px;color:#5C7A9A;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1;">${_esc((s.url||'').replace(/^https?:\/\/(www\.)?/,''))}</span>
+        <button onclick="event.stopPropagation();weDeleteSocial(${i})" style="background:none;border:none;cursor:pointer;font-size:15px;color:#B91C1C;padding:2px 6px;flex-shrink:0;" title="Eliminar">🗑</button>
+        <span style="font-size:11px;color:#5C7A9A;flex-shrink:0;">${open?'▲':'▼'}</span>
       </div>
-      <div class="fld"><label>Descripción</label><input type="text" id="we-val${i}-desc" value="${v.desc||''}"></div>
-    </div>`).join('');
+      <div style="display:${open?'block':'none'};padding:12px 14px;border-top:1px solid #D8E8F5;background:#FAFCFF;">
+        <div class="frow">
+          <div style="flex:0 0 80px;"><label>Emoji</label><input type="text" id="we-soc${i}-emoji" value="${_esc(s.emoji||'')}" maxlength="4" style="font-size:20px;text-align:center;width:100%;"></div>
+          <div style="flex:1;"><label>Nombre</label><input type="text" id="we-soc${i}-label" value="${_esc(s.label||'')}" placeholder="Ej: LinkedIn"></div>
+        </div>
+        <div class="fld"><label>URL completa</label><input type="url" id="we-soc${i}-url" value="${_esc(s.url||'')}" placeholder="https://..."></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _weSaveAllSocFields(){
+  if(!Array.isArray(SITE_CONFIG.social)) return;
+  SITE_CONFIG.social.forEach((s,i)=>{
+    const emoji=(document.getElementById(`we-soc${i}-emoji`)||{}).value;
+    const label=(document.getElementById(`we-soc${i}-label`)||{}).value;
+    const url=(document.getElementById(`we-soc${i}-url`)||{}).value;
+    if(emoji!==undefined) s.emoji=emoji;
+    if(label!==undefined) s.label=label;
+    if(url!==undefined) s.url=url;
+  });
+}
+
+function weToggleSocial(i){
+  _weSaveAllSocFields();
+  if(_weSocOpen.has(i)) _weSocOpen.delete(i); else _weSocOpen.add(i);
+  _renderWeRedes();
+}
+
+function weDeleteSocial(i){
+  if(!confirm('¿Eliminar esta red social?')) return;
+  _weSaveAllSocFields();
+  SITE_CONFIG.social.splice(i,1);
+  _weSocOpen.clear();
+  _renderWeRedes();
+}
+
+function weAddSocial(){
+  _weSaveAllSocFields();
+  if(!Array.isArray(SITE_CONFIG.social)) SITE_CONFIG.social=[];
+  const idx = SITE_CONFIG.social.length;
+  SITE_CONFIG.social.push({emoji:'🔗', label:'Nueva red', url:''});
+  _weSocOpen.clear();
+  _weSocOpen.add(idx);
+  _renderWeRedes();
 }
 
 /* ── Live preview of hero ── */
@@ -10202,29 +10318,15 @@ function saveWebContacto() {
 }
 
 function saveWebRedes() {
-  const g = id => (document.getElementById(id)||{}).value || '';
-  SITE_CONFIG.social = {
-    fb:     g('we-social-fb'),
-    ig:     g('we-social-ig'),
-    tiktok: g('we-social-tiktok')
-  };
+  _weSaveAllSocFields();
   if (typeof fbSaveSiteConfig === 'function') fbSaveSiteConfig();
-  showToast('green','💾','Redes sociales actualizadas');
+  showToast('green','💾','Redes sociales actualizadas en el sitio web');
 }
 
 function saveWebValores() {
-  const vals = [];
-  for (let i = 0; i < 4; i++) {
-    const g = id => (document.getElementById(id)||{}).value || '';
-    vals.push({
-      icon:  g(`we-val${i}-icon`),
-      title: g(`we-val${i}-title`),
-      desc:  g(`we-val${i}-desc`)
-    });
-  }
-  SITE_CONFIG.values = vals;
+  _weSaveAllValorFields();
   if (typeof fbSaveSiteConfig === 'function') fbSaveSiteConfig();
-  showToast('green','💾','Valores de empresa actualizados');
+  showToast('green','💾','Valores actualizados en el sitio web');
 }
 
 function _renderPromoList() {
