@@ -6804,17 +6804,24 @@ function _renderPlanVer(ps,personalId){
   </div>`;
 }
 
+/* Mapeo días contrato → claves del plan de trabajo */
+const _diasSvcMap={lun:'L',mar:'Ma',mie:'Mi',jue:'J',vie:'V',sab:'S',dom:'D'};
+function _defaultDiasPlan(ps){
+  return (ps.diasServicio||[]).map(d=>_diasSvcMap[d]).filter(Boolean);
+}
+
 /* ── Editor ── */
 function _renderPlanEditor(ps,personalId){
   const body=document.getElementById('plan-trabajo-body');if(!body)return;
   const pi=personalId?PERSONAL_INM.find(p=>p.id===personalId):null;
   _planFilaCount=0;
   const plan=(ps.planesTrabajo||{})[personalId]||ps.planTrabajo||null;
+  const defaultDias=_defaultDiasPlan(ps);
   const filas=(plan&&plan.filas&&plan.filas.length)
     ?plan.filas
-    :[{id:1,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]},
-      {id:2,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]},
-      {id:3,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]}];
+    :[{id:1,horaInicio:'',horaFin:'',area:'',actividades:'',dias:defaultDias},
+      {id:2,horaInicio:'',horaFin:'',area:'',actividades:'',dias:defaultDias},
+      {id:3,horaInicio:'',horaFin:'',area:'',actividades:'',dias:defaultDias}];
   body.innerHTML=_piHeaderHtml(pi)+`<div style="padding:16px 20px;background:#0D1B2C!important;">
     <div id="plan-filas-container">${filas.map(f=>_planFilaHtml(f)).join('')}</div>
     <button onclick="agregarFilaPlan()" style="margin-top:10px;padding:7px 18px;border-radius:8px;background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);font-size:12px;font-weight:600;cursor:pointer;">+ Agregar fila</button>
@@ -6853,8 +6860,10 @@ function _planFilaHtml(f){
 }
 function agregarFilaPlan(){
   const c=document.getElementById('plan-filas-container');if(!c)return;
+  const ps=PROPERTY_SERVICES.find(p=>p.id===_planPsId);
+  const defaultDias=ps?_defaultDiasPlan(ps):[];
   const div=document.createElement('div');
-  div.innerHTML=_planFilaHtml({horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]});
+  div.innerHTML=_planFilaHtml({horaInicio:'',horaFin:'',area:'',actividades:'',dias:defaultDias});
   c.appendChild(div.firstElementChild);
 }
 function guardarPlanTrabajo(psId,personalId){
