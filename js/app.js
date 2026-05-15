@@ -6772,7 +6772,7 @@ function _piHeaderHtml(pi){
 function _renderPlanVer(ps,personalId){
   const body=document.getElementById('plan-trabajo-body');if(!body)return;
   const pi=personalId?PERSONAL_INM.find(p=>p.id===personalId):null;
-  const plan=(ps.planesTrabajo||{})[personalId]||ps.planTrabajo||null;
+  const plan=ps.planesTrabajo ? (ps.planesTrabajo[personalId]||null) : (ps.planTrabajo||null);
   const filas=(plan&&plan.filas)||[];
   if(!filas.length){
     body.innerHTML=_piHeaderHtml(pi)+`<div style="padding:40px 20px;text-align:center;color:#6EAAD8;font-size:13px;background:#0D1B2C;">Sin plan de trabajo registrado.</div>`;
@@ -6816,7 +6816,7 @@ function _renderPlanEditor(ps,personalId){
   const body=document.getElementById('plan-trabajo-body');if(!body)return;
   const pi=personalId?PERSONAL_INM.find(p=>p.id===personalId):null;
   _planFilaCount=0;
-  const plan=(ps.planesTrabajo||{})[personalId]||ps.planTrabajo||null;
+  const plan=ps.planesTrabajo ? (ps.planesTrabajo[personalId]||null) : (ps.planTrabajo||null);
   const defaultDias=_defaultDiasPlan(ps);
   const filas=(plan&&plan.filas&&plan.filas.length)
     ?plan.filas
@@ -6902,7 +6902,7 @@ function eliminarPlanTrabajo(psId,personalId){
 /* ── PDF Plan de Trabajo ── */
 function exportarPlanTrabajoPDF(psId,personalId){
   const ps=PROPERTY_SERVICES.find(p=>p.id===psId);if(!ps)return;
-  const plan=(ps.planesTrabajo||{})[personalId]||ps.planTrabajo||null;
+  const plan=ps.planesTrabajo ? (ps.planesTrabajo[personalId]||null) : (ps.planTrabajo||null);
   if(!(plan&&plan.filas&&plan.filas.length)){showToast('amber','⚠️','El plan de trabajo está vacío.');return;}
   const pi=personalId?PERSONAL_INM.find(p=>p.id===personalId):null;
   const logo=new Image();
