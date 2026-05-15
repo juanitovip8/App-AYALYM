@@ -38,9 +38,9 @@ let CLEANING_TYPES=[
 ];
 
 let SVC_TYPES=[
-  {id:'depto',nombre:'Limpieza de departamento',precio:500,durMin:60,durMax:180,activo:true},
-  {id:'auto',nombre:'Lavado de auto',precio:400,durMin:30,durMax:60,activo:true},
-  {id:'tapiceria',nombre:'Lavado de tapicería',precio:1200,durMin:90,durMax:240,activo:true},
+  {id:'depto',nombre:'Limpieza de departamento',precio:500,durMin:60,durMax:180,activo:true,mostrarEnWeb:true},
+  {id:'auto',nombre:'Lavado de auto',precio:400,durMin:30,durMax:60,activo:true,mostrarEnWeb:true},
+  {id:'tapiceria',nombre:'Lavado de tapicería',precio:1200,durMin:90,durMax:240,activo:true,mostrarEnWeb:true},
 ];
 
 let URGENCIAS=[

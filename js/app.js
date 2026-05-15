@@ -112,10 +112,10 @@ function renderCleaningTypesForClient(){
   updateDurationBanner();
 }
 
-/* Populate #svc select from active SVC_TYPES */
+/* Populate #svc select from active+webVisible SVC_TYPES */
 function renderSvcSelect(){
   const el=document.getElementById('svc');if(!el)return;
-  const active=SVC_TYPES.filter(s=>s.activo!==false);
+  const active=SVC_TYPES.filter(s=>s.activo!==false&&s.mostrarEnWeb!==false);
   el.innerHTML=active.map(s=>`<option value="${s.id}">${s.nombre}</option>`).join('');
   onSvcChange();
 }
@@ -2775,8 +2775,9 @@ function renderSvcDurationList(){
           <p style="font-size:13px;font-weight:600;color:#042C53;margin:0;">${s.nombre}</p>
           <span style="font-size:11px;color:#5C7A9A;">${isOn?'Activo':'Inactivo'}</span>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;" onclick="event.stopPropagation()">
-          <button class="toggle-btn${isOn?' on':''}" onclick="toggleSvcType(${i})">${isOn?'Activo':'Inactivo'}</button>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;" onclick="event.stopPropagation()">
+          <button class="toggle-btn${isOn?' on':''}" onclick="toggleSvcType(${i})" title="Activo para reservas">${isOn?'✅ Activo':'⚪ Inactivo'}</button>
+          <button class="toggle-btn${s.mostrarEnWeb!==false?' on':''}" onclick="toggleSvcWebVisibility(${i})" title="Visible en sitio web" style="${s.mostrarEnWeb!==false?'background:#059669;':'background:#6B7280;'}color:#fff;border-color:transparent;">${s.mostrarEnWeb!==false?'🌐 En web':'👁️ Oculto'}</button>
           <button class="btn-danger" onclick="removeSvcType(${i})">✕</button>
           <span id="stc-chev-${s.id}" class="stc-chevron${collapsed?'':' open'}">▼</span>
         </div>
@@ -2800,7 +2801,8 @@ function renderSvcDurationList(){
 }
 
 function toggleSvcType(i){SVC_TYPES[i].activo=!(SVC_TYPES[i].activo!==false);renderSvcDurationList();renderSvcSelect();savePricesToLanding();fbSaveConfig();showToast(SVC_TYPES[i].activo!==false?'green':'blue',SVC_TYPES[i].activo!==false?'✅':'⚪','"'+SVC_TYPES[i].nombre+'" '+(SVC_TYPES[i].activo!==false?'activado':'desactivado'));}
-function addSvcType(){const n=document.getElementById('ns-name').value.trim(),p=parseInt(document.getElementById('ns-price').value)||500,dMin=parseInt(document.getElementById('ns-dur-min').value)||30,dMax=parseInt(document.getElementById('ns-dur-max').value)||60;if(!n){showToast('amber','⚠️','Escribe el nombre');return;}SVC_TYPES.push({id:'s'+Date.now(),nombre:n,precio:p,durMin:dMin,durMax:dMax,activo:true});_closeModal();renderSvcDurationList();renderSvcSelect();savePricesToLanding();fbSaveConfig();showToast('green','✅','"'+n+'" agregado');}
+function toggleSvcWebVisibility(i){SVC_TYPES[i].mostrarEnWeb=!(SVC_TYPES[i].mostrarEnWeb!==false);renderSvcDurationList();renderSvcSelect();fbSaveConfig();showToast(SVC_TYPES[i].mostrarEnWeb!==false?'green':'blue',SVC_TYPES[i].mostrarEnWeb!==false?'🌐':'👁️','"'+SVC_TYPES[i].nombre+'" '+(SVC_TYPES[i].mostrarEnWeb!==false?'visible en sitio web':'oculto del sitio web'));}
+function addSvcType(){const n=document.getElementById('ns-name').value.trim(),p=parseInt(document.getElementById('ns-price').value)||500,dMin=parseInt(document.getElementById('ns-dur-min').value)||30,dMax=parseInt(document.getElementById('ns-dur-max').value)||60;if(!n){showToast('amber','⚠️','Escribe el nombre');return;}SVC_TYPES.push({id:'s'+Date.now(),nombre:n,precio:p,durMin:dMin,durMax:dMax,activo:true,mostrarEnWeb:true});_closeModal();renderSvcDurationList();renderSvcSelect();savePricesToLanding();fbSaveConfig();showToast('green','✅','"'+n+'" agregado');}
 function removeSvcType(i){const n=SVC_TYPES[i].nombre;SVC_TYPES.splice(i,1);renderSvcDurationList();renderSvcSelect();fbSaveConfig();showToast('blue','🗑️','"'+n+'" eliminado');}
 
 /* extras CRUD */
@@ -10973,7 +10975,7 @@ function openAgendaModal(id){
   const initFiltro=(!item||isSinAsignar)?'trabajador':(item.asignadoA?.rol==='personal_inm'?'personal_inm':item.asignadoA?.rol==='supervisor'?'supervisor':'trabajador');
   const selA=item&&!isSinAsignar?`${item.asignadoA.rol}:${item.asignadoA.id}`:'';
   const todayISO=new Date().toISOString().split('T')[0];
-  const svcTypes=SVC_TYPES.filter(s=>s.activo!==false);
+  const svcTypes=SVC_TYPES.length?SVC_TYPES:[{id:'otro',nombre:'Otro / Especial'}]; /* agenda siempre muestra todos */
   const _buildOpts=(rolF,selV)=>{
     let lst=[];
     if(rolF==='trabajador'){

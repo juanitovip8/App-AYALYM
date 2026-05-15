@@ -4,7 +4,7 @@
                Network-first para HTML (siempre versión fresca)
    ═══════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'ayalym-v154';
+const CACHE_NAME = 'ayalym-v155';
 
 /* Assets a pre-cachear en la instalación */
 const PRECACHE = [
