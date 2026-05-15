@@ -5725,7 +5725,7 @@ function renderPersonalInmPanel(){
   /* Mostrar tabs condicionales según puesto y permisos */
   const p=_getPIData();
   const isEncargado=p&&p.puesto==='encargado';
-  const tieneInsumos=p&&p.puedeInsumos===true;
+  const tieneInsumos=p&&p.puedeInsumos===true&&INSUMOS_CONFIG.panelActivo!==false;
   const tabEquipo=document.getElementById('pi-nav-equipo');
   const tabInsumos=document.getElementById('pi-nav-insumos');
   if(tabEquipo) tabEquipo.style.display=isEncargado?'':'none';
@@ -7718,7 +7718,7 @@ function _insItemsHtml(items,dark){
 
 function renderPIInsumos(activeTab){
   const el=document.getElementById('pi-insumos-content');if(!el)return;
-  const p=_getPIData();if(!p||!p.puedeInsumos){el.innerHTML='';return;}
+  const p=_getPIData();if(!p||!p.puedeInsumos||INSUMOS_CONFIG.panelActivo===false){el.innerHTML='';return;}
   const dark=document.documentElement.classList.contains('dark-mode');
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
   const tab=activeTab||'solicitudes';
@@ -8488,8 +8488,9 @@ function renderAdminInsumos(activeTab){
     <div id="adm-historial-list">${reqs.length?reqs.map(r=>_insReqRowAcordeon(r,dark,true,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes registradas.</p>`}</div>`;
   const tabCatalogoHtml=_renderAdminCatalogo(dark,txt,lbl,bdr);
 
+  const panelOn=INSUMOS_CONFIG.panelActivo!==false;
   const configHtml=`<div style="border:.5px solid ${bdr};border-radius:10px;padding:11px 16px;margin-bottom:14px;">
-    <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;">⚙️ Período de recepción de insumos</p>
+    <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px;">⚙️ Período de recepción de insumos</p>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <label style="font-size:12px;font-weight:600;color:${txt};">Día inicio</label>
       <input type="number" id="ins-cfg-inicio" min="1" max="28" value="${INSUMOS_CONFIG.diaInicio||15}"
@@ -8499,6 +8500,19 @@ function renderAdminInsumos(activeTab){
         style="width:60px;padding:5px 8px;border-radius:7px;border:.5px solid ${bdr};font-size:13px;font-weight:700;text-align:center;background:${dark?'rgba(255,255,255,.07)':'#F4F8FF'};color:${txt};">
       <button onclick="guardarInsumosConfig()" style="padding:6px 14px;border-radius:8px;background:#185FA5;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;">Guardar</button>
       <span style="font-size:11px;color:${lbl};">Actualmente: día ${INSUMOS_CONFIG.diaInicio||15} al ${INSUMOS_CONFIG.diaFin||25}</span>
+    </div>
+    <!-- Toggle panel trabajadores -->
+    <div style="margin-top:12px;padding-top:10px;border-top:.5px solid ${bdr};display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;" onclick="admTogglePanelInsumos()">
+        <div style="position:relative;width:44px;height:24px;flex-shrink:0;">
+          <div style="position:absolute;inset:0;border-radius:12px;background:${panelOn?'#1A56DB':'#6B7280'};transition:background .2s;"></div>
+          <div style="position:absolute;top:3px;left:${panelOn?'23px':'3px'};width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+        </div>
+        <span style="font-size:12px;font-weight:600;color:${panelOn?'#1A56DB':lbl};">
+          ${panelOn?'✅ Panel de insumos activo para trabajadores':'⛔ Panel de insumos desactivado'}
+        </span>
+      </label>
+      ${panelOn?`<span style="font-size:11px;color:${lbl};">Los trabajadores con permiso pueden solicitar insumos.</span>`:`<span style="font-size:11px;color:#E53935;">El panel está oculto para todos los trabajadores.</span>`}
     </div>
   </div>`;
 
@@ -8524,6 +8538,15 @@ function guardarInsumosConfig(){
   INSUMOS_CONFIG.diaInicio=inicio;INSUMOS_CONFIG.diaFin=fin;
   fbSaveInsumosConfig();renderAdminInsumos();
   showToast('green','⚙️',`Período actualizado: días ${inicio} al ${fin} de cada mes.`);
+}
+function admTogglePanelInsumos(){
+  INSUMOS_CONFIG.panelActivo=INSUMOS_CONFIG.panelActivo===false?true:false;
+  fbSaveInsumosConfig();
+  renderAdminInsumos();
+  /* Refrescar nav de personal_inm si está activo en esta sesión (admin ve el cambio globalmente) */
+  const panelOn=INSUMOS_CONFIG.panelActivo!==false;
+  showToast(panelOn?'green':'amber',panelOn?'✅':'⛔',
+    panelOn?'Panel de insumos activado para trabajadores.':'Panel de insumos desactivado para todos los trabajadores.');
 }
 function admFiltrarHistorial(){
   const el=document.getElementById('admin-insumos-content');if(!el||!el._allReqs)return;

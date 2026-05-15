@@ -255,6 +255,7 @@ async function loadAllData() {
       var cfg = insCfgSnap.data();
       if (cfg.diaInicio) INSUMOS_CONFIG.diaInicio = cfg.diaInicio;
       if (cfg.diaFin)    INSUMOS_CONFIG.diaFin    = cfg.diaFin;
+      if (typeof cfg.panelActivo !== 'undefined') INSUMOS_CONFIG.panelActivo = cfg.panelActivo;
     }
   } catch(e) { console.warn('INSUMOS_CONFIG load', e); }
 
@@ -375,8 +376,9 @@ function fbSaveCatalogo() {
 function fbSaveInsumosConfig() {
   try {
     _col('config').doc('insumos').set({
-      diaInicio: INSUMOS_CONFIG.diaInicio,
-      diaFin:    INSUMOS_CONFIG.diaFin
+      diaInicio:    INSUMOS_CONFIG.diaInicio,
+      diaFin:       INSUMOS_CONFIG.diaFin,
+      panelActivo:  INSUMOS_CONFIG.panelActivo !== false
     }).catch(function(e){ console.warn('fbSaveInsumosConfig', e); });
   } catch(e) { console.warn('fbSaveInsumosConfig', e); }
 }
