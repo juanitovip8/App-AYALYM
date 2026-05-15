@@ -3623,6 +3623,7 @@ function confirmReschedule(){
   renderSolicitudes();
 }
 
+function toggleUrgCard(i){if(_urgOpen.has(i))_urgOpen.delete(i);else _urgOpen.add(i);renderUrgencias();}
 function renderUrgencias(){
   const modoOpts=[
     {v:'sin_filtro', l:'Sin filtro de trabajadores'},
@@ -3631,17 +3632,29 @@ function renderUrgencias(){
   ];
   document.getElementById('urgencias-list').innerHTML=URGENCIAS.map((u,i)=>{
     const isOn=u.activo!==false;
+    const open=_urgOpen.has(i);
     const modoSel=modoOpts.map(o=>`<option value="${o.v}"${u.modo===o.v?' selected':''}>${o.l}</option>`).join('');
-    return`<div class="urg-card${isOn?'':' inactive'}">
-      <div class="urg-card-main">
-        <div class="urg-card-fields">
-          <div class="urg-field">
-            <label class="urg-label">Nombre</label>
+    const modoHint=u.modo==='sin_filtro'?'Muestra todos los trabajadores disponibles en la zona del cliente.':
+                   u.modo==='mismo_dia'?'Solo muestra trabajadores con al menos un horario libre hoy.':
+                   `Solo muestra trabajadores que llegan en ≤ ${u.maxMin||120} minutos al domicilio.`;
+    return`<div class="urg-card${isOn?'':' inactive'}" style="border-radius:10px;overflow:hidden;margin-bottom:10px;">
+      <div class="urg-card-header" onclick="toggleUrgCard(${i})"
+        style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--card-bg,#fff);border-bottom:${open?'1px solid rgba(92,122,154,.15)':'none'};">
+        <span style="font-size:11px;color:#5C7A9A;transition:transform .2s;display:inline-block;transform:${open?'rotate(90deg)':'rotate(0deg)'};flex-shrink:0;">▶</span>
+        <span style="font-weight:600;flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_esc(u.nombre)}</span>
+        <span style="font-size:11px;color:#5C7A9A;background:rgba(92,122,154,.12);border-radius:6px;padding:2px 8px;flex-shrink:0;">${u.pct}%</span>
+        <button class="toggle-btn${isOn?' on':''}" onclick="event.stopPropagation();toggleUrgencia(${i})" style="flex-shrink:0;">${isOn?'Activo':'Inactivo'}</button>
+        <button class="btn-danger" onclick="event.stopPropagation();removeUrgencia(${i})" style="flex-shrink:0;">✕</button>
+      </div>
+      ${open?`<div class="urg-card-body" style="padding:14px;background:var(--card-bg,#fff);">
+        <div class="urg-card-fields" style="display:flex;gap:10px;margin-bottom:12px;">
+          <div class="urg-field" style="flex:1;">
+            <label class="urg-label">NOMBRE</label>
             <input class="urg-inp" value="${u.nombre.replace(/"/g,'&quot;')}" placeholder="Ej. Express"
               onchange="setUrgNombre(${i},this.value)" onblur="setUrgNombre(${i},this.value)">
           </div>
           <div class="urg-field urg-field-pct">
-            <label class="urg-label">Recargo</label>
+            <label class="urg-label">RECARGO</label>
             <div class="urg-pct-wrap">
               <input class="urg-inp" type="number" min="0" max="999" value="${u.pct}"
                 onchange="setUrgPct(${i},this.value)" onblur="setUrgPct(${i},this.value)">
@@ -3649,53 +3662,45 @@ function renderUrgencias(){
             </div>
           </div>
         </div>
-        <div class="urg-card-actions">
-          <button class="toggle-btn${isOn?' on':''}" onclick="toggleUrgencia(${i})">${isOn?'Activo':'Inactivo'}</button>
-          <button class="btn-danger" onclick="removeUrgencia(${i})">✕</button>
-        </div>
-      </div>
-      <div class="urg-card-filter">
-        <div class="urg-filter-row">
-          <div class="urg-field" style="flex:1;">
-            <label class="urg-label">Filtro de trabajadores</label>
-            <select class="urg-inp" onchange="setUrgModo(${i},this.value)">${modoSel}</select>
-          </div>
-          ${u.modo==='minutos'?`<div class="urg-field urg-field-pct">
-            <label class="urg-label">Máx. llegada</label>
-            <div class="urg-pct-wrap">
-              <input class="urg-inp" type="number" min="1" max="999" value="${u.maxMin||120}"
-                onchange="setUrgMaxMin(${i},this.value)" onblur="setUrgMaxMin(${i},this.value)">
-              <span class="urg-pct-sign">min</span>
+        <div class="urg-card-filter">
+          <div class="urg-filter-row">
+            <div class="urg-field" style="flex:1;">
+              <label class="urg-label">FILTRO DE TRABAJADORES</label>
+              <select class="urg-inp" onchange="setUrgModo(${i},this.value)">${modoSel}</select>
             </div>
-          </div>`:''}
-        </div>
-        <p class="urg-filter-hint">${
-          u.modo==='sin_filtro'?'Muestra todos los trabajadores disponibles en la zona del cliente.':
-          u.modo==='mismo_dia'?'Solo muestra trabajadores con al menos un horario libre hoy.':
-          `Solo muestra trabajadores que llegan en ≤ ${u.maxMin||120} minutos al domicilio.`
-        }</p>
-        <div class="urg-filter-row urg-dias-row">
-          <div class="urg-field urg-field-pct">
-            <label class="urg-label">Días mín.</label>
-            <div class="urg-pct-wrap">
-              <input class="urg-inp" type="number" min="0" max="365" value="${u.diasMin||0}"
-                onchange="setUrgDiasMin(${i},this.value)" onblur="setUrgDiasMin(${i},this.value)">
-              <span class="urg-pct-sign">d</span>
-            </div>
+            ${u.modo==='minutos'?`<div class="urg-field urg-field-pct">
+              <label class="urg-label">Máx. llegada</label>
+              <div class="urg-pct-wrap">
+                <input class="urg-inp" type="number" min="1" max="999" value="${u.maxMin||120}"
+                  onchange="setUrgMaxMin(${i},this.value)" onblur="setUrgMaxMin(${i},this.value)">
+                <span class="urg-pct-sign">min</span>
+              </div>
+            </div>`:''}
           </div>
-          <div class="urg-field urg-field-pct">
-            <label class="urg-label">Días máx.</label>
-            <div class="urg-pct-wrap">
-              <input class="urg-inp" type="number" min="0" max="365" value="${u.diasMax!=null?u.diasMax:''}" placeholder="∞"
-                onchange="setUrgDiasMax(${i},this.value)" onblur="setUrgDiasMax(${i},this.value)">
-              <span class="urg-pct-sign">d</span>
+          <p class="urg-filter-hint">${modoHint}</p>
+          <div class="urg-filter-row urg-dias-row">
+            <div class="urg-field urg-field-pct">
+              <label class="urg-label">Días mín.</label>
+              <div class="urg-pct-wrap">
+                <input class="urg-inp" type="number" min="0" max="365" value="${u.diasMin||0}"
+                  onchange="setUrgDiasMin(${i},this.value)" onblur="setUrgDiasMin(${i},this.value)">
+                <span class="urg-pct-sign">d</span>
+              </div>
+            </div>
+            <div class="urg-field urg-field-pct">
+              <label class="urg-label">Días máx.</label>
+              <div class="urg-pct-wrap">
+                <input class="urg-inp" type="number" min="0" max="365" value="${u.diasMax!=null?u.diasMax:''}" placeholder="∞"
+                  onchange="setUrgDiasMax(${i},this.value)" onblur="setUrgDiasMax(${i},this.value)">
+                <span class="urg-pct-sign">d</span>
+              </div>
+            </div>
+            <div class="urg-field" style="flex:1;align-self:flex-end;">
+              <p class="urg-filter-hint" style="margin:0;">📅 Rango de días en que el cliente puede agendar desde hoy.</p>
             </div>
           </div>
-          <div class="urg-field" style="flex:1;align-self:flex-end;">
-            <p class="urg-filter-hint" style="margin:0;">📅 Rango de días en que el cliente puede agendar desde hoy.</p>
-          </div>
         </div>
-      </div>
+      </div>`:''}
     </div>`;}).join('');
 }
 function setUrgNombre(i,val){const v=val.trim();if(!v){showToast('amber','⚠️','El nombre no puede estar vacío');return;}if(URGENCIAS[i].nombre===v)return;URGENCIAS[i].nombre=v;renderUrgenciaSelect();}
@@ -3705,8 +3710,8 @@ function setUrgMaxMin(i,val){const v=Math.max(1,parseInt(val)||120);if(URGENCIAS
 function setUrgDiasMin(i,val){const v=Math.max(0,parseInt(val)||0);if(URGENCIAS[i].diasMin===v)return;URGENCIAS[i].diasMin=v;if(URGENCIAS[i].diasMax!=null&&v>URGENCIAS[i].diasMax)URGENCIAS[i].diasMax=v;renderUrgenciaSelect();}
 function setUrgDiasMax(i,val){const raw=val.toString().trim();const v=raw===''||isNaN(parseInt(raw))?null:Math.max(0,parseInt(raw));if(URGENCIAS[i].diasMax===v)return;URGENCIAS[i].diasMax=v;renderUrgenciaSelect();}
 function toggleUrgencia(i){URGENCIAS[i].activo=!(URGENCIAS[i].activo!==false);renderUrgencias();renderUrgenciaSelect();fbSaveConfig();showToast(URGENCIAS[i].activo!==false?'green':'blue',URGENCIAS[i].activo!==false?'✅':'⚪','"'+URGENCIAS[i].nombre+'" '+(URGENCIAS[i].activo!==false?'activada':'desactivada'));}
-function addUrgencia(){const n=document.getElementById('nu-name').value.trim(),p=Math.max(0,parseInt(document.getElementById('nu-pct').value)||0);if(!n){showToast('amber','⚠️','Escribe el nombre');return;}URGENCIAS.push({id:'u'+Date.now(),nombre:n,pct:p,activo:true,modo:'sin_filtro',maxMin:null});_closeModal();renderUrgencias();renderUrgenciaSelect();fbSaveConfig();showToast('green','✅','"'+n+'" agregada');}
-function removeUrgencia(i){const n=URGENCIAS[i].nombre;URGENCIAS.splice(i,1);renderUrgencias();renderUrgenciaSelect();showToast('blue','🗑️','"'+n+'" eliminada');}
+function addUrgencia(){const n=document.getElementById('nu-name').value.trim(),p=Math.max(0,parseInt(document.getElementById('nu-pct').value)||0);if(!n){showToast('amber','⚠️','Escribe el nombre');return;}URGENCIAS.push({id:'u'+Date.now(),nombre:n,pct:p,activo:true,modo:'sin_filtro',maxMin:null});_urgOpen.add(URGENCIAS.length-1);_closeModal();renderUrgencias();renderUrgenciaSelect();fbSaveConfig();showToast('green','✅','"'+n+'" agregada');}
+function removeUrgencia(i){const n=URGENCIAS[i].nombre;_urgOpen.delete(i);URGENCIAS.splice(i,1);/* re-map open indices above i */{const newOpen=new Set();_urgOpen.forEach(k=>{if(k<i)newOpen.add(k);else if(k>i)newOpen.add(k-1);});_urgOpen=newOpen;}renderUrgencias();renderUrgenciaSelect();showToast('blue','🗑️','"'+n+'" eliminada');}
 function renderZonasAdmin(){
   document.getElementById('zonas-list').innerHTML=ZONAS.map((z,i)=>{
     const isOn=z.activo!==false;
@@ -10157,6 +10162,7 @@ function _wePopulateContacto() {
 /* ── Accordion state ── */
 let _weValOpen = new Set();
 let _weSocOpen = new Set();
+let _urgOpen   = new Set();
 const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
 function _wePopulateRedes()  { _renderWeRedes(); }
