@@ -4172,14 +4172,25 @@ function renderAdminAstReport(){
   :`<tr><td colspan="9" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
   /* ── Tabla Personal de Inmuebles ── */
   const{from:fromPI,to:toPI}=_astDateRange();
-  /* Enriquecer filas con contratos asignados */
+  /* Enriquecer filas: si la asistencia tiene servicioId, mostrar solo ese contrato */
   const piRowsAll=PERSONAL_INM.flatMap(pi=>{
-    const contratos=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
-    const contratoLabel=contratos.length?contratos.map(ps=>`${ps.folio||'INM'} — ${ps.cliente.nombre}`).join(', '):'Sin contrato';
-    const contratoKeys=contratos.map(ps=>ps.folio||String(ps.id));
     return(pi.asistencias||[])
       .filter(a=>a.fecha>=fromPI&&a.fecha<=toPI)
-      .map(a=>({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel,contratoKeys}));
+      .map(a=>{
+        let contratoLabel,contratoKeys;
+        if(a.servicioId){
+          /* Asistencia con geofence: mostrar solo el contrato donde estuvo */
+          const ps=PROPERTY_SERVICES.find(x=>x.id===a.servicioId);
+          contratoLabel=ps?`${ps.folio||'INM'} — ${ps.cliente.nombre}`:'Sin contrato';
+          contratoKeys=ps?[ps.folio||String(ps.id)]:[];
+        } else {
+          /* Legado: sin servicioId → mostrar todos los contratos asignados */
+          const contratos=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
+          contratoLabel=contratos.length?contratos.map(ps=>`${ps.folio||'INM'} — ${ps.cliente.nombre}`).join(', '):'Sin contrato';
+          contratoKeys=contratos.map(ps=>ps.folio||String(ps.id));
+        }
+        return({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel,contratoKeys});
+      });
   }).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.piNombre.localeCompare(b.piNombre));
   /* Lista única de trabajadores y contratos para los dropdowns */
   const piPersonales=[...new Set(piRowsAll.map(r=>r.piNombre))].sort();
@@ -4381,11 +4392,19 @@ function exportAsistenciasPDF(){
 function exportPIAsistenciasPDF(){
   const{from,to,label}=_astDateRange();
   const piRowsAll=PERSONAL_INM.flatMap(pi=>{
-    const contratos=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
-    const contratoLabel=contratos.length?contratos.map(ps=>`${ps.folio||'INM'} — ${ps.cliente.nombre}`).join(', '):'Sin contrato';
     return(pi.asistencias||[])
       .filter(a=>a.fecha>=from&&a.fecha<=to)
-      .map(a=>({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel}));
+      .map(a=>{
+        let contratoLabel;
+        if(a.servicioId){
+          const ps=PROPERTY_SERVICES.find(x=>x.id===a.servicioId);
+          contratoLabel=ps?`${ps.folio||'INM'} — ${ps.cliente.nombre}`:'Sin contrato';
+        } else {
+          const contratos=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
+          contratoLabel=contratos.length?contratos.map(ps=>`${ps.folio||'INM'} — ${ps.cliente.nombre}`).join(', '):'Sin contrato';
+        }
+        return({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel});
+      });
   }).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.piNombre.localeCompare(b.piNombre));
   const piRows=piRowsAll.filter(r=>
     (!_adminAstPIPersonalFiltro||r.piNombre===_adminAstPIPersonalFiltro)&&
@@ -5983,7 +6002,18 @@ function registrarEntrada(){
     myCoords,
     (info,uLat,uLng)=>{
       const hora=new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',hour12:false});
-      p.asistencias.push({fecha:today,entrada:hora,salida:null});
+      /* Identificar cuál contrato es el más cercano para guardar en la asistencia */
+      let closestSvcId=null;
+      const svcsWithCoords=PROPERTY_SERVICES.filter(ps=>(p.serviciosAsignados||[]).includes(ps.id)&&ps.inmueble&&ps.inmueble.lat&&ps.inmueble.lng);
+      if(uLat&&uLng&&svcsWithCoords.length){
+        closestSvcId=[...svcsWithCoords].sort((a,b)=>_haversineDistance(uLat,uLng,a.inmueble.lat,a.inmueble.lng)-_haversineDistance(uLat,uLng,b.inmueble.lat,b.inmueble.lng))[0].id;
+      } else if(!uLat&&svcsWithCoords.length===1){
+        /* Sin GPS pero solo 1 contrato */
+        closestSvcId=svcsWithCoords[0].id;
+      } else if(!uLat&&(p.serviciosAsignados||[]).length===1){
+        closestSvcId=p.serviciosAsignados[0];
+      }
+      p.asistencias.push({fecha:today,entrada:hora,salida:null,servicioId:closestSvcId});
       const svcLabel=_piSvcLabel(p);
       pushNotif('supervisor','🟢','green','Entrada registrada',`${p.nombre} registró entrada a las ${hora}${svcLabel}`);
       pushNotif('admin','🟢','green','Entrada registrada',`${p.nombre} (Personal Inm.) registró entrada a las ${hora}${svcLabel}`);
