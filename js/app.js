@@ -6671,6 +6671,8 @@ function openInmEdit(id){
   const sel=document.getElementById('ie-supervisor');
   if(sel)sel.innerHTML=SUPERVISORS.map(sv=>`<option value="${sv.id}"${sv.id===ps.supervisorId?' selected':''}>${sv.name}</option>`).join('');
   set('ie-presupuesto-insumos',ps.presupuestoInsumos||'');
+  const fsel=document.getElementById('ie-frecuencia-insumos');
+  if(fsel)fsel.value=ps.frecuenciaInsumos||'1';
   // Notas
   set('ie-notas',ps.notas);
 }
@@ -6760,6 +6762,7 @@ function saveInmEdit(){
   // Supervisor
   ps.supervisorId=parseInt(document.getElementById('ie-supervisor').value);
   ps.presupuestoInsumos=parseFloat((document.getElementById('ie-presupuesto-insumos')||{}).value||0)||0;
+  ps.frecuenciaInsumos=parseInt((document.getElementById('ie-frecuencia-insumos')||{}).value||1)||1;
   // Notas
   ps.notas=g('ie-notas');
   /* Si cambió la dirección, limpiar coords viejas y re-geocodificar */
@@ -7318,10 +7321,22 @@ function abrirNuevaInsumoSol(psId){
   if(!psId&&misPS.length>1){_insumoSeleccionarServicio(p,misPS);return;}
   const ps=psId?PROPERTY_SERVICES.find(x=>x.id===psId):misPS[0];
   if(!ps)return;
-  /* Verificar si ya existe solicitud del mes actual para este servicio */
-  const mesActual=new Date().toISOString().slice(0,7); // YYYY-MM
-  const yaExiste=INSUMOS_REQUESTS.find(r=>r.personalId===p.id&&r.servicioId===ps.id&&(r.fecha||'').startsWith(mesActual)&&r.status!=='rechazado');
-  if(yaExiste){showToast('amber','⚠️','Ya enviaste una solicitud para '+ps.folio+' este mes. Espera la revisión del supervisor.');return;}
+  /* Verificar límite de solicitudes según frecuencia configurada */
+  const frecMeses=ps.frecuenciaInsumos||1; // 1=mensual, 2=bimestral, 3=trimestral
+  const hoy=new Date();
+  const mesBase=Math.floor(hoy.getMonth()/frecMeses)*frecMeses; // primer mes del período actual
+  const periodoInicio=new Date(hoy.getFullYear(),mesBase,1).toISOString().slice(0,7); // YYYY-MM inicio
+  const periodoFin=new Date(hoy.getFullYear(),mesBase+frecMeses,1).toISOString().slice(0,7); // YYYY-MM exclusivo
+  const solEnPeriodo=INSUMOS_REQUESTS.filter(r=>
+    r.personalId===p.id&&r.servicioId===ps.id&&r.status!=='rechazado'&&
+    (r.fecha||'')>=periodoInicio&&(r.fecha||'')<periodoFin
+  );
+  if(solEnPeriodo.length>0){
+    const freqLabel=frecMeses===1?'este mes':frecMeses===2?'este bimestre':'este trimestre';
+    const folioExist=solEnPeriodo.map(r=>r.folio).join(', ');
+    showToast('amber','⚠️',`Ya enviaste una solicitud (${folioExist}) para ${ps.folio} ${freqLabel}. Espera la revisión del supervisor.`);
+    return;
+  }
   _insumoSolServicioId=ps.id;
   _renderInsumoForm(p,ps);
 }
@@ -7346,6 +7361,8 @@ function _insumoSeleccionarServicio(p,misPS){
 function _renderInsumoForm(p,ps){
   const dark=document.documentElement.classList.contains('dark-mode');
   const presupuesto=ps.presupuestoInsumos||0;
+  const frecMeses=ps.frecuenciaInsumos||1;
+  const freqLabel=frecMeses===1?'Mensual':frecMeses===2?'Bimestral':'Trimestral';
   const categorias=[
     {key:'jarcieria',label:'🧹 Jarciería'},
     {key:'bolsas',label:'🗑️ Bolsas'},
@@ -7362,6 +7379,7 @@ function _renderInsumoForm(p,ps){
     <div>
       <p style="font-size:12px;font-weight:600;color:${lbl};margin:0;">🏢 ${ps.inmueble.tipo} · ${ps.inmueble.colonia||''}</p>
       <p style="font-size:11px;color:${lbl};margin:2px 0 0;">${ps.inmueble.direccion||''}</p>
+      <span style="font-size:10px;font-weight:600;color:#185FA5;background:${dark?'rgba(24,95,165,.2)':'#D8EAFF'};padding:2px 8px;border-radius:8px;margin-top:4px;display:inline-block;">🔁 Pedidos: ${freqLabel}</span>
     </div>
     <div style="text-align:right;">
       <p style="font-size:11px;font-weight:600;color:${lbl};margin:0;">Presupuesto asignado</p>
@@ -7653,6 +7671,7 @@ function createPropertyService(){
     },
     notas:_gv('inm-notas'),
     presupuestoInsumos:parseFloat((document.getElementById('inm-presupuesto-insumos')||{}).value||0)||0,
+    frecuenciaInsumos:parseInt((document.getElementById('inm-frecuencia-insumos')||{}).value||1)||1,
     reportes:[],
     parentId:null,renovadoPor:null,createdAt:today,
   });

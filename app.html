@@ -350,7 +350,8 @@
       <!-- Supervisor -->
       <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">👁️ Supervisor asignado</p>
       <div class="frow full"><label>Supervisor</label><select id="ie-supervisor"></select></div>
-      <div class="frow full"><label>💰 Presupuesto mensual de insumos ($)</label><input type="number" id="ie-presupuesto-insumos" min="0" step="0.01" placeholder="Ej: 1000.00"></div>
+      <div class="frow"><label>💰 Presupuesto de insumos ($)</label><input type="number" id="ie-presupuesto-insumos" min="0" step="0.01" placeholder="Ej: 1000.00"></div>
+      <div class="frow"><label>🔁 Frecuencia de pedidos</label><select id="ie-frecuencia-insumos"><option value="1">Mensual (1 por mes)</option><option value="2">Bimestral (1 cada 2 meses)</option><option value="3">Trimestral (1 cada 3 meses)</option></select></div>
 
       <div class="div" style="margin:12px 0;"></div>
 
@@ -1216,7 +1217,8 @@
             <!-- 7. Asignación -->
             <p class="inm-section-label">👁️ Asignación y notas</p>
             <div class="frow full"><label>Supervisor asignado</label><select id="inm-supervisor-sel"></select></div>
-            <div class="frow full"><label>💰 Presupuesto mensual de insumos ($)</label><input type="number" id="inm-presupuesto-insumos" min="0" step="0.01" placeholder="Ej: 1000.00"></div>
+            <div class="frow"><label>💰 Presupuesto de insumos ($)</label><input type="number" id="inm-presupuesto-insumos" min="0" step="0.01" placeholder="Ej: 1000.00"></div>
+            <div class="frow"><label>🔁 Frecuencia de pedidos</label><select id="inm-frecuencia-insumos"><option value="1">Mensual (1 por mes)</option><option value="2">Bimestral (1 cada 2 meses)</option><option value="3">Trimestral (1 cada 3 meses)</option></select></div>
             <div class="frow full"><label>Notas internas</label><textarea id="inm-notas" placeholder="Acceso, coordinación, observaciones…" style="resize:vertical;min-height:50px;"></textarea></div>
 
             <div style="display:flex;gap:8px;margin-top:12px;">
