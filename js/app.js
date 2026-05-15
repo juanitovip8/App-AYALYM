@@ -7522,7 +7522,7 @@ function enviarInsumoSol(){
   fbSaveInsumos();
   cerrarInsumoSol();
   renderPIInsumos();
-  pushNotif('supervisor','📦','blue','Nueva solicitud de insumos',`${folio} — ${p.nombre} · ${ps.folio}`);
+  pushNotif('supervisor','📦','blue','Nueva solicitud de insumos',`${folio} — ${p.nombre} · ${ps.folio} · ${ps.cliente.nombre}`);
   showToast('green','📦',`Solicitud ${folio} enviada al supervisor.`);
 }
 
