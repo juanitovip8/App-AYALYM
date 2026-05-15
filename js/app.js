@@ -4172,26 +4172,42 @@ function renderAdminAstReport(){
   :`<tr><td colspan="9" style="text-align:center;padding:1.5rem;color:#5C7A9A;">Sin registros en este período</td></tr>`;
   /* ── Tabla Personal de Inmuebles ── */
   const{from:fromPI,to:toPI}=_astDateRange();
-  /* Enriquecer filas: si la asistencia tiene servicioId, mostrar solo ese contrato */
+  let _piModified=false;
   const piRowsAll=PERSONAL_INM.flatMap(pi=>{
+    const svcs=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
     return(pi.asistencias||[])
       .filter(a=>a.fecha>=fromPI&&a.fecha<=toPI)
       .map(a=>{
-        let contratoLabel,contratoKeys;
+        let contratoLabel,contratoHtml,contratoKeys;
         if(a.servicioId){
-          /* Asistencia con geofence: mostrar solo el contrato donde estuvo */
+          /* Asistencia ya identificada por geofence */
           const ps=PROPERTY_SERVICES.find(x=>x.id===a.servicioId);
           contratoLabel=ps?`${ps.folio||'INM'} — ${ps.cliente.nombre}`:'Sin contrato';
+          contratoHtml=`<span style="font-size:11px;color:#5C7A9A;">${contratoLabel}</span>`;
           contratoKeys=ps?[ps.folio||String(ps.id)]:[];
+        } else if(svcs.length===1){
+          /* Un solo contrato → auto-asignar y guardar */
+          if(!a.servicioId){a.servicioId=svcs[0].id;_piModified=true;}
+          contratoLabel=`${svcs[0].folio||'INM'} — ${svcs[0].cliente.nombre}`;
+          contratoHtml=`<span style="font-size:11px;color:#5C7A9A;">${contratoLabel}</span>`;
+          contratoKeys=[svcs[0].folio||String(svcs[0].id)];
+        } else if(svcs.length>1){
+          /* Múltiples contratos: selector inline para que el admin asigne */
+          contratoLabel='⚠️ Sin asignar';
+          contratoKeys=[];
+          const opts=svcs.map(ps=>`<option value="${ps.id}">${ps.folio||'INM'} — ${ps.cliente.nombre}</option>`).join('');
+          contratoHtml=`<select style="font-size:11px;padding:3px 6px;border-radius:6px;border:1.5px solid #f59e0b;color:#042C53;background:#fffbeb;max-width:230px;cursor:pointer;"
+            onchange="adminAssignPIContrato('${pi.id}','${a.fecha}',+this.value)" title="Selecciona el contrato donde estuvo este día">
+            <option value="">⚠️ Seleccionar contrato…</option>${opts}</select>`;
         } else {
-          /* Legado: sin servicioId → mostrar todos los contratos asignados */
-          const contratos=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
-          contratoLabel=contratos.length?contratos.map(ps=>`${ps.folio||'INM'} — ${ps.cliente.nombre}`).join(', '):'Sin contrato';
-          contratoKeys=contratos.map(ps=>ps.folio||String(ps.id));
+          contratoLabel='Sin contrato';
+          contratoHtml=`<span style="font-size:11px;color:#5C7A9A;">Sin contrato asignado</span>`;
+          contratoKeys=[];
         }
-        return({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel,contratoKeys});
+        return({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel,contratoHtml,contratoKeys});
       });
   }).sort((a,b)=>b.fecha.localeCompare(a.fecha)||a.piNombre.localeCompare(b.piNombre));
+  if(_piModified) setTimeout(()=>fbSavePersonalInm(),0);
   /* Lista única de trabajadores y contratos para los dropdowns */
   const piPersonales=[...new Set(piRowsAll.map(r=>r.piNombre))].sort();
   const piContratos=[...new Set(piRowsAll.map(r=>r.contratoLabel))].sort();
@@ -4218,7 +4234,7 @@ function renderAdminAstReport(){
       :`<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#042C53;color:#fff;font-size:9px;font-weight:700;vertical-align:middle;margin-right:6px;">${initials}</span>`;
     return`<tr>
     <td style="white-space:nowrap;">${avCell}${a.piNombre}</td>
-    <td style="font-size:11px;color:#5C7A9A;">${a.contratoLabel}</td>
+    <td>${a.contratoHtml}</td>
     <td>${a.fecha}</td>
     <td>${a.entrada||'—'}</td>
     <td>${a.salida||'—'}</td>
@@ -4296,9 +4312,22 @@ function adminDeletePIAst(piId,fecha){
   const idx=(pi.asistencias||[]).findIndex(a=>a.fecha===fecha);
   if(idx===-1)return;
   pi.asistencias.splice(idx,1);
-  fbSavePersonalInm(); /* personal_inm se guarda como un solo doc, set() reemplaza todo */
+  fbSavePersonalInm();
   renderAdminAstReport();
   showToast('green','🗑','Registro eliminado');
+}
+
+function adminAssignPIContrato(piId,fecha,servicioId){
+  if(!servicioId) return;
+  const pi=PERSONAL_INM.find(p=>String(p.id)===String(piId));
+  if(!pi) return;
+  const asis=(pi.asistencias||[]).find(a=>a.fecha===fecha);
+  if(!asis) return;
+  asis.servicioId=servicioId;
+  fbSavePersonalInm();
+  renderAdminAstReport();
+  const ps=PROPERTY_SERVICES.find(x=>x.id===servicioId);
+  showToast('green','✅',`Contrato asignado: ${ps?ps.folio:'#'+servicioId}`);
 }
 
 /* ══ PDF in-app overlay — PWA-safe (no window.open, usuario nunca sale de la app) ══ */
@@ -4392,6 +4421,7 @@ function exportAsistenciasPDF(){
 function exportPIAsistenciasPDF(){
   const{from,to,label}=_astDateRange();
   const piRowsAll=PERSONAL_INM.flatMap(pi=>{
+    const svcs=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
     return(pi.asistencias||[])
       .filter(a=>a.fecha>=from&&a.fecha<=to)
       .map(a=>{
@@ -4399,9 +4429,12 @@ function exportPIAsistenciasPDF(){
         if(a.servicioId){
           const ps=PROPERTY_SERVICES.find(x=>x.id===a.servicioId);
           contratoLabel=ps?`${ps.folio||'INM'} — ${ps.cliente.nombre}`:'Sin contrato';
+        } else if(svcs.length===1){
+          contratoLabel=`${svcs[0].folio||'INM'} — ${svcs[0].cliente.nombre}`;
+        } else if(svcs.length>1){
+          contratoLabel='Sin asignar';
         } else {
-          const contratos=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
-          contratoLabel=contratos.length?contratos.map(ps=>`${ps.folio||'INM'} — ${ps.cliente.nombre}`).join(', '):'Sin contrato';
+          contratoLabel='Sin contrato';
         }
         return({...a,piId:pi.id,piNombre:pi.nombre,piPhoto:pi.photo||null,contratoLabel});
       });
