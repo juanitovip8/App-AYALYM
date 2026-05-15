@@ -5640,8 +5640,8 @@ function renderPersonalInmPanel(){
   const tieneInsumos=p&&p.puedeInsumos===true;
   const tabEquipo=document.getElementById('pi-nav-equipo');
   const tabInsumos=document.getElementById('pi-nav-insumos');
-  if(tabEquipo) tabEquipo.style.display=isEncargado?'flex':'none';
-  if(tabInsumos) tabInsumos.style.display=tieneInsumos?'flex':'none';
+  if(tabEquipo) tabEquipo.style.display=isEncargado?'':'none';
+  if(tabInsumos) tabInsumos.style.display=tieneInsumos?'':'none';
   /* Ajustar columnas del nav según tabs visibles */
   const navEl=document.getElementById('nav-personal_inm');
   if(navEl){const cols=4+(isEncargado?1:0)+(tieneInsumos?1:0);navEl.style.gridTemplateColumns=`repeat(${cols},1fr)`;}
