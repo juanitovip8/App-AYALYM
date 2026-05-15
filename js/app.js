@@ -4192,13 +4192,10 @@ function renderAdminAstReport(){
           contratoHtml=`<span style="font-size:11px;color:#5C7A9A;">${contratoLabel}</span>`;
           contratoKeys=[svcs[0].folio||String(svcs[0].id)];
         } else if(svcs.length>1){
-          /* Múltiples contratos: selector inline para que el admin asigne */
-          contratoLabel='⚠️ Sin asignar';
+          /* Registro legacy sin geofence — no se puede determinar el contrato */
+          contratoLabel='Registro anterior';
           contratoKeys=[];
-          const opts=svcs.map(ps=>`<option value="${ps.id}">${ps.folio||'INM'} — ${ps.cliente.nombre}</option>`).join('');
-          contratoHtml=`<select style="font-size:11px;padding:3px 6px;border-radius:6px;border:1.5px solid #f59e0b;color:#042C53;background:#fffbeb;max-width:230px;cursor:pointer;"
-            onchange="adminAssignPIContrato('${pi.id}','${a.fecha}',+this.value)" title="Selecciona el contrato donde estuvo este día">
-            <option value="">⚠️ Seleccionar contrato…</option>${opts}</select>`;
+          contratoHtml=`<span style="font-size:11px;color:rgba(92,122,154,.6);font-style:italic;">Registro anterior al GPS</span>`;
         } else {
           contratoLabel='Sin contrato';
           contratoHtml=`<span style="font-size:11px;color:#5C7A9A;">Sin contrato asignado</span>`;
@@ -4432,7 +4429,7 @@ function exportPIAsistenciasPDF(){
         } else if(svcs.length===1){
           contratoLabel=`${svcs[0].folio||'INM'} — ${svcs[0].cliente.nombre}`;
         } else if(svcs.length>1){
-          contratoLabel='Sin asignar';
+          contratoLabel='Registro anterior al GPS';
         } else {
           contratoLabel='Sin contrato';
         }
