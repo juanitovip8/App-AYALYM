@@ -754,7 +754,7 @@
       <div class="bnav-btn" onclick="navGo('supervisor','mapa-sv',this)"><span class="bnav-icon">📍</span>Mapa</div>
       <div class="bnav-btn" onclick="navGo('supervisor','asistencias-sv',this)"><span class="bnav-icon">📋</span>Asistencias</div>
       <div class="bnav-btn" onclick="navGo('supervisor','inmuebles-sv',this)"><span class="bnav-icon">🏢</span>Inmuebles</div>
-      <div class="bnav-btn" onclick="navGo('supervisor','insumos-sv',this)"><span class="bnav-icon">📦</span>Insumos</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','insumos-sv',this)"><span class="bnav-icon">🧹</span>Insumos</div>
     </div>
     <!-- Tarjeta de perfil -->
     <div class="card role-profile-card" style="background:linear-gradient(135deg,#042C53,#185FA5);border:none;">
@@ -1140,7 +1140,7 @@
         <div class="msg-tabs" style="margin-bottom:14px;">
           <button class="msg-tab active" id="inm-main-tab-contratos" onclick="switchInmMainTab('contratos',this)">📋 Contratos</button>
           <button class="msg-tab" id="inm-main-tab-clientes" onclick="switchInmMainTab('clientes',this)">👤 Clientes</button>
-          <button class="msg-tab" id="inm-main-tab-insumos" onclick="switchInmMainTab('insumos',this)">📦 Solicitudes de Insumos</button>
+          <button class="msg-tab" id="inm-main-tab-insumos" onclick="switchInmMainTab('insumos',this)">🧹 Solicitudes de Insumos</button>
         </div>
 
         <!-- PANEL: Contratos (contenido original) -->
@@ -1307,7 +1307,7 @@
             <div style="display:flex;align-items:center;gap:10px;padding:10px 0 4px;">
               <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;">
                 <input type="checkbox" id="pi-puede-insumos" style="width:16px;height:16px;accent-color:#042C53;">
-                📦 Habilitar panel de solicitud de insumos
+                🧹 Habilitar panel de solicitud de insumos
               </label>
             </div>
             <div style="display:flex;gap:8px;margin-top:10px;">
@@ -1355,7 +1355,7 @@
     <div class="bnav-btn active" onclick="navGo('personal_inm','inicio',this)"><span class="bnav-icon">🏠</span>Inicio</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','servicios',this)"><span class="bnav-icon">🏢</span>Servicios</div>
     <div class="bnav-btn" id="pi-nav-equipo" style="display:none;" onclick="navGo('personal_inm','equipo',this)"><span class="bnav-icon">👥</span>Mi equipo</div>
-    <div class="bnav-btn" id="pi-nav-insumos" style="display:none;" onclick="navGo('personal_inm','insumos',this)"><span class="bnav-icon">📦</span>Insumos</div>
+    <div class="bnav-btn" id="pi-nav-insumos" style="display:none;" onclick="navGo('personal_inm','insumos',this)"><span class="bnav-icon">🧹</span>Insumos</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','asistencias',this)"><span class="bnav-icon">📋</span>Asistencias</div>
     <div class="bnav-btn" onclick="navGo('personal_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
   </div>
@@ -1375,7 +1375,7 @@
     <div class="bnav-btn" onclick="navGo('cliente_inm','contrato',this)"><span class="bnav-icon">📄</span>Contrato</div>
     <div class="bnav-btn" onclick="navGo('cliente_inm','reportes',this)"><span class="bnav-icon">📋</span>Reportes</div>
     <div class="bnav-btn" onclick="navGo('cliente_inm','asistencias',this)"><span class="bnav-icon">🕐</span>Asistencias</div>
-    <div class="bnav-btn" onclick="navGo('cliente_inm','insumos-ci',this)"><span class="bnav-icon">📦</span>Insumos</div>
+    <div class="bnav-btn" onclick="navGo('cliente_inm','insumos-ci',this)"><span class="bnav-icon">🧹</span>Insumos</div>
     <div class="bnav-btn" onclick="navGo('cliente_inm','perfil',this)"><span class="bnav-icon">👤</span>Perfil</div>
   </div>
   <div id="cinm-inicio" class="sec active"><div id="cinm-inicio-content" style="padding:16px;"></div></div>
@@ -1429,7 +1429,7 @@
   <div style="max-width:700px;margin:16px auto;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.3);" id="insumos-sol-card">
     <div style="background:linear-gradient(135deg,#042C53,#185FA5);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1;">
       <div>
-        <p style="font-size:15px;font-weight:700;color:#fff;margin:0;">📦 Solicitud de Insumos</p>
+        <p style="font-size:15px;font-weight:700;color:#fff;margin:0;">🧹 Solicitud de Insumos</p>
         <span style="font-size:12px;color:rgba(255,255,255,.75);" id="insumos-sol-subtitle"></span>
       </div>
       <button onclick="cerrarInsumoSol()" style="background:rgba(255,255,255,.18);border:none;border-radius:8px;padding:6px 14px;color:#fff;font-size:13px;cursor:pointer;">✕</button>

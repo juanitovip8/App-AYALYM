@@ -2013,7 +2013,7 @@ function renderUsersPanel(filter){
             <div style="display:flex;gap:8px;margin-top:8px;"><button class="btn-sm" style="flex:1;" onclick="saveAdminProfile(${i})">Guardar</button><button class="btn-sec" onclick="toggleEditUser(${i})">Cancelar</button></div>`
           :`<div class="frow"><div><label>Nombre</label><input type="text" id="ue-nombre-${i}" value="${u.nombre}"></div><div><label>Teléfono</label><input type="text" id="ue-tel-${i}" value="${u.tel||''}"></div></div>
             <div class="frow"><div><label>Correo</label><input type="email" id="ue-email-${i}" value="${u.email}"></div><div><label>Rol</label><select id="ue-rol-${i}" onchange="togglePIEditFields(${i},this.value)"><option value="admin" ${u.rol==='admin'?'selected':''}>Administrador</option><option value="supervisor" ${u.rol==='supervisor'?'selected':''}>Supervisor</option><option value="trabajador" ${u.rol==='trabajador'?'selected':''}>Trabajador</option><option value="cliente" ${u.rol==='cliente'?'selected':''}>Cliente</option><option value="cliente_inm" ${u.rol==='cliente_inm'?'selected':''}>Cliente Inmuebles</option><option value="personal_inm" ${u.rol==='personal_inm'?'selected':''}>Personal Inmuebles</option></select></div></div>
-            ${(()=>{const pi=PERSONAL_INM.find(p=>p.email===u.email);return u.rol==='personal_inm'?`<div id="ue-pi-fields-${i}" class="frow" style="flex-direction:column;gap:10px;"><div><label>Puesto</label><select id="ue-pi-puesto-${i}"><option value="aux_limpieza" ${(pi?.puesto||'aux_limpieza')==='aux_limpieza'?'selected':''}>Aux. de limpieza</option><option value="pulidor" ${pi?.puesto==='pulidor'?'selected':''}>Pulidor</option><option value="encargado" ${pi?.puesto==='encargado'?'selected':''}>Encargado de servicio</option></select></div><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;"><input type="checkbox" id="ue-pi-insumos-${i}" ${pi?.puedeInsumos?'checked':''} style="width:15px;height:15px;accent-color:#042C53;">📦 Panel de solicitud de insumos habilitado</label></div>`:`<div id="ue-pi-fields-${i}" style="display:none;"></div>`;})()}
+            ${(()=>{const pi=PERSONAL_INM.find(p=>p.email===u.email);return u.rol==='personal_inm'?`<div id="ue-pi-fields-${i}" class="frow" style="flex-direction:column;gap:10px;"><div><label>Puesto</label><select id="ue-pi-puesto-${i}"><option value="aux_limpieza" ${(pi?.puesto||'aux_limpieza')==='aux_limpieza'?'selected':''}>Aux. de limpieza</option><option value="pulidor" ${pi?.puesto==='pulidor'?'selected':''}>Pulidor</option><option value="encargado" ${pi?.puesto==='encargado'?'selected':''}>Encargado de servicio</option></select></div><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;"><input type="checkbox" id="ue-pi-insumos-${i}" ${pi?.puedeInsumos?'checked':''} style="width:15px;height:15px;accent-color:#042C53;">🧹 Panel de solicitud de insumos habilitado</label></div>`:`<div id="ue-pi-fields-${i}" style="display:none;"></div>`;})()}
             <div style="border-top:.5px solid #B5D4F4;margin-top:10px;padding-top:10px;">
               <p style="font-size:11px;font-weight:600;color:#042C53;margin-bottom:6px;">🔑 Contraseña temporal <span style="font-weight:400;color:#5A8CB0;">(opcional — dejar vacío para no cambiar)</span></p>
               <div class="frow"><div style="grid-column:1/-1;"><label>Nueva contraseña</label><input type="password" id="ue-tmppass-${i}" placeholder="Mínimo 8 caracteres"></div></div>
@@ -2210,7 +2210,7 @@ function togglePIEditFields(i,rol){
   if(rol==='personal_inm'){
     const pi=PERSONAL_INM.find(p=>p.email===(USERS[i]?.email||''));
     el.style.display='';
-    el.innerHTML=`<div><label>Puesto</label><select id="ue-pi-puesto-${i}"><option value="aux_limpieza" ${(pi?.puesto||'aux_limpieza')==='aux_limpieza'?'selected':''}>Aux. de limpieza</option><option value="pulidor" ${pi?.puesto==='pulidor'?'selected':''}>Pulidor</option><option value="encargado" ${pi?.puesto==='encargado'?'selected':''}>Encargado de servicio</option></select></div><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;"><input type="checkbox" id="ue-pi-insumos-${i}" ${pi?.puedeInsumos?'checked':''} style="width:15px;height:15px;accent-color:#042C53;">📦 Panel de solicitud de insumos habilitado</label>`;
+    el.innerHTML=`<div><label>Puesto</label><select id="ue-pi-puesto-${i}"><option value="aux_limpieza" ${(pi?.puesto||'aux_limpieza')==='aux_limpieza'?'selected':''}>Aux. de limpieza</option><option value="pulidor" ${pi?.puesto==='pulidor'?'selected':''}>Pulidor</option><option value="encargado" ${pi?.puesto==='encargado'?'selected':''}>Encargado de servicio</option></select></div><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;"><input type="checkbox" id="ue-pi-insumos-${i}" ${pi?.puedeInsumos?'checked':''} style="width:15px;height:15px;accent-color:#042C53;">🧹 Panel de solicitud de insumos habilitado</label>`;
   } else {
     el.style.display='none';el.innerHTML='';
   }
@@ -5734,7 +5734,7 @@ function renderPIServicios(){
         </div>
         ${diasHtml?'<div style="margin-top:8px;"><span style="font-size:10px;font-weight:600;color:'+_lbl+';text-transform:uppercase;letter-spacing:.5px;">D\xEDas de servicio</span>'+diasHtml+'</div>':''}
         ${(()=>{const piD=_getPIData();if(!piD||!piD.puedeInsumos||!ps.presupuestoInsumos)return'';const frLbl=ps.frecuenciaInsumos===2?'Bimestral':ps.frecuenciaInsumos===3?'Trimestral':'Mensual';return`<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:${_dark?'rgba(24,95,165,.12)':'#EEF5FF'};border:.5px solid ${_dark?'rgba(24,95,165,.3)':'#C5D8EC'};">
-          <p style="font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px;">📦 Insumos</p>
+          <p style="font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px;">🧹 Insumos</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
             <span style="font-size:11px;color:${_txt};font-weight:600;">💰 Presupuesto: $${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
             <span style="font-size:11px;color:${_txt};font-weight:600;">🔁 ${frLbl} · Solicitud días ${INSUMOS_CONFIG.diaInicio||15}-${INSUMOS_CONFIG.diaFin||25}</span>
@@ -6128,7 +6128,7 @@ function _insumosInfoBlock(ps){
   const tieneSol=solPeriodo.length>0;
   const solInfo=tieneSol?solPeriodo.map(r=>`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:7px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${r.folio} · ${_insStatusLabel[r.status]||r.status}</span>`).join(' '):'';
   return`<div style="margin-top:10px;padding:10px 14px;border-radius:10px;background:${dark?'rgba(24,95,165,.10)':'#EEF5FF'};border:.5px solid ${dark?'rgba(24,95,165,.25)':'#C5D8EC'};">
-    <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;">📦 Insumos</p>
+    <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;">🧹 Insumos</p>
     <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
       ${ps.presupuestoInsumos?`<span style="font-size:12px;font-weight:600;color:${txt};">💰 Presupuesto: $${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
       <span style="font-size:12px;font-weight:600;color:${txt};">🔁 ${frLbl} · Solicitud días ${INSUMOS_CONFIG.diaInicio||15}-${INSUMOS_CONFIG.diaFin||25}</span>
@@ -6174,7 +6174,7 @@ function _checkInsumosReminders(){
               : `⚠️ Último aviso: ${faltantes.length} contrato(s) sin solicitud`;
   faltantes.forEach(ps=>{
     const piAsignados=(PERSONAL_INM||[]).filter(p=>p.puedeInsumos&&(p.serviciosAsignados||[]).includes(ps.id));
-    if(piAsignados.length)pushNotif('personal_inm','📦','amber','📅 Solicitud de insumos',`${msgPI} — ${ps.folio} · ${ps.cliente.nombre}`);
+    if(piAsignados.length)pushNotif('personal_inm','🧹','amber','📅 Solicitud de insumos',`${msgPI} — ${ps.folio} · ${ps.cliente.nombre}`);
   });
   const folios=faltantes.map(ps=>`${ps.folio} · ${ps.cliente.nombre}`).join(', ');
   pushNotif('supervisor','📋','amber','📅 Insumos pendientes',`${msgSV}: ${folios}`);
@@ -7388,7 +7388,7 @@ function renderPIInsumos(activeTab){
   };
 
   el.innerHTML=`
-    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Mis solicitudes de insumos</p>
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">🧹 Mis solicitudes de insumos</p>
     <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
       <button style="${tabBtnStyle(tab==='solicitudes')}" onclick="renderPIInsumos('solicitudes')">📋 Solicitudes</button>
       <button style="${tabBtnStyle(tab==='historial')}" onclick="renderPIInsumos('historial')">🕐 Historial</button>
@@ -7472,7 +7472,7 @@ function renderSVInsumos(activeTab){
   const tabHistorialHtml=`${_insHistorialFiltros(allReqs,'sv')}
     <div id="sv-historial-list">${allReqs.length?allReqs.map(r=>_insReqRowAcordeon(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes registradas.</p>`}</div>`;
   el.innerHTML=`
-    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Solicitudes de insumos</p>
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">🧹 Solicitudes de insumos</p>
     <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
       <button style="${tabBtnStyle(tab==='actual')}" onclick="renderSVInsumos('actual')">📅 ${mesNom} ${hoy.getFullYear()}</button>
       <button style="${tabBtnStyle(tab==='historial')}" onclick="renderSVInsumos('historial')">🕐 Historial</button>
@@ -7528,7 +7528,7 @@ function renderCIInsumos(){
           <p style="font-size:11px;color:${lbl};margin:0;">👷 ${pi?pi.nombre:'—'} · ${r.fecha}</p>
         </div>`;}).join('')
     :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:40px 0;">Sin solicitudes de insumos para tus servicios.</p>';
-  el.innerHTML=`<p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Insumos solicitados</p>${listaHtml}`;
+  el.innerHTML=`<p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">🧹 Insumos solicitados</p>${listaHtml}`;
 }
 
 /* ── Cambiar status de solicitud (supervisor/admin) ── */
@@ -7540,7 +7540,7 @@ function cambiarStatusInsumo(id,nuevoStatus){
   renderSVInsumos();
   renderAdminInsumos();
   if(nuevoStatus==='aprobado')pushNotif('personal_inm','✅','green','Solicitud aprobada',`${r.folio} fue aprobada por el supervisor.`);
-  showToast('green','📦','Solicitud actualizada a: '+(_insStatusLabel[nuevoStatus]||nuevoStatus));
+  showToast('green','🧹','Solicitud actualizada a: '+(_insStatusLabel[nuevoStatus]||nuevoStatus));
 }
 
 /* ── Eliminar solicitud (solo admin) ── */
@@ -7782,8 +7782,8 @@ function enviarInsumoSol(){
   fbSaveInsumos();
   cerrarInsumoSol();
   renderPIInsumos();
-  pushNotif('supervisor','📦','blue',_insumoEditId!=null?'Solicitud corregida':'Nueva solicitud de insumos',`${folio} — ${p.nombre} · ${ps.folio} · ${ps.cliente.nombre}`);
-  showToast('green','📦',`Solicitud ${folio} enviada al supervisor.`);
+  pushNotif('supervisor','🧹','blue',_insumoEditId!=null?'Solicitud corregida':'Nueva solicitud de insumos',`${folio} — ${p.nombre} · ${ps.folio} · ${ps.cliente.nombre}`);
+  showToast('green','🧹',`Solicitud ${folio} enviada al supervisor.`);
 }
 
 function cerrarInsumoSol(){
@@ -7986,7 +7986,7 @@ function renderAdminInsumos(activeTab){
   </div>`;
 
   el.innerHTML=`
-    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Solicitudes de insumos</p>
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">🧹 Solicitudes de insumos</p>
     ${configHtml}
     <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;flex-wrap:wrap;">
       <button style="${tabBtnStyle(tab==='actual')}" onclick="renderAdminInsumos('actual')">📅 ${mesNom} ${hoy.getFullYear()}</button>
