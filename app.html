@@ -1438,5 +1438,19 @@
   </div>
 </div>
 
+<!-- ══ PLAN DE TRABAJO overlay ══ -->
+<div id="plan-trabajo-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:9100;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="max-width:860px;margin:16px auto;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.35);" id="plan-trabajo-card">
+    <div style="background:linear-gradient(135deg,#042C53,#185FA5);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <p style="font-size:15px;font-weight:700;color:#fff;margin:0;">📋 Plan de Trabajo</p>
+        <span style="font-size:12px;color:rgba(255,255,255,.75);" id="plan-trabajo-subtitle"></span>
+      </div>
+      <button onclick="cerrarPlanTrabajo()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;">×</button>
+    </div>
+    <div id="plan-trabajo-body" style="background:#F7FAFF;min-height:120px;"></div>
+  </div>
+</div>
+
 </body>
 </html>
