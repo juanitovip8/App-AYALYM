@@ -396,6 +396,14 @@ function fbListenInsumos(callback){
   }catch(e){console.warn('fbListenInsumos',e);return function(){};}
 }
 
+function fbListenPropertyServices(callback){
+  try{
+    return _col('servicios_prop').onSnapshot(function(snap){
+      var list=[];snap.forEach(function(d){list.push(d.data());});callback(list);
+    },function(e){console.warn('fbListenPropertyServices',e);});
+  }catch(e){console.warn('fbListenPropertyServices',e);return function(){};}
+}
+
 function fbSaveSupervisorAsistencias() {
   try {
     var b = _db.batch();

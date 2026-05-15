@@ -1294,11 +1294,13 @@ function launchApp(role,nombre,zona){
     const pi=PERSONAL_INM.find(p=>p.email===currentUserEmail||p.nombre===nombre);
     if(pi&&pi.photo){const hav=document.getElementById('header-av');if(hav){hav.innerHTML=`<img src="${pi.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;hav.style.fontSize='0';}}
     renderPersonalInmPanel();
+    _startAstListeners('personal_inm');
   }
   if(role==='cliente_inm'){
     const ci=CLIENTS_INM[currentClientInmId];
     if(ci&&ci.photo){const hav=document.getElementById('header-av');if(hav){hav.innerHTML=`<img src="${ci.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;hav.style.fontSize='0';}}
     renderClienteInmInicio();
+    _startAstListeners('cliente_inm');
   }
   /* ── Inicializar chat flotante ── */
   setTimeout(initChatFab, 200);
@@ -3326,9 +3328,11 @@ let _svMapInstance=null;
 let _svMapMarkers={};
 let _svMapListener=null;
 
-/* ── Listeners en tiempo real para asistencias ──────────────── */
+/* ── Listeners en tiempo real ──────────────── */
 let _svAstListener=null;
 let _piAstListener=null;
+let _insumosListener=null;
+let _propServListener=null;
 
 /* Debounce: evita renders múltiples cuando Firestore dispara cambios rápidos */
 function _debounce(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn,ms);};}
@@ -3340,6 +3344,17 @@ const _renderSVAstDebounced=_debounce(function(){
   const el=document.getElementById('sv-ast-hoy');
   if(el&&el.offsetParent!==null)renderSVAstHoy();
 },400);
+const _renderInsumosDebounced=_debounce(function(){
+  if(typeof renderAdminInsumos==='function')renderAdminInsumos();
+  if(typeof renderSVInsumos==='function')renderSVInsumos();
+  if(typeof renderPIInsumos==='function')renderPIInsumos();
+},350);
+const _renderPropServDebounced=_debounce(function(){
+  if(typeof renderPropServices==='function')renderPropServices(_propFilter);
+  if(typeof renderSVServicios==='function')renderSVServicios();
+  if(typeof renderPIServicios==='function')renderPIServicios();
+  if(typeof renderClienteInmContratos==='function')renderClienteInmContratos();
+},350);
 
 function _startAstListeners(role){
   if(_svAstListener){_svAstListener();_svAstListener=null;}
@@ -3357,10 +3372,26 @@ function _startAstListeners(role){
       _renderAstDebounced();
     });
   }
+  /* ── Insumos en tiempo real (todas las vistas) ── */
+  if(_insumosListener){_insumosListener();_insumosListener=null;}
+  _insumosListener=fbListenInsumos(function(list){
+    INSUMOS_REQUESTS.length=0;
+    list.forEach(function(r){INSUMOS_REQUESTS.push(r);});
+    _renderInsumosDebounced();
+  });
+  /* ── Servicios/contratos de inmuebles en tiempo real ── */
+  if(_propServListener){_propServListener();_propServListener=null;}
+  _propServListener=fbListenPropertyServices(function(list){
+    PROPERTY_SERVICES.length=0;
+    list.forEach(function(ps){PROPERTY_SERVICES.push(ps);});
+    _renderPropServDebounced();
+  });
 }
 function _stopAstListeners(){
   if(_svAstListener){_svAstListener();_svAstListener=null;}
   if(_piAstListener){_piAstListener();_piAstListener=null;}
+  if(_insumosListener){_insumosListener();_insumosListener=null;}
+  if(_propServListener){_propServListener();_propServListener=null;}
 }
 
 function renderSVMap(){
@@ -4216,6 +4247,32 @@ function adminDeletePIAst(piId,fecha){
   showToast('green','🗑','Registro eliminado');
 }
 
+/* ══ PDF in-app overlay — PWA-safe (no window.open, usuario nunca sale de la app) ══ */
+function _openPdfOverlay(html){
+  const ov=document.getElementById('pdf-ov');
+  const frame=document.getElementById('pdf-frame');
+  if(!ov||!frame){
+    // Fallback si el overlay no existe (no debería pasar)
+    const w=window.open('','_blank');
+    if(w){w.document.write(html);w.document.close();}
+    return;
+  }
+  // Quitar auto-print para que el usuario lo controle con el botón
+  const clean=html
+    .replace(/<script>window\.onload=function\(\)\{window\.print\(\);\}<\/script>/g,'')
+    .replace(/<script>setTimeout\(\(\)=>window\.print\(\),\d+\);<\/script>/g,'');
+  ov.style.display='flex';
+  const doc=frame.contentDocument||(frame.contentWindow&&frame.contentWindow.document);
+  if(doc){doc.open();doc.write(clean);doc.close();}
+}
+function _pdfOvPrint(){
+  const frame=document.getElementById('pdf-frame');
+  if(frame&&frame.contentWindow){
+    try{frame.contentWindow.focus();frame.contentWindow.print();}
+    catch(e){console.warn('print',e);}
+  }
+}
+
 function exportAsistenciasPDF(){
   const{from,to,label}=_astDateRange();
   const filtered=SUPERVISOR_ASISTENCIAS.filter(a=>a.fecha>=from&&a.fecha<=to&&(!_adminAstSvFiltro||a.supervisorNombre===_adminAstSvFiltro)&&(!_adminAstClientFiltro||a.clienteNombre===_adminAstClientFiltro))
@@ -4275,9 +4332,7 @@ function exportAsistenciasPDF(){
   </div>
   <script>window.onload=function(){window.print();}<\/script>
 </body></html>`;
-  const w=window.open('','_blank','width=960,height=720');
-  if(w){w.document.write(html);w.document.close();}
-  else{showToast('amber','⚠️','Permite ventanas emergentes para exportar PDF');}
+  _openPdfOverlay(html);
 }
 
 function exportPIAsistenciasPDF(){
@@ -4359,9 +4414,7 @@ function exportPIAsistenciasPDF(){
   </div>
   <script>window.onload=function(){window.print();}<\/script>
 </body></html>`;
-  const w=window.open('','_blank','width=960,height=720');
-  if(w){w.document.write(html);w.document.close();}
-  else{showToast('amber','⚠️','Permite ventanas emergentes para exportar PDF');}
+  _openPdfOverlay(html);
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -6659,10 +6712,7 @@ ${fotosHtml?`<div class="section">
 
 <script>window.onload=function(){window.print();}<\/script>
 </body></html>`;
-  const w=window.open('','_blank');
-  if(!w){showToast('amber','⚠️','Permite ventanas emergentes en tu navegador para generar el PDF');return;}
-  w.document.write(html);
-  w.document.close();
+  _openPdfOverlay(html);
 }
 
 /* Re-geocodifica un inmueble existente desde el panel admin */
@@ -6969,9 +7019,7 @@ ${plan.updatedAt?`<p style="font-size:9px;color:#8A9BB0;margin-top:10px;text-ali
 <div class="ftr"><span>AYALYM · Servicios de limpieza profesional · ¡Espacios limpios, Entornos felices!</span><span>Plan de Trabajo <strong>${ps.folio}</strong> · ${ps.cliente.nombre}</span></div>
 <script>window.onload=function(){window.print();}<\/script>
 </body></html>`;
-  const w=window.open('','_blank');
-  if(!w){showToast('amber','⚠️','Permite ventanas emergentes para generar el PDF');return;}
-  w.document.write(html);w.document.close();
+  _openPdfOverlay(html);
 }
 
 /* ── Edición de servicio de inmueble (admin) ── */
@@ -8512,8 +8560,7 @@ function _exportInsumosPDF(){
       <td style="padding:6px 10px;border-bottom:.5px solid #E8EEF7;text-align:right;font-weight:700;">$${(r.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
       <td style="padding:6px 10px;border-bottom:.5px solid #E8EEF7;text-align:center;">${r.fecha}</td>
     </tr>`;}).join('');
-  const w=window.open('','_blank','width=900,height=700');if(!w)return;
-  w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Insumos ${mesNom} ${hoy.getFullYear()}</title>
+  _openPdfOverlay(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Insumos ${mesNom} ${hoy.getFullYear()}</title>
   <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1C2B3A;}
   .hdr{background:#042C53;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;color:#fff;}
   .hdr h1{font-size:22px;font-weight:800;letter-spacing:.5px;}.hdr p{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;}
@@ -8544,9 +8591,7 @@ function _exportInsumosPDF(){
     <tbody>${detailRowsHtml}</tbody></table>
   </div>
   <div class="ftr"><span>AYALYM — Sistema de gestión</span><span>Impreso: ${generado}</span></div>
-  <script>setTimeout(()=>window.print(),400);<\/script>
   </body></html>`);
-  w.document.close();
 }
 
 /* ── Autocompletado de cliente existente en el formulario de nuevo inmueble ── */
@@ -9234,10 +9279,7 @@ body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;color:#1C2
 </div>
 <script>window.onload=function(){window.print();}<\/script>
 </body></html>`;
-  const w=window.open('','_blank');
-  if(!w){showToast('amber','⚠️','Permite ventanas emergentes para generar el PDF');return;}
-  w.document.write(html);
-  w.document.close();
+  _openPdfOverlay(html);
 }
 
 /* ── PERFIL ── */
@@ -9373,15 +9415,13 @@ function _renderAsisPDF(asis,workerName,label,ps,logoB64){
   const logoHtml=logoB64
     ?`<img src="${logoB64}" style="height:52px;width:52px;object-fit:contain;border-radius:6px;">`
     :`<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;">AYA<span style="color:#5B9FE8;">LYM</span></div>`;
-  const w=window.open('','_blank','width=860,height=720');if(!w)return;
-  w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Asistencias — ${workerName}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1C2B3A;}.hdr{background:#042C53;padding:18px 36px;display:flex;justify-content:space-between;align-items:center;color:#fff;}.hdr-brand{display:flex;align-items:center;gap:13px;}.hdr-brand h1{font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1;}.hdr-sub{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}.hdr-r{text-align:right;}.hdr-r h2{font-size:14px;font-weight:700;}.hdr-r p{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;}.meta{background:#F0F4FA;border-bottom:1px solid #D8E5F3;padding:10px 36px;}.meta table{width:100%;border-collapse:collapse;font-size:12px;}.meta td{padding:4px 6px;}.meta td:first-child{font-weight:600;color:#5C7A9A;width:130px;}.stats{display:flex;border-bottom:1px solid #D8E5F3;}.stat{flex:1;padding:12px 0;text-align:center;border-right:1px solid #D8E5F3;}.stat:last-child{border-right:none;}.sv{font-size:20px;font-weight:700;color:#042C53;}.sl{font-size:10px;color:#8A9BB0;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}.body{padding:16px 36px;}h3{font-size:12px;font-weight:700;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}table.tbl{width:100%;border-collapse:collapse;font-size:12px;}table.tbl thead th{background:#F0F4FA;color:#5C7A9A;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:8px;border-bottom:1.5px solid #D8E5F3;text-align:left;}table.tbl tbody tr:nth-child(even){background:#F8FAFB;}table.tbl tbody td{padding:7px 8px;border-bottom:.5px solid #E8EEF7;}.ftr{padding:10px 36px;background:#F0F4FA;border-top:1px solid #D8E5F3;font-size:10px;color:#8A9BB0;display:flex;justify-content:space-between;margin-top:16px;}@media print{body,.hdr,.meta,.stats,.ftr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>
+  _openPdfOverlay(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Asistencias — ${workerName}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1C2B3A;}.hdr{background:#042C53;padding:18px 36px;display:flex;justify-content:space-between;align-items:center;color:#fff;}.hdr-brand{display:flex;align-items:center;gap:13px;}.hdr-brand h1{font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1;}.hdr-sub{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}.hdr-r{text-align:right;}.hdr-r h2{font-size:14px;font-weight:700;}.hdr-r p{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;}.meta{background:#F0F4FA;border-bottom:1px solid #D8E5F3;padding:10px 36px;}.meta table{width:100%;border-collapse:collapse;font-size:12px;}.meta td{padding:4px 6px;}.meta td:first-child{font-weight:600;color:#5C7A9A;width:130px;}.stats{display:flex;border-bottom:1px solid #D8E5F3;}.stat{flex:1;padding:12px 0;text-align:center;border-right:1px solid #D8E5F3;}.stat:last-child{border-right:none;}.sv{font-size:20px;font-weight:700;color:#042C53;}.sl{font-size:10px;color:#8A9BB0;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}.body{padding:16px 36px;}h3{font-size:12px;font-weight:700;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}table.tbl{width:100%;border-collapse:collapse;font-size:12px;}table.tbl thead th{background:#F0F4FA;color:#5C7A9A;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:8px;border-bottom:1.5px solid #D8E5F3;text-align:left;}table.tbl tbody tr:nth-child(even){background:#F8FAFB;}table.tbl tbody td{padding:7px 8px;border-bottom:.5px solid #E8EEF7;}.ftr{padding:10px 36px;background:#F0F4FA;border-top:1px solid #D8E5F3;font-size:10px;color:#8A9BB0;display:flex;justify-content:space-between;margin-top:16px;}@media print{body,.hdr,.meta,.stats,.ftr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>
 <div class="hdr"><div class="hdr-brand">${logoHtml}<div><h1>AYALYM</h1><p class="hdr-sub" style="line-height:1.3;">Servicios de limpieza profesional.<br><span style="color:#7ec8f5;font-size:8px;">¡Espacios limpios, Entornos felices!</span></p></div></div><div class="hdr-r"><h2>Reporte de Asistencias</h2><p>Generado: ${generado}</p></div></div>
 <div class="meta"><table><tbody><tr><td>Trabajador</td><td>${workerName}</td></tr><tr><td>Período</td><td>${label}</td></tr>${psRow}</tbody></table></div>
 <div class="stats"><div class="stat"><div class="sv">${asis.length}</div><div class="sl">Registros</div></div><div class="stat"><div class="sv">${cmpl.length}</div><div class="sl">Completos</div></div><div class="stat"><div class="sv">${asis.length-cmpl.length}</div><div class="sl">Sin salida</div></div><div class="stat"><div class="sv">${dStrMin(avgMin)}</div><div class="sl">Promedio turno</div></div></div>
 <div class="body"><h3>Detalle de registros</h3><table class="tbl"><thead><tr><th>Fecha</th><th>Día</th><th>Entrada</th><th>Salida</th><th>Duración</th></tr></thead><tbody>${rows||'<tr><td colspan="5" style="text-align:center;color:#8A9BB0;padding:16px;">Sin registros en el período.</td></tr>'}</tbody></table></div>
 <div class="ftr"><span>AYALYM — Sistema de gestión</span><span>${workerName} · ${label}</span></div>
-<script>window.onload=function(){window.print();}<\/script></body></html>`);
-  w.document.close();
+</body></html>`);
 }
 
 function renderClienteInmAsistencias(){

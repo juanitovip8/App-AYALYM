@@ -1408,7 +1408,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=134"></script>
+<script src="js/app.js?v=136"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 
@@ -1450,6 +1450,18 @@
     </div>
     <div id="plan-trabajo-body" style="background:#0D1B2C;min-height:120px;"></div>
   </div>
+</div>
+
+<!-- ══ PDF IN-APP OVERLAY — PWA-safe, sin window.open ══ -->
+<div id="pdf-ov" style="display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;">
+  <div style="background:#042C53;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;padding-top:calc(10px + env(safe-area-inset-top,0px));">
+    <span style="color:#fff;font-weight:700;font-size:15px;">📄 Vista previa</span>
+    <div style="display:flex;gap:8px;">
+      <button onclick="_pdfOvPrint()" style="background:#1A56DB;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;">🖨️ Imprimir</button>
+      <button onclick="document.getElementById('pdf-ov').style.display='none'" style="background:#B71C1C;color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;">✕ Cerrar</button>
+    </div>
+  </div>
+  <iframe id="pdf-frame" style="flex:1;border:none;width:100%;background:#fff;" sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms allow-downloads"></iframe>
 </div>
 
 </body>
