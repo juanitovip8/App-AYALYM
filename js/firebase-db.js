@@ -15,6 +15,17 @@ const _FIREBASE_CFG = {
 if (!firebase.apps.length) firebase.initializeApp(_FIREBASE_CFG);
 const _db = firebase.firestore();
 
+/* ── Persistencia offline (IndexedDB) ─────────────────────────
+   Cachea todos los documentos localmente. En recargas sucesivas
+   Firestore solo sincroniza los cambios → ahorro masivo de datos.
+   synchronizeTabs: true evita errores con múltiples pestañas.
+   ─────────────────────────────────────────────────────────── */
+_db.enablePersistence({ synchronizeTabs: true })
+  .catch(function(e){
+    if(e.code==='failed-precondition')console.warn('[AYA] Firestore offline: múltiples pestañas, solo una sincroniza.');
+    else if(e.code==='unimplemented')console.warn('[AYA] Firestore offline: navegador no compatible.');
+  });
+
 /* ── Helpers ──────────────────────────────────────────── */
 function _col(n)  { return _db.collection(n); }
 function _clone(x){ return JSON.parse(JSON.stringify(x)); }
@@ -247,15 +258,15 @@ async function loadAllData() {
     }
   } catch(e) { console.warn('AGENDA_ITEMS load', e); }
 
-  /* 9. SUPERVISOR ASISTENCIAS — siempre cargar desde Firestore (datos operativos, nunca purgar) */
-  var svAstSnap = await _col('sv_asistencias').get();
+  /* 9. SUPERVISOR ASISTENCIAS — cargar solo las últimas 300 */
+  var svAstSnap = await _col('sv_asistencias').limitToLast(300).get();
   if (!svAstSnap.empty) {
     SUPERVISOR_ASISTENCIAS.length = 0;
     svAstSnap.docs.forEach(function(d){ SUPERVISOR_ASISTENCIAS.push(d.data()); });
   }
 
-  /* 10. INSUMOS_REQUESTS — cargar solicitudes de insumos */
-  var insSnap = await _col('insumos_requests').get();
+  /* 10. INSUMOS_REQUESTS — cargar solicitudes de insumos (últimas 200) */
+  var insSnap = await _col('insumos_requests').limit(200).get();
   if (!insSnap.empty) {
     INSUMOS_REQUESTS.length = 0;
     insSnap.docs.forEach(function(d){ INSUMOS_REQUESTS.push(d.data()); });

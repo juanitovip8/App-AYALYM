@@ -1533,6 +1533,16 @@
 <script src="js/app.js?v=152"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
+<script>
+/* ── Registro del Service Worker ── */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js')
+      .then(function(r){ console.log('[AYA SW] Registrado:', r.scope); })
+      .catch(function(e){ console.warn('[AYA SW] Error:', e); });
+  });
+}
+</script>
 
 <!-- ── Modal flotante de administración ── -->
 <div id="admin-modal-ov" class="admin-modal-ov" onclick="closeAdminModal(event)">
