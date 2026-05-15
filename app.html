@@ -350,6 +350,7 @@
       <!-- Supervisor -->
       <p style="font-size:11px;font-weight:600;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">👁️ Supervisor asignado</p>
       <div class="frow full"><label>Supervisor</label><select id="ie-supervisor"></select></div>
+      <div class="frow full"><label>💰 Presupuesto mensual de insumos ($)</label><input type="number" id="ie-presupuesto-insumos" min="0" step="0.01" placeholder="Ej: 1000.00"></div>
 
       <div class="div" style="margin:12px 0;"></div>
 
@@ -1215,6 +1216,7 @@
             <!-- 7. Asignación -->
             <p class="inm-section-label">👁️ Asignación y notas</p>
             <div class="frow full"><label>Supervisor asignado</label><select id="inm-supervisor-sel"></select></div>
+            <div class="frow full"><label>💰 Presupuesto mensual de insumos ($)</label><input type="number" id="inm-presupuesto-insumos" min="0" step="0.01" placeholder="Ej: 1000.00"></div>
             <div class="frow full"><label>Notas internas</label><textarea id="inm-notas" placeholder="Acceso, coordinación, observaciones…" style="resize:vertical;min-height:50px;"></textarea></div>
 
             <div style="display:flex;gap:8px;margin-top:12px;">
@@ -1418,5 +1420,21 @@
     <div id="admin-modal-body" class="admin-modal-body"></div>
   </div>
 </div>
+<!-- ══════════════════════════════════════════════════════
+     OVERLAY: FORMULARIO SOLICITUD DE INSUMOS
+     ══════════════════════════════════════════════════════ -->
+<div id="insumos-sol-ov" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:8000;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+  <div style="max-width:700px;margin:16px auto;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.3);" id="insumos-sol-card">
+    <div style="background:linear-gradient(135deg,#042C53,#185FA5);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1;">
+      <div>
+        <p style="font-size:15px;font-weight:700;color:#fff;margin:0;">📦 Solicitud de Insumos</p>
+        <span style="font-size:12px;color:rgba(255,255,255,.75);" id="insumos-sol-subtitle"></span>
+      </div>
+      <button onclick="cerrarInsumoSol()" style="background:rgba(255,255,255,.18);border:none;border-radius:8px;padding:6px 14px;color:#fff;font-size:13px;cursor:pointer;">✕</button>
+    </div>
+    <div id="insumos-sol-body" style="padding:0;background:#F7FAFF;"></div>
+  </div>
+</div>
+
 </body>
 </html>

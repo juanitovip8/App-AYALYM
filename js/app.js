@@ -6670,6 +6670,7 @@ function openInmEdit(id){
   // Supervisor
   const sel=document.getElementById('ie-supervisor');
   if(sel)sel.innerHTML=SUPERVISORS.map(sv=>`<option value="${sv.id}"${sv.id===ps.supervisorId?' selected':''}>${sv.name}</option>`).join('');
+  set('ie-presupuesto-insumos',ps.presupuestoInsumos||'');
   // Notas
   set('ie-notas',ps.notas);
 }
@@ -6758,6 +6759,7 @@ function saveInmEdit(){
   ps.fiscal.dirFiscal=g('ie-fiscal-dir');
   // Supervisor
   ps.supervisorId=parseInt(document.getElementById('ie-supervisor').value);
+  ps.presupuestoInsumos=parseFloat((document.getElementById('ie-presupuesto-insumos')||{}).value||0)||0;
   // Notas
   ps.notas=g('ie-notas');
   /* Si cambió la dirección, limpiar coords viejas y re-geocodificar */
@@ -7302,9 +7304,214 @@ function cambiarStatusInsumo(id,nuevoStatus){
   showToast('green','📦','Solicitud actualizada a: '+(_insStatusLabel[nuevoStatus]||nuevoStatus));
 }
 
-/* ── Placeholder para abrir formulario de nueva solicitud (se definirá cuando se den los campos) ── */
-function abrirNuevaInsumoSol(){
-  showToast('blue','📦','Próximamente: indica los campos y armamos el formulario de solicitud');
+/* ══════════════════════════════════════════════════════════
+   FORMULARIO DE SOLICITUD DE INSUMOS
+   ══════════════════════════════════════════════════════════ */
+let _insumoSolServicioId=null; /* servicio seleccionado para la solicitud activa */
+
+function abrirNuevaInsumoSol(psId){
+  const p=_getPIData();if(!p||!p.puedeInsumos)return;
+  /* Si no se pasa psId y tiene 1 solo servicio, usarlo directo */
+  const misPS=PROPERTY_SERVICES.filter(ps=>p.serviciosAsignados.includes(ps.id)&&ps.status==='activo');
+  if(!misPS.length){showToast('amber','⚠️','No tienes servicios activos asignados.');return;}
+  /* Si tiene múltiples y no se pasó ID, mostrar selector */
+  if(!psId&&misPS.length>1){_insumoSeleccionarServicio(p,misPS);return;}
+  const ps=psId?PROPERTY_SERVICES.find(x=>x.id===psId):misPS[0];
+  if(!ps)return;
+  /* Verificar si ya existe solicitud del mes actual para este servicio */
+  const mesActual=new Date().toISOString().slice(0,7); // YYYY-MM
+  const yaExiste=INSUMOS_REQUESTS.find(r=>r.personalId===p.id&&r.servicioId===ps.id&&(r.fecha||'').startsWith(mesActual)&&r.status!=='rechazado');
+  if(yaExiste){showToast('amber','⚠️','Ya enviaste una solicitud para '+ps.folio+' este mes. Espera la revisión del supervisor.');return;}
+  _insumoSolServicioId=ps.id;
+  _renderInsumoForm(p,ps);
+}
+
+function _insumoSeleccionarServicio(p,misPS){
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const ov=document.getElementById('insumos-sol-ov');
+  const body=document.getElementById('insumos-sol-body');
+  const sub=document.getElementById('insumos-sol-subtitle');
+  if(sub)sub.textContent='Selecciona el inmueble';
+  body.style.background=dark?'#1b2a3a':'#F7FAFF';
+  body.innerHTML=`<div style="padding:20px;">
+    <p style="font-size:13px;font-weight:600;color:${dark?'#C5D8EC':'#042C53'};margin:0 0 12px;">¿Para cuál inmueble es la solicitud?</p>
+    ${misPS.map(ps=>`<button onclick="abrirNuevaInsumoSol(${ps.id})" style="width:100%;text-align:left;padding:12px 16px;margin-bottom:8px;border-radius:10px;border:.5px solid ${dark?'#2a4060':'#C5D8EC'};background:${dark?'rgba(255,255,255,.05)':'#fff'};cursor:pointer;">
+      <p style="font-size:13px;font-weight:700;color:${dark?'#e8edf4':'#042C53'};margin:0;">${ps.folio}</p>
+      <span style="font-size:11px;color:${dark?'#8AACCA':'#5C7A9A'};">${ps.cliente.nombre} · ${ps.inmueble.tipo}, ${ps.inmueble.colonia||''}</span>
+    </button>`).join('')}
+  </div>`;
+  ov.style.display='block';
+}
+
+function _renderInsumoForm(p,ps){
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const presupuesto=ps.presupuestoInsumos||0;
+  const categorias=[
+    {key:'jarcieria',label:'🧹 Jarciería'},
+    {key:'bolsas',label:'🗑️ Bolsas'},
+    {key:'liquidos',label:'🧴 Líquidos'},
+  ];
+  const cardBg=dark?'#1b2a3a':'#fff';
+  const bdr=dark?'rgba(255,255,255,.08)':'#DCE8F5';
+  const txt=dark?'#e8edf4':'#042C53';
+  const lbl=dark?'#8AACCA':'#5C7A9A';
+  const sub=document.getElementById('insumos-sol-subtitle');
+  if(sub)sub.textContent=`${ps.folio} · ${ps.cliente.nombre}`;
+
+  let html=`<div style="background:${dark?'#0e1f30':'#EEF5FF'};padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div>
+      <p style="font-size:12px;font-weight:600;color:${lbl};margin:0;">🏢 ${ps.inmueble.tipo} · ${ps.inmueble.colonia||''}</p>
+      <p style="font-size:11px;color:${lbl};margin:2px 0 0;">${ps.inmueble.direccion||''}</p>
+    </div>
+    <div style="text-align:right;">
+      <p style="font-size:11px;font-weight:600;color:${lbl};margin:0;">Presupuesto asignado</p>
+      <p style="font-size:17px;font-weight:700;color:${txt};margin:0;">${presupuesto?'$'+presupuesto.toLocaleString('es-MX',{minimumFractionDigits:2}):'Sin definir'}</p>
+    </div>
+  </div>
+  <!-- Barra presupuesto -->
+  <div style="padding:10px 20px 0;background:${dark?'#1b2a3a':'#fff'};">
+    <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;color:${lbl};margin-bottom:4px;">
+      <span>Total solicitado</span><span id="ins-total-lbl">$0.00</span>
+    </div>
+    <div style="background:${dark?'rgba(255,255,255,.1)':'#E8F0F8'};border-radius:8px;height:8px;overflow:hidden;">
+      <div id="ins-bar" style="height:100%;background:#1A7A3B;border-radius:8px;width:0%;transition:width .3s,background .3s;"></div>
+    </div>
+    ${presupuesto?`<p id="ins-diff-lbl" style="font-size:11px;color:#1A7A3B;margin:4px 0 0;font-weight:600;"></p>`:''}
+  </div>
+  <div style="padding:0 20px 16px;background:${dark?'#1b2a3a':'#fff'};">`;
+
+  categorias.forEach(cat=>{
+    const items=INSUMOS_CATALOGO.filter(x=>x.categoria===cat.key&&x.activo);
+    html+=`<p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;">${cat.label}</p>
+    <div style="border:.5px solid ${bdr};border-radius:10px;overflow:hidden;">`;
+    items.forEach((item,idx)=>{
+      html+=`<div style="display:grid;grid-template-columns:1fr 52px 70px 64px;align-items:center;gap:8px;padding:8px 12px;border-bottom:${idx<items.length-1?'.5px solid '+bdr:'none'};">
+        <div>
+          <p style="font-size:12px;font-weight:600;color:${txt};margin:0;line-height:1.3;">${item.nombre}</p>
+          <span style="font-size:10px;color:${lbl};">$${item.precio.toFixed(2)} / ${item.unidad}</span>
+        </div>
+        <span style="font-size:10px;color:${lbl};text-align:center;">${item.unidad}</span>
+        <input type="number" min="0" step="1" value="0" id="ins-qty-${item.id}"
+          oninput="_insActualizarTotal(${presupuesto})"
+          style="width:100%;padding:5px 8px;border-radius:7px;border:.5px solid ${bdr};font-size:13px;font-weight:600;text-align:center;background:${dark?'rgba(255,255,255,.07)':'#F4F8FF'};color:${txt};">
+        <span id="ins-sub-${item.id}" style="font-size:11px;font-weight:600;color:${lbl};text-align:right;">$0.00</span>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+
+  html+=`<!-- Productos personalizados -->
+  <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;">➕ Productos adicionales</p>
+  <div id="ins-custom-list"></div>
+  <button onclick="_insAgregarCustom(${presupuesto})" style="width:100%;padding:8px;border:.5px dashed #185FA5;border-radius:8px;background:transparent;color:#185FA5;font-size:12px;font-weight:600;cursor:pointer;margin-top:6px;">+ Agregar producto que no está en la lista</button>
+  <!-- Notas -->
+  <div style="margin-top:14px;">
+    <label style="font-size:12px;font-weight:600;color:${lbl};display:block;margin-bottom:5px;">Notas u observaciones (opcional)</label>
+    <textarea id="ins-notas" placeholder="Comentarios sobre la solicitud…" rows="2" style="width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;border:.5px solid ${bdr};font-size:13px;background:${dark?'rgba(255,255,255,.06)':'#F8FAFF'};color:${txt};resize:vertical;"></textarea>
+  </div>
+  <button onclick="enviarInsumoSol()" style="width:100%;margin-top:16px;padding:13px;border-radius:10px;background:linear-gradient(135deg,#042C53,#185FA5);color:#fff;font-size:14px;font-weight:700;border:none;cursor:pointer;">📤 Enviar solicitud al supervisor</button>
+  </div>`;
+
+  document.getElementById('insumos-sol-body').innerHTML=html;
+  document.getElementById('insumos-sol-body').style.background=dark?'#1b2a3a':'#fff';
+  document.getElementById('insumos-sol-ov').style.display='block';
+  document.getElementById('insumos-sol-ov').scrollTop=0;
+}
+
+let _insCustomCount=0;
+function _insAgregarCustom(presupuesto){
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const bdr=dark?'rgba(255,255,255,.08)':'#DCE8F5';
+  const txt=dark?'#e8edf4':'#042C53';
+  const n=_insCustomCount++;
+  const div=document.createElement('div');
+  div.id='ins-custom-'+n;
+  div.style.cssText=`display:grid;grid-template-columns:1fr 64px 64px 28px;gap:6px;align-items:center;padding:8px 0;border-bottom:.5px solid ${bdr};`;
+  div.innerHTML=`<input type="text" placeholder="Nombre del producto" id="ins-c-nom-${n}" oninput="_insActualizarTotal(${presupuesto})" style="padding:6px 8px;border-radius:7px;border:.5px solid ${bdr};font-size:12px;background:${dark?'rgba(255,255,255,.07)':'#F4F8FF'};color:${txt};">
+    <input type="number" min="0" step="0.01" placeholder="Precio" id="ins-c-precio-${n}" oninput="_insActualizarTotal(${presupuesto})" style="padding:6px 8px;border-radius:7px;border:.5px solid ${bdr};font-size:12px;text-align:center;background:${dark?'rgba(255,255,255,.07)':'#F4F8FF'};color:${txt};">
+    <input type="number" min="0" step="1" placeholder="Cant." id="ins-c-qty-${n}" oninput="_insActualizarTotal(${presupuesto})" style="padding:6px 8px;border-radius:7px;border:.5px solid ${bdr};font-size:12px;text-align:center;background:${dark?'rgba(255,255,255,.07)':'#F4F8FF'};color:${txt};">
+    <button onclick="document.getElementById('ins-custom-${n}').remove();_insActualizarTotal(${presupuesto});" style="background:#FFE0E0;border:none;border-radius:6px;color:#C0392B;font-size:13px;cursor:pointer;padding:4px 6px;">✕</button>`;
+  document.getElementById('ins-custom-list').appendChild(div);
+}
+
+function _insActualizarTotal(presupuesto){
+  let total=0;
+  INSUMOS_CATALOGO.filter(x=>x.activo).forEach(item=>{
+    const qty=parseInt((document.getElementById('ins-qty-'+item.id)||{}).value||0)||0;
+    const sub=qty*item.precio;
+    total+=sub;
+    const subEl=document.getElementById('ins-sub-'+item.id);
+    if(subEl)subEl.textContent='$'+sub.toFixed(2);
+    if(subEl)subEl.style.color=sub>0?'#1A7A3B':'inherit';
+  });
+  /* Sumar custom */
+  document.querySelectorAll('[id^="ins-c-nom-"]').forEach(el=>{
+    const n=el.id.replace('ins-c-nom-','');
+    const precio=parseFloat((document.getElementById('ins-c-precio-'+n)||{}).value||0)||0;
+    const qty=parseInt((document.getElementById('ins-c-qty-'+n)||{}).value||0)||0;
+    total+=precio*qty;
+  });
+  const totalEl=document.getElementById('ins-total-lbl');
+  if(totalEl)totalEl.textContent='$'+total.toLocaleString('es-MX',{minimumFractionDigits:2});
+  if(totalEl)totalEl.style.color=presupuesto&&total>presupuesto?'#C0392B':'#1A7A3B';
+  const bar=document.getElementById('ins-bar');
+  if(bar){
+    const pct=presupuesto?Math.min((total/presupuesto)*100,100):0;
+    bar.style.width=pct+'%';
+    bar.style.background=presupuesto&&total>presupuesto?'#C0392B':total>presupuesto*0.8?'#E67E22':'#1A7A3B';
+  }
+  const diffEl=document.getElementById('ins-diff-lbl');
+  if(diffEl&&presupuesto){
+    const diff=presupuesto-total;
+    diffEl.textContent=diff>=0?`✅ Disponible: $${diff.toLocaleString('es-MX',{minimumFractionDigits:2})}`:`⚠️ Excede en $${Math.abs(diff).toLocaleString('es-MX',{minimumFractionDigits:2})} — ajusta tu pedido`;
+    diffEl.style.color=diff>=0?'#1A7A3B':'#C0392B';
+  }
+}
+
+function enviarInsumoSol(){
+  const p=_getPIData();if(!p)return;
+  const ps=PROPERTY_SERVICES.find(x=>x.id===_insumoSolServicioId);if(!ps)return;
+  const presupuesto=ps.presupuestoInsumos||0;
+  const items=[];
+  let total=0;
+  /* Catálogo */
+  INSUMOS_CATALOGO.filter(x=>x.activo).forEach(item=>{
+    const qty=parseInt((document.getElementById('ins-qty-'+item.id)||{}).value||0)||0;
+    if(qty>0){
+      const sub=qty*item.precio;
+      total+=sub;
+      items.push({catalogoId:item.id,nombre:item.nombre,unidad:item.unidad,precio:item.precio,cantidad:qty,subtotal:sub,esPersonalizado:false});
+    }
+  });
+  /* Custom */
+  document.querySelectorAll('[id^="ins-c-nom-"]').forEach(el=>{
+    const n=el.id.replace('ins-c-nom-','');
+    const nombre=(el.value||'').trim();
+    const precio=parseFloat((document.getElementById('ins-c-precio-'+n)||{}).value||0)||0;
+    const qty=parseInt((document.getElementById('ins-c-qty-'+n)||{}).value||0)||0;
+    if(nombre&&qty>0){
+      const sub=precio*qty;total+=sub;
+      items.push({catalogoId:null,nombre,unidad:'PZ',precio,cantidad:qty,subtotal:sub,esPersonalizado:true});
+    }
+  });
+  if(!items.length){showToast('amber','⚠️','Agrega al menos un producto con cantidad mayor a 0');return;}
+  if(presupuesto&&total>presupuesto){showToast('amber','⚠️','El total excede el presupuesto asignado ($'+presupuesto.toLocaleString('es-MX',{minimumFractionDigits:2})+').\nAjusta las cantidades antes de enviar.');return;}
+  const fecha=new Date().toISOString().split('T')[0];
+  const newId=INSUMOS_REQUESTS.length?Math.max(...INSUMOS_REQUESTS.map(r=>r.id))+1:0;
+  const folio='INS-'+String(newId+1).padStart(4,'0');
+  const req={id:newId,folio,personalId:p.id,personalNombre:p.nombre,servicioId:ps.id,servicioFolio:ps.folio,clienteNombre:ps.cliente.nombre,fecha,status:'pendiente',items,total,presupuesto,notas:(document.getElementById('ins-notas')||{}).value||'',revisadoPor:null,revisadoFecha:null};
+  INSUMOS_REQUESTS.push(req);
+  fbSaveInsumos();
+  cerrarInsumoSol();
+  renderPIInsumos();
+  pushNotif('supervisor','📦','blue','Nueva solicitud de insumos',`${folio} — ${p.nombre} · ${ps.folio}`);
+  showToast('green','📦',`Solicitud ${folio} enviada al supervisor.`);
+}
+
+function cerrarInsumoSol(){
+  const ov=document.getElementById('insumos-sol-ov');
+  if(ov)ov.style.display='none';
+  _insumoSolServicioId=null;_insCustomCount=0;
 }
 
 /* ── Render de insumos en panel admin (dentro de a-personal-inm) ── */
@@ -7445,6 +7652,7 @@ function createPropertyService(){
       dirFiscal:_gv('inm-fiscal-dir'),
     },
     notas:_gv('inm-notas'),
+    presupuestoInsumos:parseFloat((document.getElementById('inm-presupuesto-insumos')||{}).value||0)||0,
     reportes:[],
     parentId:null,renovadoPor:null,createdAt:today,
   });
