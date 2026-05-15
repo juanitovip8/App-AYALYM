@@ -6671,16 +6671,16 @@ let _planFilaCount=0;
 function _buildPlanTrabajoBtn(ps,canEdit){
   const tienePlan=ps.planTrabajo&&(ps.planTrabajo.filas||[]).length>0;
   const cntBadge=tienePlan
-    ?`<span style="font-size:10px;font-weight:600;color:#1A7A3B;background:#E8F5EC;padding:1px 9px;border-radius:10px;margin-left:6px;">${ps.planTrabajo.filas.length} actividades</span>`
+    ?`<span style="font-size:10px;font-weight:600;color:#34d399;background:rgba(5,150,105,.2);padding:1px 9px;border-radius:10px;margin-left:6px;">${ps.planTrabajo.filas.length} actividades</span>`
     :'';
-  const verBtn=tienePlan?`<button class="btn-sm" style="background:#EEF5FF;color:#185FA5;border:.5px solid #C5D8EC;" onclick="abrirPlanTrabajo(${ps.id},false)">👁 Ver</button>`:'';
+  const verBtn=tienePlan?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);" onclick="abrirPlanTrabajo(${ps.id},false)">👁 Ver</button>`:'';
   const pdfBtn=tienePlan?`<button class="btn-sm" onclick="exportarPlanTrabajoPDF(${ps.id})">⬇ PDF</button>`:'';
   const editBtn=canEdit
-    ?`<button class="btn-sm" style="background:#EEF5FF;color:#0C447C;border:.5px solid #B5D4F4;" onclick="abrirPlanTrabajo(${ps.id},true)">${tienePlan?'✏️ Editar plan':'➕ Crear plan'}</button>`
-    :(tienePlan?`<button class="btn-sm" style="background:#EEF5FF;color:#185FA5;border:.5px solid #C5D8EC;" onclick="abrirPlanTrabajo(${ps.id},false)">👁 Ver plan de trabajo</button>`:'');
+    ?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);" onclick="abrirPlanTrabajo(${ps.id},true)">${tienePlan?'✏️ Editar plan':'➕ Crear plan'}</button>`
+    :(tienePlan?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);" onclick="abrirPlanTrabajo(${ps.id},false)">👁 Ver plan de trabajo</button>`:'');
   if(!editBtn&&!tienePlan)return'';
-  return`<div style="margin-top:10px;padding:10px 14px;border:.5px solid #D0E3F7;border-radius:10px;background:#F4F8FF;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-    <p style="font-size:12px;font-weight:700;color:#042C53;margin:0;">📋 Plan de Trabajo${cntBadge}</p>
+  return`<div style="margin-top:10px;padding:10px 14px;border:.5px solid rgba(255,255,255,.12);border-radius:10px;background:#132030;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <p style="font-size:12px;font-weight:700;color:#D8EAF7;margin:0;">📋 Plan de Trabajo${cntBadge}</p>
     <div style="display:flex;gap:6px;flex-wrap:wrap;">${verBtn}${pdfBtn}${editBtn}</div>
   </div>`;
 }
