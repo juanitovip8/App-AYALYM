@@ -7223,6 +7223,28 @@ const _insStatusBg={pendiente:'#FFF3CD',aprobado:'#D4EDDA',rechazado:'#FFE0E0',e
 const _insStatusCol={pendiente:'#A05C00',aprobado:'#1A7A3B',rechazado:'#C0392B',entregado:'#185FA5'};
 
 /* ── Panel del personal de inmuebles: ver sus solicitudes y crear nuevas ── */
+/* Helper: tabla compacta de ítems para supervisor/admin/PI */
+function _insItemsHtml(items,dark){
+  if(!items||!items.length)return'';
+  const bdr=dark?'rgba(255,255,255,.07)':'#EEF5FF';
+  const txt=dark?'#e8edf4':'#042C53';
+  const lbl=dark?'#8AACCA':'#5C7A9A';
+  return`<div style="margin-top:8px;border:.5px solid ${dark?'rgba(255,255,255,.1)':'#DCE8F5'};border-radius:8px;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:1fr 44px 64px 64px;gap:4px;padding:5px 10px;background:${dark?'rgba(255,255,255,.05)':'#EEF5FF'};">
+      <span style="font-size:10px;font-weight:700;color:${lbl};">Producto</span>
+      <span style="font-size:10px;font-weight:700;color:${lbl};text-align:center;">Cant.</span>
+      <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">Precio</span>
+      <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">Subtotal</span>
+    </div>
+    ${items.map((it,i)=>`<div style="display:grid;grid-template-columns:1fr 44px 64px 64px;gap:4px;padding:6px 10px;${i<items.length-1?'border-bottom:.5px solid '+bdr:''};background:${dark?'#1b2a3a':'#fff'};">
+      <span style="font-size:11px;color:${txt};line-height:1.3;">${it.nombre}${it.esPersonalizado?' ✏️':''}</span>
+      <span style="font-size:11px;color:${txt};text-align:center;font-weight:600;">${it.cantidad} ${it.unidad}</span>
+      <span style="font-size:11px;color:${lbl};text-align:right;">$${it.precio.toFixed(2)}</span>
+      <span style="font-size:11px;font-weight:600;color:#185FA5;text-align:right;">$${it.subtotal.toFixed(2)}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
 function renderPIInsumos(){
   const el=document.getElementById('pi-insumos-content');if(!el)return;
   const p=_getPIData();if(!p||!p.puedeInsumos){el.innerHTML='';return;}
@@ -7230,13 +7252,19 @@ function renderPIInsumos(){
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
   const misReqs=(INSUMOS_REQUESTS||[]).filter(r=>r.personalId===p.id).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
   const listaHtml=misReqs.length
-    ?misReqs.map(r=>`<div style="border:.5px solid ${dark?'rgba(255,255,255,.1)':'#DCE8F5'};border-radius:10px;padding:12px 14px;margin-bottom:8px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+    ?misReqs.map(r=>{
+      const isRechazado=r.status==='rechazado';
+      const borderColor=isRechazado?'#C0392B':dark?'rgba(255,255,255,.1)':'#DCE8F5';
+      return`<div style="border:.5px solid ${borderColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;${isRechazado?'background:'+( dark?'rgba(192,57,43,.07)':'#FFF5F5')+';':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
           <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
         </div>
-        <p style="font-size:11px;color:${lbl};margin:0;">${r.fecha} · ${r.notas||'Sin notas'}</p>
-      </div>`).join('')
+        <p style="font-size:11px;color:${lbl};margin:0 0 2px;">🏢 ${r.servicioFolio||'—'} · 🏦 ${r.clienteNombre||'—'}</p>
+        <p style="font-size:11px;color:${lbl};margin:0;">📅 ${r.fecha} · Total: <strong style="color:${txt};">$${(r.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</strong></p>
+        ${isRechazado&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:6px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
+        ${isRechazado?`<button class="btn-royal" style="width:100%;margin-top:10px;font-size:12px;padding:7px;" onclick="editarInsumoRechazado(${r.id})">✏️ Editar y reenviar</button>`:''}
+      </div>`;}).join('')
     :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:30px 0;">Sin solicitudes aún. Crea la primera.</p>';
   el.innerHTML=`
     <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Mis solicitudes de insumos</p>
@@ -7249,7 +7277,6 @@ function renderSVInsumos(){
   const el=document.getElementById('sv-insumos-content');if(!el)return;
   const dark=document.documentElement.classList.contains('dark-mode');
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
-  /* Obtener IDs de personal asignado a sus servicios */
   const mySvId=currentSupervisorRef?currentSupervisorRef.id:null;
   const misServicios=(PROPERTY_SERVICES||[]).filter(ps=>ps.supervisorId===mySvId).map(ps=>ps.id);
   const reqs=(INSUMOS_REQUESTS||[]).filter(r=>misServicios.includes(r.servicioId)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
@@ -7257,21 +7284,49 @@ function renderSVInsumos(){
     ?reqs.map(r=>{
         const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
         const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
-        return`<div style="border:.5px solid ${dark?'rgba(255,255,255,.1)':'#DCE8F5'};border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+        const presupuesto=r.presupuesto||ps?.presupuestoInsumos||0;
+        const total=r.total||0;
+        const dentroPres=!presupuesto||total<=presupuesto;
+        const statusBorder=r.status==='rechazado'?'#C0392B':r.status==='aprobado'?'#1A7A3B':dark?'rgba(255,255,255,.1)':'#DCE8F5';
+        return`<div style="border:.5px solid ${statusBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+          <!-- Encabezado -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
-            <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+            <span style="font-size:13px;font-weight:700;color:${txt};">${r.folio}</span>
+            <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
           </div>
-          <p style="font-size:11px;color:${lbl};margin:0 0 4px;">👷 ${pi?pi.nombre:'—'} · 🏢 ${ps?ps.folio:'—'}</p>
-          <p style="font-size:11px;color:${lbl};margin:0 0 8px;">${r.fecha} · ${r.notas||'Sin notas'}</p>
-          ${r.status==='pendiente'?`<div style="display:flex;gap:6px;">
-            <button class="btn-royal" style="flex:1;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'aprobado')">✅ Aprobar</button>
-            <button class="btn-danger" style="flex:1;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'rechazado')">❌ Rechazar</button>
+          <!-- Info principal -->
+          <p style="font-size:12px;font-weight:600;color:${txt};margin:0 0 2px;">👷 ${pi?pi.nombre:r.personalNombre||'—'}</p>
+          <p style="font-size:11px;color:${lbl};margin:0 0 2px;">🏢 ${ps?ps.folio:'—'} · 🏦 ${r.clienteNombre||ps?.cliente?.nombre||'—'}</p>
+          <p style="font-size:11px;color:${lbl};margin:0 0 8px;">📅 ${r.fecha}${r.notas?` · <em>${r.notas}</em>`:''}</p>
+          <!-- Presupuesto vs total -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+            ${presupuesto?`<span style="font-size:11px;font-weight:600;color:${lbl};background:${dark?'rgba(255,255,255,.07)':'#EEF5FF'};padding:3px 10px;border-radius:7px;">💰 Presupuesto: $${presupuesto.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
+            <span style="font-size:11px;font-weight:700;color:${dentroPres?'#1A7A3B':'#C0392B'};background:${dentroPres?(dark?'rgba(26,122,59,.15)':'#E8F5EC'):(dark?'rgba(192,57,43,.15)':'#FFEDED')};padding:3px 10px;border-radius:7px;">📋 Total: $${total.toLocaleString('es-MX',{minimumFractionDigits:2})} s/IVA${!dentroPres?' ⚠️ Excede presupuesto':''}</span>
+          </div>
+          <!-- Lista de ítems -->
+          ${_insItemsHtml(r.items,dark)}
+          <!-- Acciones -->
+          ${r.status==='pendiente'?`<div style="display:flex;gap:6px;margin-top:10px;">
+            <button class="btn-royal" style="flex:1;font-size:12px;padding:8px;" onclick="cambiarStatusInsumo(${r.id},'aprobado')">✅ Aprobar</button>
+            <button class="btn-danger" style="flex:1;font-size:12px;padding:8px;" onclick="_svRechazarInsumo(${r.id})">❌ Rechazar</button>
           </div>`:''}
-          ${r.status==='aprobado'?`<button class="btn-sec" style="width:100%;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'entregado')">📦 Marcar entregado</button>`:''}
+          ${r.status==='aprobado'?`<button class="btn-sec" style="width:100%;margin-top:8px;font-size:12px;padding:7px;" onclick="cambiarStatusInsumo(${r.id},'entregado')">📦 Marcar como entregado</button>`:''}
+          ${r.status==='rechazado'&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:8px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
         </div>`;}).join('')
     :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:40px 0;">Sin solicitudes de insumos pendientes.</p>';
   el.innerHTML=`<p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Solicitudes de insumos</p>${listaHtml}`;
+}
+
+/* Rechazar con motivo */
+function _svRechazarInsumo(id){
+  const motivo=window.prompt('Motivo del rechazo (opcional):','');
+  if(motivo===null)return; // canceló
+  const r=INSUMOS_REQUESTS.find(x=>x.id===id);if(!r)return;
+  r.status='rechazado';r.motivoRechazo=motivo||'';r.revisadoPor=currentUserEmail;r.revisadoFecha=_localDateStr();
+  fbSaveInsumos();
+  renderSVInsumos();
+  pushNotif('personal_inm','🔴','red','Solicitud rechazada',`${r.folio} fue rechazada.${motivo?' Motivo: '+motivo:' Puedes editarla y reenviarla.'}`);
+  showToast('amber','❌','Solicitud rechazada. El trabajador puede editarla y reenviarla.');
 }
 
 /* ── Panel del cliente inmuebles: solo consulta (read-only) ── */
@@ -7302,8 +7357,11 @@ function renderCIInsumos(){
 function cambiarStatusInsumo(id,nuevoStatus){
   const r=INSUMOS_REQUESTS.find(x=>x.id===id);if(!r)return;
   r.status=nuevoStatus;r.revisadoPor=currentUserEmail;r.revisadoFecha=_localDateStr();
+  if(nuevoStatus!=='rechazado')r.motivoRechazo='';
   fbSaveInsumos();
   renderSVInsumos();
+  renderAdminInsumos();
+  if(nuevoStatus==='aprobado')pushNotif('personal_inm','✅','green','Solicitud aprobada',`${r.folio} fue aprobada por el supervisor.`);
   showToast('green','📦','Solicitud actualizada a: '+(_insStatusLabel[nuevoStatus]||nuevoStatus));
 }
 
@@ -7311,6 +7369,7 @@ function cambiarStatusInsumo(id,nuevoStatus){
    FORMULARIO DE SOLICITUD DE INSUMOS
    ══════════════════════════════════════════════════════════ */
 let _insumoSolServicioId=null; /* servicio seleccionado para la solicitud activa */
+let _insumoEditId=null; /* null = nueva solicitud, number = editando una rechazada */
 
 function abrirNuevaInsumoSol(psId){
   const p=_getPIData();if(!p||!p.puedeInsumos)return;
@@ -7514,49 +7573,161 @@ function enviarInsumoSol(){
   });
   if(!items.length){showToast('amber','⚠️','Agrega al menos un producto con cantidad mayor a 0');return;}
   if(presupuesto&&total>presupuesto){showToast('amber','⚠️','El total excede el presupuesto asignado ($'+presupuesto.toLocaleString('es-MX',{minimumFractionDigits:2})+').\nAjusta las cantidades antes de enviar.');return;}
-  const fecha=new Date().toISOString().split('T')[0];
-  const newId=INSUMOS_REQUESTS.length?Math.max(...INSUMOS_REQUESTS.map(r=>r.id))+1:0;
-  const folio='INS-'+String(newId+1).padStart(4,'0');
-  const req={id:newId,folio,personalId:p.id,personalNombre:p.nombre,servicioId:ps.id,servicioFolio:ps.folio,clienteNombre:ps.cliente.nombre,fecha,status:'pendiente',items,total,presupuesto,notas:(document.getElementById('ins-notas')||{}).value||'',revisadoPor:null,revisadoFecha:null};
-  INSUMOS_REQUESTS.push(req);
+  const notas=(document.getElementById('ins-notas')||{}).value||'';
+  let folio;
+  if(_insumoEditId!=null){
+    /* Editar solicitud rechazada existente */
+    const rEdit=INSUMOS_REQUESTS.find(x=>x.id===_insumoEditId);
+    if(rEdit){rEdit.items=items;rEdit.total=total;rEdit.notas=notas;rEdit.status='pendiente';rEdit.motivoRechazo='';rEdit.revisadoPor=null;rEdit.revisadoFecha=null;}
+    folio=rEdit?rEdit.folio:'—';
+  } else {
+    /* Nueva solicitud */
+    const fecha=new Date().toISOString().split('T')[0];
+    const newId=INSUMOS_REQUESTS.length?Math.max(...INSUMOS_REQUESTS.map(r=>r.id))+1:0;
+    folio='INS-'+String(newId+1).padStart(4,'0');
+    INSUMOS_REQUESTS.push({id:newId,folio,personalId:p.id,personalNombre:p.nombre,servicioId:ps.id,servicioFolio:ps.folio,clienteNombre:ps.cliente.nombre,fecha:new Date().toISOString().split('T')[0],status:'pendiente',items,total,presupuesto,notas,revisadoPor:null,revisadoFecha:null,motivoRechazo:''});
+  }
   fbSaveInsumos();
   cerrarInsumoSol();
   renderPIInsumos();
-  pushNotif('supervisor','📦','blue','Nueva solicitud de insumos',`${folio} — ${p.nombre} · ${ps.folio} · ${ps.cliente.nombre}`);
+  pushNotif('supervisor','📦','blue',_insumoEditId!=null?'Solicitud corregida':'Nueva solicitud de insumos',`${folio} — ${p.nombre} · ${ps.folio} · ${ps.cliente.nombre}`);
   showToast('green','📦',`Solicitud ${folio} enviada al supervisor.`);
 }
 
 function cerrarInsumoSol(){
   const ov=document.getElementById('insumos-sol-ov');
   if(ov)ov.style.display='none';
-  _insumoSolServicioId=null;_insCustomCount=0;
+  _insumoSolServicioId=null;_insumoEditId=null;_insCustomCount=0;
 }
 
-/* ── Render de insumos en panel admin (dentro de a-personal-inm) ── */
+/* Editar una solicitud rechazada: abre el formulario pre-llenado */
+function editarInsumoRechazado(reqId){
+  const r=INSUMOS_REQUESTS.find(x=>x.id===reqId);if(!r||r.status!=='rechazado')return;
+  const p=_getPIData();if(!p)return;
+  const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);if(!ps)return;
+  _insumoSolServicioId=ps.id;
+  _insumoEditId=reqId;
+  _renderInsumoForm(p,ps);
+  /* Pre-llenar cantidades del catálogo */
+  setTimeout(()=>{
+    (r.items||[]).forEach(it=>{
+      if(!it.esPersonalizado&&it.catalogoId!=null){
+        const inp=document.getElementById('ins-qty-'+it.catalogoId);
+        if(inp){inp.value=it.cantidad;inp.dispatchEvent(new Event('input'));}
+      }
+    });
+    /* Pre-llenar productos personalizados */
+    const custom=(r.items||[]).filter(it=>it.esPersonalizado);
+    custom.forEach(it=>{
+      _insAgregarCustom(ps.presupuestoInsumos||0);
+      const n=_insCustomCount-1;
+      const nomEl=document.getElementById('ins-c-nom-'+n);
+      const pEl=document.getElementById('ins-c-precio-'+n);
+      const qEl=document.getElementById('ins-c-qty-'+n);
+      if(nomEl)nomEl.value=it.nombre;
+      if(pEl)pEl.value=it.precio;
+      if(qEl)qEl.value=it.cantidad;
+    });
+    _insActualizarTotal(ps.presupuestoInsumos||0);
+    /* Notas */
+    const notasEl=document.getElementById('ins-notas');
+    if(notasEl)notasEl.value=r.notas||'';
+  },120);
+}
+
+/* ── Render de insumos en panel admin ── */
 function renderAdminInsumos(){
   const el=document.getElementById('admin-insumos-content');if(!el)return;
   const dark=document.documentElement.classList.contains('dark-mode');
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const bdr=dark?'rgba(255,255,255,.08)':'#DCE8F5';
   const reqs=[...INSUMOS_REQUESTS].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+
+  /* ── Resumen general: agrega ítems de solicitudes aprobadas + pendientes ── */
+  const reqsActivas=reqs.filter(r=>r.status==='aprobado'||r.status==='pendiente');
+  const totalGeneral=reqsActivas.reduce((s,r)=>s+(r.total||0),0);
+  /* Tabla consolidada de materiales */
+  const matMap={}; // key: catalogoId ?? nombre → {nombre,unidad,cantidad,subtotal}
+  reqsActivas.forEach(r=>(r.items||[]).forEach(it=>{
+    const key=it.catalogoId!=null?'cat_'+it.catalogoId:'cus_'+(it.nombre||'').toLowerCase().trim();
+    if(!matMap[key])matMap[key]={nombre:it.nombre,unidad:it.unidad,precio:it.precio,cantidad:0,subtotal:0};
+    matMap[key].cantidad+=it.cantidad;
+    matMap[key].subtotal+=it.subtotal;
+  }));
+  const matRows=Object.values(matMap).sort((a,b)=>b.subtotal-a.subtotal);
+
+  const resumenHtml=reqsActivas.length?`
+  <div style="border:.5px solid ${bdr};border-radius:12px;overflow:hidden;margin-bottom:16px;">
+    <div style="background:linear-gradient(135deg,#042C53,#185FA5);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <p style="font-size:13px;font-weight:700;color:#fff;margin:0;">📊 Resumen general de compras</p>
+        <p style="font-size:11px;color:rgba(255,255,255,.75);margin:2px 0 0;">${reqsActivas.length} solicitud(es) · precios s/IVA</p>
+      </div>
+      <div style="text-align:right;">
+        <p style="font-size:11px;color:rgba(255,255,255,.75);margin:0;">Total a gastar</p>
+        <p style="font-size:20px;font-weight:700;color:#fff;margin:0;">$${totalGeneral.toLocaleString('es-MX',{minimumFractionDigits:2})}</p>
+      </div>
+    </div>
+    <!-- Tabla materiales consolidados -->
+    <div style="background:${dark?'rgba(255,255,255,.04)':'#EEF5FF'};padding:6px 14px;">
+      <p style="font-size:10px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:6px 0 4px;">Materiales a comprar</p>
+    </div>
+    <div style="max-height:260px;overflow-y:auto;">
+      <div style="display:grid;grid-template-columns:1fr 52px 70px 72px;gap:4px;padding:5px 14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};">
+        <span style="font-size:10px;font-weight:700;color:${lbl};">Producto</span>
+        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:center;">Cant.</span>
+        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">P. Unit.</span>
+        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">Subtotal</span>
+      </div>
+      ${matRows.map((m,i)=>`<div style="display:grid;grid-template-columns:1fr 52px 70px 72px;gap:4px;padding:7px 14px;border-top:.5px solid ${bdr};background:${dark?'#1b2a3a':'#fff'};">
+        <span style="font-size:11px;color:${txt};line-height:1.3;">${m.nombre}</span>
+        <span style="font-size:11px;font-weight:700;color:#185FA5;text-align:center;">${m.cantidad} ${m.unidad}</span>
+        <span style="font-size:11px;color:${lbl};text-align:right;">$${m.precio.toFixed(2)}</span>
+        <span style="font-size:11px;font-weight:700;color:${txt};text-align:right;">$${m.subtotal.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+      </div>`).join('')}
+    </div>
+    <div style="display:flex;justify-content:flex-end;padding:10px 14px;border-top:.5px solid ${bdr};background:${dark?'rgba(255,255,255,.04)':'#EEF5FF'};">
+      <span style="font-size:13px;font-weight:700;color:${txt};">Total s/IVA: $${totalGeneral.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+    </div>
+  </div>`:
+  `<p style="font-size:12px;color:${lbl};text-align:center;padding:12px 0 8px;">Sin solicitudes aprobadas o pendientes aún.</p>`;
+
+  /* ── Solicitudes individuales ── */
   const listaHtml=reqs.length
     ?reqs.map(r=>{
         const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
         const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
-        return`<div style="border:.5px solid ${dark?'rgba(255,255,255,.1)':'#DCE8F5'};border-radius:10px;padding:12px 14px;margin-bottom:8px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
-            <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+        const presupuesto=r.presupuesto||ps?.presupuestoInsumos||0;
+        const total=r.total||0;
+        const dentroPres=!presupuesto||total<=presupuesto;
+        const statusBorder=r.status==='rechazado'?'#C0392B':r.status==='aprobado'?'#1A7A3B':dark?'rgba(255,255,255,.1)':'#DCE8F5';
+        return`<div style="border:.5px solid ${statusBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:13px;font-weight:700;color:${txt};">${r.folio}</span>
+            <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
           </div>
-          <p style="font-size:11px;color:${lbl};margin:0 0 4px;">👷 ${pi?pi.nombre:'—'} · 🏢 ${ps?ps.folio+' – '+ps.cliente?.nombre:'—'}</p>
-          <p style="font-size:11px;color:${lbl};margin:0 0 8px;">${r.fecha} · ${r.notas||'Sin notas'}</p>
-          ${r.status==='pendiente'?`<div style="display:flex;gap:6px;">
-            <button class="btn-royal" style="flex:1;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'aprobado');renderAdminInsumos();">✅ Aprobar</button>
-            <button class="btn-danger" style="flex:1;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'rechazado');renderAdminInsumos();">❌ Rechazar</button>
+          <p style="font-size:12px;font-weight:600;color:${txt};margin:0 0 2px;">👷 ${pi?pi.nombre:r.personalNombre||'—'}</p>
+          <p style="font-size:11px;color:${lbl};margin:0 0 2px;">🏢 ${ps?ps.folio:'—'} · 🏦 ${r.clienteNombre||ps?.cliente?.nombre||'—'}</p>
+          <p style="font-size:11px;color:${lbl};margin:0 0 8px;">📅 ${r.fecha}${r.notas?` · <em>${r.notas}</em>`:''}</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+            ${presupuesto?`<span style="font-size:11px;font-weight:600;color:${lbl};background:${dark?'rgba(255,255,255,.07)':'#EEF5FF'};padding:3px 10px;border-radius:7px;">💰 Presupuesto: $${presupuesto.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
+            <span style="font-size:11px;font-weight:700;color:${dentroPres?'#1A7A3B':'#C0392B'};background:${dentroPres?(dark?'rgba(26,122,59,.15)':'#E8F5EC'):(dark?'rgba(192,57,43,.15)':'#FFEDED')};padding:3px 10px;border-radius:7px;">📋 Total: $${total.toLocaleString('es-MX',{minimumFractionDigits:2})} s/IVA</span>
+          </div>
+          ${_insItemsHtml(r.items,dark)}
+          ${r.status==='pendiente'?`<div style="display:flex;gap:6px;margin-top:10px;">
+            <button class="btn-royal" style="flex:1;font-size:12px;padding:8px;" onclick="cambiarStatusInsumo(${r.id},'aprobado')">✅ Aprobar</button>
+            <button class="btn-danger" style="flex:1;font-size:12px;padding:8px;" onclick="_svRechazarInsumo(${r.id})">❌ Rechazar</button>
           </div>`:''}
-          ${r.status==='aprobado'?`<button class="btn-sec" style="width:100%;font-size:12px;padding:6px;" onclick="cambiarStatusInsumo(${r.id},'entregado');renderAdminInsumos();">📦 Marcar entregado</button>`:''}
+          ${r.status==='aprobado'?`<button class="btn-sec" style="width:100%;margin-top:8px;font-size:12px;padding:7px;" onclick="cambiarStatusInsumo(${r.id},'entregado')">📦 Marcar entregado</button>`:''}
+          ${r.status==='rechazado'&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:8px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
         </div>`;}).join('')
     :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:30px 0;">Sin solicitudes de insumos registradas.</p>';
-  el.innerHTML=listaHtml;
+
+  el.innerHTML=`
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Solicitudes de insumos</p>
+    ${resumenHtml}
+    <p style="font-size:12px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;">Detalle por solicitud</p>
+    ${listaHtml}`;
 }
 
 /* ── Autocompletado de cliente existente en el formulario de nuevo inmueble ── */
