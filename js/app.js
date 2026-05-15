@@ -6505,145 +6505,111 @@ function downloadReportePDF(psId,reporteId){
 function _buildAndOpenReportePDF(ps,r,logoB64){
   const fechaTxt=new Date(r.fecha+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const generadoTxt=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
-  const statusLabel={activo:'Activo',pendiente:'Pendiente',completado:'Completado',vencido:'Vencido'}[ps.status]||ps.status;
-  const statusColor={activo:'#1A7A3B',pendiente:'#A05C00',completado:'#1A56DB',vencido:'#C0392B'}[ps.status]||'#5C7A9A';
-  const statusBg={activo:'#D4EDDA',pendiente:'#FFF3CD',completado:'#EEF5FF',vencido:'#FFF0F0'}[ps.status]||'#F0F0F0';
-  const contratoLabel={'firmado':'✅ Firmado','por_firmar':'⏳ Por firmar','sin_contrato':'📄 Sin contrato'}[ps.contratoStatus]||'—';
   const logoHtml=logoB64
-    ?`<img src="${logoB64}" style="height:64px;width:64px;object-fit:contain;">`
-    :`<div style="font-size:26px;font-weight:900;color:#042C53;letter-spacing:-1px;">AYA<span style="color:#1A56DB;">LYM</span></div>`;
+    ?`<img src="${logoB64}" style="height:56px;width:56px;object-fit:contain;">`
+    :`<div style="font-size:24px;font-weight:900;color:#042C53;letter-spacing:-1px;">AYA<span style="color:#1A56DB;">LYM</span></div>`;
+
+  /* Personal asignado al contrato */
+  const piAsignados=(PERSONAL_INM||[]).filter(p=>(p.serviciosAsignados||[]).includes(ps.id));
+  const piListHtml=piAsignados.length
+    ?piAsignados.map(p=>`<span style="display:inline-block;background:#EEF5FF;border:.5px solid #C5D8EC;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;color:#042C53;margin:2px 3px 2px 0;">${p.nombre}</span>`).join('')
+    :`<span style="font-size:11px;color:#8A9BB0;">Sin personal asignado</span>`;
+
+  /* Fotos */
   const fotosHtml=r.fotos&&r.fotos.length
-    ?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">${r.fotos.map(f=>`<img src="${f}" style="width:100%;height:100px;object-fit:cover;border-radius:5px;border:1px solid #dce8f5;">`).join('')}</div>`
-    :`<p style="color:#8A9BB0;font-size:11px;font-style:italic;padding:6px 0;">Sin evidencia fotográfica adjunta.</p>`;
+    ?`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">${r.fotos.map(f=>`<img src="${f}" style="width:100%;height:110px;object-fit:cover;border-radius:6px;border:1px solid #D0E3F7;">`).join('')}</div>`
+    :'';
 
   const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
 <title>Reporte de Visita — ${ps.folio} — ${r.fecha}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;color:#1C2B3A;background:#fff;padding:0;}
-/* ── Cabecera ── */
-.page-header{background:#042C53;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;}
-.ph-brand{display:flex;align-items:center;gap:10px;}
-.ph-brand-text{color:#fff;}
-.ph-brand-text h1{font-size:18px;font-weight:800;letter-spacing:.5px;line-height:1;}
-.ph-brand-text p{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px;letter-spacing:.4px;text-transform:uppercase;}
-.ph-right{text-align:right;}
-.ph-right h2{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;}
-.ph-folio{display:inline-block;background:rgba(255,255,255,.15);color:#fff;font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;letter-spacing:.5px;}
-.ph-date{font-size:9.5px;color:rgba(255,255,255,.55);margin-top:4px;}
-/* ── Banda de estado ── */
-.status-bar{background:#F0F4FA;border-bottom:1px solid #D8E5F3;padding:7px 32px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.status-chip{font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;}
-.status-label{font-size:10px;color:#5C7A9A;margin-right:3px;}
-/* ── Cuerpo ── */
-.body{padding:16px 32px 14px;}
-/* ── Secciones ── */
-.section{margin-bottom:12px;}
-.section-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#1A56DB;padding-bottom:4px;border-bottom:1.5px solid #D0E3F7;margin-bottom:8px;}
-/* ── Grid de campos ── */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
-.field{padding:5px 10px;border-bottom:.5px solid #EBF1FA;}
-.field:nth-child(odd){border-right:.5px solid #EBF1FA;}
-.field b{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#8A9BB0;margin-bottom:2px;}
-.field span{font-size:11.5px;color:#1C2B3A;font-weight:500;}
-.field-full{grid-column:1/-1;padding:5px 10px;border-bottom:.5px solid #EBF1FA;}
-.field-full b{display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#8A9BB0;margin-bottom:2px;}
-.field-full span{font-size:11.5px;color:#1C2B3A;font-weight:500;}
-.grid-wrap{border:1px solid #D0E3F7;border-radius:7px;overflow:hidden;}
-/* ── Bloque de texto ── */
-.text-block{background:#F7FAFF;border:1px solid #D0E3F7;border-radius:7px;padding:10px 13px;font-size:12px;line-height:1.65;white-space:pre-wrap;color:#1C2B3A;min-height:40px;}
-/* ── Firma ── */
-.sign-section{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}
+body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;color:#1C2B3A;background:#fff;}
+.header{background:#042C53;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;}
+.hbrand{display:flex;align-items:center;gap:10px;}
+.hbrand-txt h1{font-size:17px;font-weight:800;color:#fff;letter-spacing:.4px;line-height:1;}
+.hbrand-txt p{font-size:9px;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.hright{text-align:right;}
+.hright h2{font-size:13px;font-weight:700;color:#fff;margin-bottom:5px;}
+.folio-badge{display:inline-block;background:rgba(255,255,255,.18);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;letter-spacing:.5px;}
+.hdate{font-size:9px;color:rgba(255,255,255,.5);margin-top:4px;}
+.visit-bar{background:#F0F6FF;border-bottom:1.5px solid #D0E3F7;padding:7px 28px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.vb-item{display:flex;align-items:center;gap:5px;}
+.vb-label{font-size:9.5px;color:#5C7A9A;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+.vb-value{font-size:11px;font-weight:700;color:#042C53;}
+.body{padding:16px 28px 10px;}
+.section{margin-bottom:14px;}
+.stitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#1A56DB;padding-bottom:4px;border-bottom:1.5px solid #D0E3F7;margin-bottom:8px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #D0E3F7;border-radius:7px;overflow:hidden;}
+.ifield{padding:6px 12px;border-bottom:.5px solid #EBF1FA;}
+.ifield:nth-child(odd){border-right:.5px solid #EBF1FA;}
+.ifield b{display:block;font-size:8.5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#8A9BB0;margin-bottom:2px;}
+.ifield span{font-size:11.5px;color:#1C2B3A;font-weight:500;}
+.ifield-full{grid-column:1/-1;padding:7px 12px;border-bottom:.5px solid #EBF1FA;}
+.ifield-full b{display:block;font-size:8.5px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:#8A9BB0;margin-bottom:4px;}
+.text-block{background:#F7FAFF;border:1px solid #D0E3F7;border-radius:7px;padding:10px 13px;font-size:11.5px;line-height:1.7;white-space:pre-wrap;color:#1C2B3A;min-height:38px;}
+.no-content{color:#8A9BB0;font-style:italic;}
+.sign-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:22px;}
 .sign-box{text-align:center;}
-.sign-line{border-top:1.5px solid #8A9BB0;margin-bottom:6px;margin-top:40px;}
+.sign-line{border-top:1.5px solid #8A9BB0;margin-top:38px;margin-bottom:5px;}
 .sign-name{font-size:11px;font-weight:600;color:#1C2B3A;}
-.sign-role{font-size:9.5px;color:#8A9BB0;margin-top:2px;}
-/* ── Pie de página ── */
-.page-footer{background:#F0F4FA;border-top:1px solid #D0E3F7;padding:8px 32px;display:flex;justify-content:space-between;align-items:center;margin-top:20px;}
-.page-footer span{font-size:9.5px;color:#8A9BB0;}
-.page-footer strong{color:#1A56DB;font-weight:600;}
-@media print{
-  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .page-header{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .status-bar{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-}
+.sign-role{font-size:9px;color:#8A9BB0;margin-top:1px;}
+.footer{background:#F0F4FA;border-top:1px solid #D0E3F7;padding:7px 28px;display:flex;justify-content:space-between;align-items:center;margin-top:18px;}
+.footer span{font-size:9px;color:#8A9BB0;}
+.footer strong{color:#1A56DB;}
+@media print{body,div{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
 </style></head><body>
 
-<!-- CABECERA -->
-<div class="page-header">
-  <div class="ph-brand">
+<div class="header">
+  <div class="hbrand">
     ${logoHtml}
-    <div class="ph-brand-text">
-      <h1>AYALYM</h1>
-      <p>Servicios de limpieza profesional</p>
-    </div>
+    <div class="hbrand-txt"><h1>AYALYM</h1><p>Servicios de limpieza profesional</p></div>
   </div>
-  <div class="ph-right">
+  <div class="hright">
     <h2>Reporte de Visita</h2>
-    <div class="ph-folio">${ps.folio}${ps.parentId!=null?' &nbsp;·&nbsp; RENOVACIÓN':''}</div>
-    <div class="ph-date">Generado el ${generadoTxt}</div>
+    <div class="folio-badge">${ps.folio}</div>
+    <div class="hdate">Generado el ${generadoTxt}</div>
   </div>
 </div>
 
-<!-- BANDA DE ESTADO -->
-<div class="status-bar">
-  <span class="status-label">Estado:</span>
-  <span class="status-chip" style="background:${statusBg};color:${statusColor};">${statusLabel}</span>
-  <span class="status-label" style="margin-left:8px;">Contrato:</span>
-  <span class="status-chip" style="background:#F0F4FA;color:#1C2B3A;border:1px solid #D0E3F7;">${contratoLabel}</span>
-  <span class="status-label" style="margin-left:8px;">Supervisor:</span>
-  <span style="font-size:10px;font-weight:600;color:#1C2B3A;">${r.supervisorNombre}</span>
-  <span class="status-label" style="margin-left:8px;">Visita:</span>
-  <span style="font-size:10px;font-weight:600;color:#1C2B3A;text-transform:capitalize;">${fechaTxt} &nbsp;·&nbsp; ${r.hora} hrs</span>
+<div class="visit-bar">
+  <div class="vb-item"><span class="vb-label">Fecha de visita</span><span class="vb-value" style="text-transform:capitalize;">${fechaTxt}</span></div>
+  <div class="vb-item"><span class="vb-label">Hora</span><span class="vb-value">${r.hora} hrs</span></div>
+  <div class="vb-item"><span class="vb-label">Supervisor</span><span class="vb-value">${r.supervisorNombre||'—'}</span></div>
 </div>
 
 <div class="body">
 
-<!-- SECCIÓN 1+2 unificada: Datos del servicio y visita -->
 <div class="section">
-  <div class="section-title">Datos del servicio y visita</div>
-  <div class="grid-wrap">
-    <div class="grid">
-      <div class="field"><b>Cliente / Empresa</b><span>${ps.cliente.nombre}</span></div>
-      <div class="field"><b>Contacto directo</b><span>${ps.cliente.contacto||'—'}</span></div>
-      <div class="field"><b>Teléfono</b><span>${ps.cliente.tel||'—'}</span></div>
-      <div class="field"><b>Correo electrónico</b><span>${ps.cliente.email||'—'}</span></div>
-      <div class="field"><b>Tipo de inmueble</b><span>${ps.inmueble.tipo} · ${ps.inmueble.m2} m²</span></div>
-      <div class="field"><b>Colonia</b><span>${ps.inmueble.colonia}</span></div>
-      <div class="field-full"><b>Dirección</b><span>${ps.inmueble.direccion}</span></div>
-      <div class="field"><b>Tipo de servicio</b><span>${ps.tipo}</span></div>
-      <div class="field"><b>Frecuencia · Hora habitual</b><span style="text-transform:capitalize;">${ps.frecuencia||'—'} · ${ps.hora} hrs</span></div>
-      <div class="field"><b>Vigencia</b><span>${ps.fechaInicio} → ${ps.fechaFin||'—'}</span></div>
-      <div class="field"><b>Folio</b><span>${ps.folio}</span></div>
-      <div class="field"><b>Fecha de registro</b><span>${r.createdAt}</span></div>
-    </div>
+  <div class="stitle">Información del contrato</div>
+  <div class="info-grid">
+    <div class="ifield"><b>Cliente / Empresa</b><span>${ps.cliente.nombre}</span></div>
+    <div class="ifield"><b>Contrato</b><span>${ps.folio} · ${ps.tipo}</span></div>
+    <div class="ifield"><b>Inmueble</b><span>${ps.inmueble.tipo}${ps.inmueble.m2?' · '+ps.inmueble.m2+' m²':''}</span></div>
+    <div class="ifield"><b>Dirección</b><span>${ps.inmueble.direccion}</span></div>
+    <div class="ifield-full"><b>Personal asignado</b><div style="margin-top:2px;">${piListHtml}</div></div>
   </div>
 </div>
 
-<!-- SECCIÓN 2: Actividades -->
 <div class="section">
-  <div class="section-title">Actividades realizadas</div>
-  <div class="text-block">${r.actividades||'Sin actividades registradas.'}</div>
+  <div class="stitle">Actividades realizadas</div>
+  <div class="text-block">${r.actividades||'<span class="no-content">Sin actividades registradas.</span>'}</div>
 </div>
 
-<!-- SECCIÓN 3: Observaciones -->
 <div class="section">
-  <div class="section-title">Observaciones / Estado del inmueble</div>
-  <div class="text-block">${r.observaciones||'Sin observaciones.'}</div>
+  <div class="stitle">Observaciones</div>
+  <div class="text-block">${r.observaciones||'<span class="no-content">Sin observaciones.</span>'}</div>
 </div>
 
-${r.fotos&&r.fotos.length?`
-<!-- SECCIÓN 4: Fotografías -->
-<div class="section">
-  <div class="section-title">Evidencia fotográfica (${r.fotos.length} foto${r.fotos.length!==1?'s':''})</div>
+${fotosHtml?`<div class="section">
+  <div class="stitle">Evidencia fotográfica · ${r.fotos.length} foto${r.fotos.length!==1?'s':''}</div>
   ${fotosHtml}
 </div>`:''}
 
-<!-- FIRMAS -->
-<div class="sign-section">
+<div class="sign-grid">
   <div class="sign-box">
     <div class="sign-line"></div>
-    <div class="sign-name">${r.supervisorNombre}</div>
+    <div class="sign-name">${r.supervisorNombre||'Supervisor'}</div>
     <div class="sign-role">Supervisor responsable</div>
   </div>
   <div class="sign-box">
@@ -6653,12 +6619,11 @@ ${r.fotos&&r.fotos.length?`
   </div>
 </div>
 
-</div><!-- /body -->
+</div>
 
-<!-- PIE DE PÁGINA -->
-<div class="page-footer">
+<div class="footer">
   <span>AYALYM · Servicios de limpieza profesional</span>
-  <span>Folio: <strong>${ps.folio}</strong> &nbsp;·&nbsp; Visita del ${r.fecha} &nbsp;·&nbsp; ${generadoTxt}</span>
+  <span>Folio <strong>${ps.folio}</strong> &nbsp;·&nbsp; Visita del ${r.fecha}</span>
 </div>
 
 <script>window.onload=function(){window.print();}<\/script>
