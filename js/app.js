@@ -7463,11 +7463,13 @@ function renderSVInsumos(activeTab){
   const mesActual=hoy.toISOString().slice(0,7);
   const mesNom=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][hoy.getMonth()];
   const reqsActual=allReqs.filter(r=>(r.fecha||'').startsWith(mesActual));
-  const tabActualHtml=reqsActual.length
-    ?reqsActual.map(r=>_insReqCard(r,dark,true)).join('')
-    :`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`;
+  const bdr=dark?'rgba(255,255,255,.08)':'#DCE8F5';
+  const tabActualHtml=_insResumenHtml(reqsActual,dark,mesNom,hoy.getFullYear(),bdr,lbl,txt,false)
+    +(reqsActual.length
+      ?reqsActual.map(r=>_insReqRowAcordeon(r,dark,true)).join('')
+      :`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`);
   const tabHistorialHtml=`${_insHistorialFiltros(allReqs,'sv')}
-    <div id="sv-historial-list">${allReqs.length?allReqs.map(r=>_insReqCard(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes registradas.</p>`}</div>`;
+    <div id="sv-historial-list">${allReqs.length?allReqs.map(r=>_insReqRowAcordeon(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes registradas.</p>`}</div>`;
   el.innerHTML=`
     <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Solicitudes de insumos</p>
     <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
@@ -7489,7 +7491,7 @@ function svFiltrarHistorial(){
   if(trab)reqs=reqs.filter(r=>r.personalNombre===trab);
   const lbl=el._dark?'#8AACCA':'#5C7A9A';
   const listEl=document.getElementById('sv-historial-list');
-  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqCard(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados con los filtros seleccionados.</p>`;
+  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqRowAcordeon(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados con los filtros seleccionados.</p>`;
 }
 
 /* Rechazar con motivo */
@@ -7847,6 +7849,93 @@ function editarInsumoRechazado(reqId){
   },120);
 }
 
+/* ── Card acordeón compacto para solicitudes (click para expandir) ── */
+function _insReqRowAcordeon(r,dark,showActions){
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const bdr=dark?'rgba(255,255,255,.1)':'#DCE8F5';
+  const statusBorder=r.status==='rechazado'?'#C0392B':r.status==='aprobado'?'#1A7A3B':dark?'rgba(255,255,255,.12)':'#DCE8F5';
+  const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
+  const total=r.total||0;const iva=total*0.16;
+  return`<div class="ins-req-row" style="border:.5px solid ${statusBorder};border-radius:10px;margin-bottom:6px;overflow:hidden;">
+    <div class="ins-req-hdr" onclick="toggleInsRow(this)"
+      style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;gap:10px;">
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
+          <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:7px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+        </div>
+        <p style="font-size:11px;font-weight:600;color:${txt};margin:3px 0 1px;">${r.personalNombre||'—'}</p>
+        <p style="font-size:11px;color:${lbl};margin:0;">${r.servicioFolio||ps?.folio||'—'} · ${r.clienteNombre||ps?.cliente?.nombre||'—'} · 📅 ${r.fecha}</p>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <p style="font-size:12px;font-weight:700;color:${txt};margin:0;">$${total.toLocaleString('es-MX',{minimumFractionDigits:2})}</p>
+        <p style="font-size:10px;color:${lbl};margin:1px 0 0;">s/IVA</p>
+      </div>
+      <span style="font-size:10px;color:${lbl};flex-shrink:0;">▼</span>
+    </div>
+    <div class="ins-req-body" style="display:none;border-top:.5px solid ${bdr};">
+      <div style="padding:12px 14px;">${_insReqCard(r,dark,showActions)}</div>
+    </div>
+  </div>`;
+}
+function toggleInsRow(hdr){
+  const body=hdr.nextElementSibling;
+  const arrow=hdr.querySelector('span:last-child');
+  const open=body.style.display==='block';
+  body.style.display=open?'none':'block';
+  if(arrow)arrow.textContent=open?'▼':'▲';
+}
+
+/* ── Resumen consolidado (helper compartido) ── */
+function _insResumenHtml(reqsActivas,dark,mesNom,anio,bdr,lbl,txt,showPDF){
+  const totalSinIVA=reqsActivas.reduce((s,r)=>s+(r.total||0),0);
+  const totalConIVA=totalSinIVA*1.16;
+  const matMap={};
+  reqsActivas.forEach(r=>(r.items||[]).forEach(it=>{
+    const key=it.catalogoId!=null?'cat_'+it.catalogoId:'cus_'+(it.nombre||'').toLowerCase().trim();
+    if(!matMap[key])matMap[key]={nombre:it.nombre,unidad:it.unidad,precio:it.precio,cantidad:0,subtotal:0};
+    matMap[key].cantidad+=it.cantidad;matMap[key].subtotal+=it.subtotal;
+  }));
+  const matRows=Object.values(matMap).sort((a,b)=>b.subtotal-a.subtotal);
+  if(!matRows.length)return`<p style="font-size:12px;color:${lbl};text-align:center;padding:10px 0 8px;">Sin solicitudes aprobadas o pendientes en ${mesNom}.</p>`;
+  return`<div style="border:.5px solid ${bdr};border-radius:12px;overflow:hidden;margin-bottom:14px;">
+    <div style="background:linear-gradient(135deg,#042C53,#185FA5);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div>
+        <p style="font-size:13px;font-weight:700;color:#fff;margin:0;">📊 Resumen de compras · ${mesNom} ${anio}</p>
+        <p style="font-size:11px;color:rgba(255,255,255,.75);margin:2px 0 0;">${reqsActivas.length} solicitud(es)</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="text-align:right;">
+          <p style="font-size:11px;color:rgba(255,255,255,.65);margin:0;">s/IVA &nbsp;|&nbsp; c/IVA 16%</p>
+          <p style="font-size:17px;font-weight:700;color:#fff;margin:0;">$${totalSinIVA.toLocaleString('es-MX',{minimumFractionDigits:2})} &nbsp;|&nbsp; $${totalConIVA.toLocaleString('es-MX',{minimumFractionDigits:2})}</p>
+        </div>
+        ${showPDF?`<button onclick="_exportInsumosPDF()" style="padding:7px 12px;border-radius:8px;background:rgba(255,255,255,.18);color:#fff;border:.5px solid rgba(255,255,255,.4);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">⬇ PDF</button>`:''}
+      </div>
+    </div>
+    <div style="max-height:280px;overflow-y:auto;">
+      <div style="display:grid;grid-template-columns:1fr 60px 70px 80px;gap:4px;padding:5px 14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};position:sticky;top:0;">
+        <span style="font-size:10px;font-weight:700;color:${lbl};">Producto</span>
+        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:center;">Cant.</span>
+        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">P. Unit.</span>
+        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">Subtotal</span>
+      </div>
+      ${matRows.map(m=>`<div style="display:grid;grid-template-columns:1fr 60px 70px 80px;gap:4px;padding:7px 14px;border-top:.5px solid ${bdr};background:${dark?'#1b2a3a':'#fff'};">
+        <span style="font-size:11px;color:${txt};line-height:1.3;">${m.nombre}</span>
+        <span style="font-size:11px;font-weight:700;color:#185FA5;text-align:center;">${m.cantidad} ${m.unidad}</span>
+        <span style="font-size:11px;color:${lbl};text-align:right;">$${m.precio.toFixed(2)}</span>
+        <span style="font-size:11px;font-weight:700;color:${txt};text-align:right;">$${m.subtotal.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+      </div>`).join('')}
+    </div>
+    <div style="padding:10px 14px;border-top:.5px solid ${bdr};background:${dark?'rgba(255,255,255,.04)':'#EEF5FF'};">
+      <div style="display:flex;justify-content:flex-end;gap:24px;flex-wrap:wrap;">
+        <span style="font-size:12px;color:${lbl};">Subtotal s/IVA: <strong style="color:${txt};">$${totalSinIVA.toLocaleString('es-MX',{minimumFractionDigits:2})}</strong></span>
+        <span style="font-size:12px;color:${lbl};">IVA 16%: <strong style="color:${txt};">$${(totalConIVA-totalSinIVA).toLocaleString('es-MX',{minimumFractionDigits:2})}</strong></span>
+        <span style="font-size:13px;font-weight:700;color:${txt};">Total c/IVA: $${totalConIVA.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
 /* ── Render de insumos en panel admin ── */
 function renderAdminInsumos(activeTab){
   const el=document.getElementById('admin-insumos-content');if(!el)return;
@@ -7859,58 +7948,19 @@ function renderAdminInsumos(activeTab){
   const mesActual=hoy.toISOString().slice(0,7);
   const mesNom=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][hoy.getMonth()];
   const reqs=[...INSUMOS_REQUESTS].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
-
-  /* ── Resumen de compras del período actual ── */
   const reqsActual=reqs.filter(r=>(r.fecha||'').startsWith(mesActual));
   const reqsActivasActual=reqsActual.filter(r=>r.status==='aprobado'||r.status==='pendiente');
-  const totalGeneral=reqsActivasActual.reduce((s,r)=>s+(r.total||0),0);
-  const matMap={};
-  reqsActivasActual.forEach(r=>(r.items||[]).forEach(it=>{
-    const key=it.catalogoId!=null?'cat_'+it.catalogoId:'cus_'+(it.nombre||'').toLowerCase().trim();
-    if(!matMap[key])matMap[key]={nombre:it.nombre,unidad:it.unidad,precio:it.precio,cantidad:0,subtotal:0};
-    matMap[key].cantidad+=it.cantidad;matMap[key].subtotal+=it.subtotal;
-  }));
-  const matRows=Object.values(matMap).sort((a,b)=>b.subtotal-a.subtotal);
-  const resumenHtml=reqsActivasActual.length?`
-  <div style="border:.5px solid ${bdr};border-radius:12px;overflow:hidden;margin-bottom:14px;">
-    <div style="background:linear-gradient(135deg,#042C53,#185FA5);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
-      <div>
-        <p style="font-size:13px;font-weight:700;color:#fff;margin:0;">📊 Resumen de compras · ${mesNom} ${hoy.getFullYear()}</p>
-        <p style="font-size:11px;color:rgba(255,255,255,.75);margin:2px 0 0;">${reqsActivasActual.length} solicitud(es) · precios s/IVA</p>
-      </div>
-      <p style="font-size:20px;font-weight:700;color:#fff;margin:0;">$${totalGeneral.toLocaleString('es-MX',{minimumFractionDigits:2})}</p>
-    </div>
-    <div style="max-height:260px;overflow-y:auto;">
-      <div style="display:grid;grid-template-columns:1fr 52px 70px 72px;gap:4px;padding:5px 14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};">
-        <span style="font-size:10px;font-weight:700;color:${lbl};">Producto</span>
-        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:center;">Total cant.</span>
-        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">P. Unit.</span>
-        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">Subtotal</span>
-      </div>
-      ${matRows.map(m=>`<div style="display:grid;grid-template-columns:1fr 52px 70px 72px;gap:4px;padding:7px 14px;border-top:.5px solid ${bdr};background:${dark?'#1b2a3a':'#fff'};">
-        <span style="font-size:11px;color:${txt};line-height:1.3;">${m.nombre}</span>
-        <span style="font-size:11px;font-weight:700;color:#185FA5;text-align:center;">${m.cantidad} ${m.unidad}</span>
-        <span style="font-size:11px;color:${lbl};text-align:right;">$${m.precio.toFixed(2)}</span>
-        <span style="font-size:11px;font-weight:700;color:${txt};text-align:right;">$${m.subtotal.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
-      </div>`).join('')}
-    </div>
-    <div style="display:flex;justify-content:flex-end;padding:10px 14px;border-top:.5px solid ${bdr};background:${dark?'rgba(255,255,255,.04)':'#EEF5FF'};">
-      <span style="font-size:13px;font-weight:700;color:${txt};">Total s/IVA: $${totalGeneral.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
-    </div>
-  </div>`:`<p style="font-size:12px;color:${lbl};text-align:center;padding:10px 0 8px;">Sin solicitudes aprobadas o pendientes en ${mesNom}.</p>`;
 
-  /* ── Tab: Período actual ── */
-  const tabActualHtml=`${resumenHtml}
-    <p style="font-size:11px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;">Detalle de solicitudes</p>
-    ${reqsActual.length?reqsActual.map(r=>_insReqCard(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`}`;
-
-  /* ── Tab: Historial con filtros ── */
+  /* Tabs */
+  const tabActualHtml=`
+    ${_insResumenHtml(reqsActivasActual,dark,mesNom,hoy.getFullYear(),bdr,lbl,txt,true)}
+    <p style="font-size:11px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Detalle de solicitudes</p>
+    ${reqsActual.length?reqsActual.map(r=>_insReqRowAcordeon(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`}`;
   const tabHistorialHtml=`${_insHistorialFiltros(reqs,'adm')}
-    <div id="adm-historial-list">${reqs.length?reqs.map(r=>_insReqCard(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes registradas.</p>`}</div>`;
+    <div id="adm-historial-list">${reqs.length?reqs.map(r=>_insReqRowAcordeon(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes registradas.</p>`}</div>`;
 
-  /* ── Config editable: período de recepción ── */
-  const configHtml=`<div style="border:.5px solid ${bdr};border-radius:10px;padding:12px 16px;margin-bottom:14px;">
-    <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px;">⚙️ Período de recepción de insumos</p>
+  const configHtml=`<div style="border:.5px solid ${bdr};border-radius:10px;padding:11px 16px;margin-bottom:14px;">
+    <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;">⚙️ Período de recepción de insumos</p>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <label style="font-size:12px;font-weight:600;color:${txt};">Día inicio</label>
       <input type="number" id="ins-cfg-inicio" min="1" max="28" value="${INSUMOS_CONFIG.diaInicio||15}"
@@ -7932,20 +7982,19 @@ function renderAdminInsumos(activeTab){
     </div>
     ${tab==='actual'?tabActualHtml:tabHistorialHtml}`;
   el._allReqs=reqs;el._dark=dark;
+  /* Guardar contexto para PDF */
+  el._mesNom=mesNom;el._anio=hoy.getFullYear();el._reqsActivas=reqsActivasActual;el._matRows=Object.values({}).concat();
 }
 function guardarInsumosConfig(){
   const inicio=parseInt((document.getElementById('ins-cfg-inicio')||{}).value||15);
   const fin=parseInt((document.getElementById('ins-cfg-fin')||{}).value||25);
   if(isNaN(inicio)||isNaN(fin)||inicio<1||fin>31||inicio>=fin){
-    showToast('amber','⚠️','Rango inválido. El día inicio debe ser menor que el día fin (ej: 1-28).');return;
+    showToast('amber','⚠️','Rango inválido. El día inicio debe ser menor que el día fin.');return;
   }
-  INSUMOS_CONFIG.diaInicio=inicio;
-  INSUMOS_CONFIG.diaFin=fin;
-  fbSaveInsumosConfig();
-  renderAdminInsumos();
+  INSUMOS_CONFIG.diaInicio=inicio;INSUMOS_CONFIG.diaFin=fin;
+  fbSaveInsumosConfig();renderAdminInsumos();
   showToast('green','⚙️',`Período actualizado: días ${inicio} al ${fin} de cada mes.`);
 }
-
 function admFiltrarHistorial(){
   const el=document.getElementById('admin-insumos-content');if(!el||!el._allReqs)return;
   const mes=(document.getElementById('adm-f-mes')||{}).value||'';
@@ -7957,7 +8006,90 @@ function admFiltrarHistorial(){
   if(trab)reqs=reqs.filter(r=>r.personalNombre===trab);
   const lbl=el._dark?'#8AACCA':'#5C7A9A';
   const listEl=document.getElementById('adm-historial-list');
-  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqCard(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados con los filtros seleccionados.</p>`;
+  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqRowAcordeon(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados.</p>`;
+}
+/* ── Supervisor también usa acordeón ── */
+function svFiltrarHistorial(){
+  const el=document.getElementById('sv-insumos-content');if(!el||!el._allReqs)return;
+  const mes=(document.getElementById('sv-f-mes')||{}).value||'';
+  const cont=(document.getElementById('sv-f-cont')||{}).value||'';
+  const trab=(document.getElementById('sv-f-trab')||{}).value||'';
+  let reqs=el._allReqs;
+  if(mes)reqs=reqs.filter(r=>(r.fecha||'').startsWith(mes));
+  if(cont)reqs=reqs.filter(r=>r.servicioFolio===cont);
+  if(trab)reqs=reqs.filter(r=>r.personalNombre===trab);
+  const lbl=el._dark?'#8AACCA':'#5C7A9A';
+  const listEl=document.getElementById('sv-historial-list');
+  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqRowAcordeon(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados.</p>`;
+}
+
+/* ── Exportar resumen de compras a PDF ── */
+function _exportInsumosPDF(){
+  const el=document.getElementById('admin-insumos-content');
+  const hoy=new Date();
+  const mesNom=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][hoy.getMonth()];
+  const mesActual=hoy.toISOString().slice(0,7);
+  const reqs=INSUMOS_REQUESTS.filter(r=>(r.fecha||'').startsWith(mesActual)&&(r.status==='aprobado'||r.status==='pendiente'));
+  const matMap={};
+  reqs.forEach(r=>(r.items||[]).forEach(it=>{
+    const key=it.catalogoId!=null?'cat_'+it.catalogoId:'cus_'+(it.nombre||'').toLowerCase().trim();
+    if(!matMap[key])matMap[key]={nombre:it.nombre,unidad:it.unidad,precio:it.precio,cantidad:0,subtotal:0};
+    matMap[key].cantidad+=it.cantidad;matMap[key].subtotal+=it.subtotal;
+  }));
+  const matRows=Object.values(matMap).sort((a,b)=>b.subtotal-a.subtotal);
+  const totalSinIVA=reqs.reduce((s,r)=>s+(r.total||0),0);
+  const iva=totalSinIVA*0.16;const totalConIVA=totalSinIVA+iva;
+  const generado=hoy.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+  const matRowsHtml=matRows.map((m,i)=>`<tr style="${i%2===0?'background:#F8FAFB':''}">
+    <td style="padding:7px 10px;border-bottom:.5px solid #E8EEF7;">${m.nombre}</td>
+    <td style="padding:7px 10px;border-bottom:.5px solid #E8EEF7;text-align:center;font-weight:700;color:#185FA5;">${m.cantidad} ${m.unidad}</td>
+    <td style="padding:7px 10px;border-bottom:.5px solid #E8EEF7;text-align:right;">$${m.precio.toFixed(2)}</td>
+    <td style="padding:7px 10px;border-bottom:.5px solid #E8EEF7;text-align:right;font-weight:700;">$${m.subtotal.toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+  </tr>`).join('');
+  const detailRowsHtml=reqs.map(r=>{
+    const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
+    return`<tr>
+      <td style="padding:6px 10px;border-bottom:.5px solid #E8EEF7;">${r.folio}</td>
+      <td style="padding:6px 10px;border-bottom:.5px solid #E8EEF7;">${r.personalNombre||'—'}</td>
+      <td style="padding:6px 10px;border-bottom:.5px solid #E8EEF7;">${r.servicioFolio||'—'} · ${r.clienteNombre||ps?.cliente?.nombre||'—'}</td>
+      <td style="padding:6px 10px;border-bottom:.5px solid #E8EEF7;text-align:right;font-weight:700;">$${(r.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</td>
+      <td style="padding:6px 10px;border-bottom:.5px solid #E8EEF7;text-align:center;">${r.fecha}</td>
+    </tr>`;}).join('');
+  const w=window.open('','_blank','width=900,height=700');if(!w)return;
+  w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Insumos ${mesNom} ${hoy.getFullYear()}</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1C2B3A;}
+  .hdr{background:#042C53;padding:16px 32px;display:flex;justify-content:space-between;align-items:center;color:#fff;}
+  .hdr h1{font-size:22px;font-weight:800;letter-spacing:.5px;}.hdr p{font-size:11px;color:rgba(255,255,255,.55);margin-top:3px;}
+  .hdr-r{text-align:right;}.hdr-r h2{font-size:14px;font-weight:700;}.section{padding:18px 32px;}
+  h3{font-size:11px;font-weight:700;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;margin-top:18px;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead th{background:#F0F4FA;color:#5C7A9A;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:1.5px solid #D8E5F3;text-align:left;}
+  .totals{background:#EEF5FF;border-radius:8px;padding:12px 16px;margin-top:14px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+  .totals p{font-size:12px;color:#5C7A9A;}.totals .grand{font-size:15px;font-weight:700;color:#042C53;}
+  .ftr{padding:10px 32px;background:#F0F4FA;border-top:1px solid #D8E5F3;font-size:10px;color:#8A9BB0;display:flex;justify-content:space-between;margin-top:20px;}
+  @media print{body,.hdr,.totals,.ftr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
+  </style></head><body>
+  <div class="hdr">
+    <div><h1>AYALYM</h1><p>Limpieza profesional</p></div>
+    <div class="hdr-r"><h2>Resumen de Compras de Insumos</h2><p>${mesNom} ${hoy.getFullYear()} · Generado: ${generado}</p></div>
+  </div>
+  <div class="section">
+    <h3>Materiales consolidados (${reqs.length} solicitud(es))</h3>
+    <table><thead><tr><th>Producto</th><th style="text-align:center;">Cant. total</th><th style="text-align:right;">P. Unitario</th><th style="text-align:right;">Subtotal</th></tr></thead>
+    <tbody>${matRowsHtml}</tbody></table>
+    <div class="totals">
+      <p>Subtotal s/IVA: <strong>$${totalSinIVA.toLocaleString('es-MX',{minimumFractionDigits:2})}</strong></p>
+      <p>IVA 16%: <strong>$${iva.toLocaleString('es-MX',{minimumFractionDigits:2})}</strong></p>
+      <p class="grand">Total c/IVA: $${totalConIVA.toLocaleString('es-MX',{minimumFractionDigits:2})}</p>
+    </div>
+    <h3>Detalle de solicitudes</h3>
+    <table><thead><tr><th>Folio</th><th>Trabajador</th><th>Contrato · Cliente</th><th style="text-align:right;">Total s/IVA</th><th style="text-align:center;">Fecha</th></tr></thead>
+    <tbody>${detailRowsHtml}</tbody></table>
+  </div>
+  <div class="ftr"><span>AYALYM — Sistema de gestión</span><span>Impreso: ${generado}</span></div>
+  <script>setTimeout(()=>window.print(),400);<\/script>
+  </body></html>`);
+  w.document.close();
 }
 
 /* ── Autocompletado de cliente existente en el formulario de nuevo inmueble ── */
