@@ -6274,6 +6274,7 @@ function buildInmDetail(ps,showActions){
     <div class="inm-field" style="grid-column:1/-1;"><strong>✉️ Correo</strong>${ps.cliente.email}</div>
     ${ps.descripcion?`<div class="inm-field" style="grid-column:1/-1;"><strong>Descripción</strong>${ps.descripcion}</div>`:''}
   </div>
+  ${reportesHtml}
   ${mapHtml}
   ${pagoHtml}
   ${fiscHtml}
@@ -6281,7 +6282,6 @@ function buildInmDetail(ps,showActions){
   ${_insumosInfoBlock(ps)}
   ${histHtml}
   ${buildPersonalAsignadoHtml(ps.id,showActions)}
-  ${reportesHtml}
   ${showActions?adminActionsHtml:svActionsHtml}`;
 }
 
@@ -6951,10 +6951,10 @@ function buildInmDetailSV(ps){
     <div class="inm-field" style="grid-column:1/-1;"><strong>✉️ Correo</strong>${ps.cliente.email}</div>
     ${ps.descripcion?`<div class="inm-field" style="grid-column:1/-1;"><strong>Descripción</strong>${ps.descripcion}</div>`:''}
   </div>
+  ${reportesHtml}
   ${ps.notas?`<p style="font-size:11px;color:#5C7A9A;margin-top:8px;background:var(--blue-light);border-radius:6px;padding:6px 10px;">📝 ${ps.notas}</p>`:''}
   ${_insumosInfoBlock(ps)}
   ${buildPersonalAsignadoHtml(ps.id,false)}
-  ${reportesHtml}
   <div id="att-sv-${ps.id}">${_buildSvAttHtml('sv_'+ps.id,ps)}</div>`;
 }
 function _buildSvAttHtml(k,ps){
