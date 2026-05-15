@@ -6716,6 +6716,7 @@ function _buildPlanTrabajoBtn(ps,canEdit){
       ?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);font-size:11px;" onclick="abrirPlanTrabajo(${ps.id},true,${p.id})">${tienePlan?'✏️ Editar':'➕ Crear'}</button>`:'';
     const verBtn=tienePlan?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);font-size:11px;" onclick="abrirPlanTrabajo(${ps.id},false,${p.id})">👁 Ver</button>`:'';
     const pdfBtn=tienePlan?`<button class="btn-sm" style="font-size:11px;" onclick="exportarPlanTrabajoPDF(${ps.id},${p.id})">⬇ PDF</button>`:'';
+    const delBtn=tienePlan&&canEdit?`<button class="btn-sm" style="background:rgba(192,57,43,.2);color:#FF7B6B;border:.5px solid rgba(192,57,43,.5);font-size:11px;" onclick="eliminarPlanTrabajo(${ps.id},${p.id})">🗑</button>`:'';
     return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid rgba(255,255,255,.07);">
       ${avHtml}
       <div style="flex:1;min-width:0;">
@@ -6725,7 +6726,7 @@ function _buildPlanTrabajoBtn(ps,canEdit){
           ${cntBadge}
         </div>
       </div>
-      <div style="display:flex;gap:5px;flex-shrink:0;">${verBtn}${pdfBtn}${editBtn}</div>
+      <div style="display:flex;gap:5px;flex-shrink:0;">${verBtn}${pdfBtn}${editBtn}${delBtn}</div>
     </div>`;
   }).join('');
   return`<div style="margin-top:10px;padding:10px 14px;border:.5px solid rgba(255,255,255,.12);border-radius:10px;background:#132030;">
@@ -6887,6 +6888,15 @@ function guardarPlanTrabajo(psId,personalId){
   cerrarPlanTrabajo();
   renderPropServices(_propFilter);
   showToast('green','📋','Plan de trabajo guardado.');
+}
+function eliminarPlanTrabajo(psId,personalId){
+  const ps=PROPERTY_SERVICES.find(p=>p.id===psId);if(!ps)return;
+  const pi=PERSONAL_INM.find(p=>p.id===personalId);
+  if(!confirm('¿Eliminar el plan de trabajo de '+(pi?pi.nombre:'esta persona')+'?\nEsta acción no se puede deshacer.'))return;
+  if(ps.planesTrabajo)delete ps.planesTrabajo[personalId];
+  fbSavePropertyServices();
+  renderPropServices(_propFilter);
+  showToast('green','🗑️','Plan de trabajo eliminado.');
 }
 
 /* ── PDF Plan de Trabajo ── */
