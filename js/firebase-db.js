@@ -259,7 +259,26 @@ async function loadAllData() {
     }
   } catch(e) { console.warn('INSUMOS_CONFIG load', e); }
 
-  /* 12. INSUMOS_CATALOGO — catálogo editable por admin */
+  /* 12. SITE_CONFIG — textos y datos de la landing page */
+  try {
+    var siteCfgSnap = await _col('config').doc('site').get();
+    if (siteCfgSnap.exists) {
+      var sc = siteCfgSnap.data();
+      if (sc && typeof sc === 'object') {
+        if (sc.hero)      Object.assign(SITE_CONFIG.hero,     sc.hero);
+        if (sc.stats)     Object.assign(SITE_CONFIG.stats,    sc.stats);
+        if (sc.nosotros)  Object.assign(SITE_CONFIG.nosotros, sc.nosotros);
+        if (sc.values)    SITE_CONFIG.values  = sc.values;
+        if (sc.repse)     Object.assign(SITE_CONFIG.repse,    sc.repse);
+        if (sc.contacto)  Object.assign(SITE_CONFIG.contacto, sc.contacto);
+        if (sc.social)    Object.assign(SITE_CONFIG.social,   sc.social);
+        /* Persist to localStorage for landing page (cross-tab) */
+        try { localStorage.setItem('ayalym-site-config', JSON.stringify(SITE_CONFIG)); } catch(ex){}
+      }
+    }
+  } catch(e) { console.warn('SITE_CONFIG load', e); }
+
+  /* 13. INSUMOS_CATALOGO — catálogo editable por admin */
   try {
     var catSnap = await _col('config').doc('catalogo').get();
     if (catSnap.exists) {
@@ -371,6 +390,14 @@ function fbSaveCatalogo() {
     _col('config').doc('catalogo').set({ items: _clone(INSUMOS_CATALOGO) })
       .catch(function(e){ console.warn('fbSaveCatalogo', e); });
   } catch(e) { console.warn('fbSaveCatalogo', e); }
+}
+
+function fbSaveSiteConfig() {
+  try {
+    _col('config').doc('site').set(_clone(SITE_CONFIG))
+      .catch(function(e){ console.warn('fbSaveSiteConfig', e); });
+    try { localStorage.setItem('ayalym-site-config', JSON.stringify(SITE_CONFIG)); } catch(ex){}
+  } catch(e) { console.warn('fbSaveSiteConfig', e); }
 }
 
 function fbSaveInsumosConfig() {

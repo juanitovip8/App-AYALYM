@@ -223,3 +223,50 @@ const PRICES={
    campana: 'buen_fin' | 'hot_sale' | 'navidad' | 'madres' | 'custom'
    ──────────────────────────────────────────────────────────── */
 let PROMOTIONS = [];
+
+/* ── SITE CONFIG ──────────────────────────────────────────────
+   Textos, redes y datos editables de la landing page.
+   Se persiste en Firestore config/site y localStorage.
+   ──────────────────────────────────────────────────────────── */
+let SITE_CONFIG = {
+  hero: {
+    eyebrow:    'Limpieza profesional',
+    h1Intro:    '¡Espacios',
+    h1Em:       'limpios,',
+    h1Close:    'entornos felices!',
+    priceLabel: 'Reserva desde',
+    btnPrimary: '✨ Reserva tu limpieza',
+    btnSecondary:'Ver servicios'
+  },
+  stats: {
+    s1Num:'+500', s1Lbl:'Servicios realizados',
+    s2Num:'100%', s2Lbl:'Satisfacción garantizada',
+    s3Num:'REPSE', s3Lbl:'ACR15827 / 2025',
+    s4Num:'CDMX', s4Lbl:'Área Metropolitana'
+  },
+  nosotros: {
+    highlight:'Empresa dedicada a la innovación y cuidado del medio ambiente, generando ambientes amigables con entornos limpios y elegantes.',
+    p1:'Brindamos la seguridad de que nuestros clientes y sus colaboradores se sientan como en casa al llegar a sus instalaciones, obteniendo su entera satisfacción con la calidad de nuestro servicio.',
+    p2:'Nuestro equipo de profesionales está comprometido con los más altos estándares de calidad, utilizando productos eco-amigables y tecnología de punta.'
+  },
+  values:[
+    {icon:'🌿',title:'Sustentabilidad',desc:'Productos y procesos respetuosos con el medio ambiente.'},
+    {icon:'⭐',title:'Excelencia',      desc:'Estándares de calidad en cada servicio que realizamos.'},
+    {icon:'🤝',title:'Confianza',       desc:'Personal capacitado y certificado para tu tranquilidad.'},
+    {icon:'⏱️',title:'Puntualidad',    desc:'Cumplimos con tiempos y compromisos establecidos.'}
+  ],
+  repse:{
+    num:'Aviso de registro REPSE',
+    empresa:'No. ACR15827/2025 — AYA LIMPIEZA Y MANTENIMIENTO S.A. DE C.V.'
+  },
+  contacto:{
+    direccion:'Prol. Paseo de la Reforma No. 799 Int. 1308, Col. Lomas de Santa Fe, Alcaldía Álvaro Obregón, C.P. 01219, CDMX.',
+    horario:'Lunes a Viernes: 8:00 — 18:00 hrs\nSábado: 9:00 — 14:00 hrs',
+    whatsapp:'https://wa.me/521XXXXXXXXXX'
+  },
+  social:{
+    fb:'https://www.facebook.com/ayalym23',
+    ig:'https://www.instagram.com/ayalym23',
+    tiktok:'https://www.tiktok.com/@ayalym23'
+  }
+};

@@ -10030,6 +10030,173 @@ function renderAdminPromociones() {
   _renderPromoList();
 }
 
+/* ══════════════════════════════════════════════════════════
+   MÓDULO: EDITOR DE SITIO WEB
+   ══════════════════════════════════════════════════════════ */
+
+function renderAdminWebEditor() {
+  // Default to promos tab
+  switchWebTab('promos', document.getElementById('web-tab-promos'));
+  _updatePromoPreview();
+  _renderPromoList();
+  // Populate all fields from SITE_CONFIG
+  _wePopulateTextos();
+  _wePopulateContacto();
+  _wePopulateRedes();
+  _wePopulateValores();
+}
+
+function switchWebTab(tab, btn) {
+  const panels = ['promos','textos','contacto','redes','valores'];
+  panels.forEach(p => {
+    const el = document.getElementById('web-panel-' + p);
+    if (el) el.style.display = p === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('[id^="web-tab-"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (tab === 'textos')   _wePopulateTextos();
+  if (tab === 'contacto') _wePopulateContacto();
+  if (tab === 'redes')    _wePopulateRedes();
+  if (tab === 'valores')  _wePopulateValores();
+}
+
+/* ── Populate helpers ── */
+function _v(id, val) { const el=document.getElementById(id); if(el) el.value = val||''; }
+
+function _wePopulateTextos() {
+  const h = SITE_CONFIG.hero    || {};
+  const s = SITE_CONFIG.stats   || {};
+  const n = SITE_CONFIG.nosotros|| {};
+  _v('we-hero-eyebrow',    h.eyebrow    || '');
+  _v('we-hero-h1intro',    h.h1Intro    || '');
+  _v('we-hero-h1em',       h.h1Em       || '');
+  _v('we-hero-h1close',    h.h1Close    || '');
+  _v('we-hero-pricelabel', h.priceLabel || '');
+  _v('we-hero-btnprimary', h.btnPrimary || '');
+  _v('we-hero-btnsecondary', h.btnSecondary || '');
+  _v('we-s1num', s.s1Num||''); _v('we-s1lbl', s.s1Lbl||'');
+  _v('we-s2num', s.s2Num||''); _v('we-s2lbl', s.s2Lbl||'');
+  _v('we-s3num', s.s3Num||''); _v('we-s3lbl', s.s3Lbl||'');
+  _v('we-s4num', s.s4Num||''); _v('we-s4lbl', s.s4Lbl||'');
+  _v('we-nos-highlight', n.highlight || '');
+  _v('we-nos-p1', n.p1 || '');
+  _v('we-nos-p2', n.p2 || '');
+  webPreviewHero();
+}
+
+function _wePopulateContacto() {
+  const c = SITE_CONFIG.contacto || {};
+  const r = SITE_CONFIG.repse    || {};
+  _v('we-ctc-dir',     c.direccion || '');
+  _v('we-ctc-horario', c.horario   || '');
+  _v('we-ctc-wa',      c.whatsapp  || '');
+  _v('we-repse-num',     r.num     || '');
+  _v('we-repse-empresa', r.empresa || '');
+}
+
+function _wePopulateRedes() {
+  const so = SITE_CONFIG.social || {};
+  _v('we-social-fb',    so.fb     || '');
+  _v('we-social-ig',    so.ig     || '');
+  _v('we-social-tiktok',so.tiktok || '');
+}
+
+function _wePopulateValores() {
+  const list = document.getElementById('we-values-list');
+  if (!list) return;
+  const vals = SITE_CONFIG.values || [];
+  list.innerHTML = vals.map((v,i) => `
+    <div style="border:1px solid #D8E8F5;border-radius:10px;padding:12px;margin-bottom:10px;">
+      <p style="font-size:11px;font-weight:700;color:#5C7A9A;text-transform:uppercase;margin-bottom:8px;">Valor ${i+1}</p>
+      <div class="frow">
+        <div><label>Icono (emoji)</label><input type="text" id="we-val${i}-icon" value="${v.icon||''}" maxlength="4" style="font-size:18px;text-align:center;width:60px;"></div>
+        <div><label>Título</label><input type="text" id="we-val${i}-title" value="${v.title||''}"></div>
+      </div>
+      <div class="fld"><label>Descripción</label><input type="text" id="we-val${i}-desc" value="${v.desc||''}"></div>
+    </div>`).join('');
+}
+
+/* ── Live preview of hero ── */
+function webPreviewHero() {
+  const g = id => (document.getElementById(id)||{}).value || '';
+  const ey = document.getElementById('wp-eyebrow');
+  const h1 = document.getElementById('wp-h1');
+  const b1 = document.getElementById('wp-btn1');
+  const b2 = document.getElementById('wp-btn2');
+  if (ey) ey.textContent = g('we-hero-eyebrow');
+  if (h1) h1.textContent = [g('we-hero-h1intro'), g('we-hero-h1em'), g('we-hero-h1close')].filter(Boolean).join(' ');
+  if (b1) b1.textContent = g('we-hero-btnprimary');
+  if (b2) b2.textContent = g('we-hero-btnsecondary');
+}
+
+/* ── Save functions ── */
+function saveWebTextos() {
+  const g = id => (document.getElementById(id)||{}).value || '';
+  SITE_CONFIG.hero = {
+    eyebrow:     g('we-hero-eyebrow'),
+    h1Intro:     g('we-hero-h1intro'),
+    h1Em:        g('we-hero-h1em'),
+    h1Close:     g('we-hero-h1close'),
+    priceLabel:  g('we-hero-pricelabel'),
+    btnPrimary:  g('we-hero-btnprimary'),
+    btnSecondary:g('we-hero-btnsecondary')
+  };
+  SITE_CONFIG.stats = {
+    s1Num:g('we-s1num'), s1Lbl:g('we-s1lbl'),
+    s2Num:g('we-s2num'), s2Lbl:g('we-s2lbl'),
+    s3Num:g('we-s3num'), s3Lbl:g('we-s3lbl'),
+    s4Num:g('we-s4num'), s4Lbl:g('we-s4lbl')
+  };
+  SITE_CONFIG.nosotros = {
+    highlight: g('we-nos-highlight'),
+    p1:        g('we-nos-p1'),
+    p2:        g('we-nos-p2')
+  };
+  if (typeof fbSaveSiteConfig === 'function') fbSaveSiteConfig();
+  showToast('green','💾','Textos actualizados en el sitio web');
+}
+
+function saveWebContacto() {
+  const g = id => (document.getElementById(id)||{}).value || '';
+  SITE_CONFIG.contacto = {
+    direccion: g('we-ctc-dir'),
+    horario:   g('we-ctc-horario'),
+    whatsapp:  g('we-ctc-wa')
+  };
+  SITE_CONFIG.repse = {
+    num:     g('we-repse-num'),
+    empresa: g('we-repse-empresa')
+  };
+  if (typeof fbSaveSiteConfig === 'function') fbSaveSiteConfig();
+  showToast('green','💾','Datos de contacto actualizados');
+}
+
+function saveWebRedes() {
+  const g = id => (document.getElementById(id)||{}).value || '';
+  SITE_CONFIG.social = {
+    fb:     g('we-social-fb'),
+    ig:     g('we-social-ig'),
+    tiktok: g('we-social-tiktok')
+  };
+  if (typeof fbSaveSiteConfig === 'function') fbSaveSiteConfig();
+  showToast('green','💾','Redes sociales actualizadas');
+}
+
+function saveWebValores() {
+  const vals = [];
+  for (let i = 0; i < 4; i++) {
+    const g = id => (document.getElementById(id)||{}).value || '';
+    vals.push({
+      icon:  g(`we-val${i}-icon`),
+      title: g(`we-val${i}-title`),
+      desc:  g(`we-val${i}-desc`)
+    });
+  }
+  SITE_CONFIG.values = vals;
+  if (typeof fbSaveSiteConfig === 'function') fbSaveSiteConfig();
+  showToast('green','💾','Valores de empresa actualizados');
+}
+
 function _renderPromoList() {
   const list = document.getElementById('promo-list-admin');
   const badge = document.getElementById('promo-count-badge');

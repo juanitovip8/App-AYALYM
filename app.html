@@ -903,7 +903,7 @@
       </div>
       <div class="admin-nav-row anr-2">
         <div class="nav-btn" onclick="navGo('admin','mapa',this)"><span class="nav-icon">🗺️</span>Mapa en vivo</div>
-        <div class="nav-btn nav-btn-promo" onclick="navGo('admin','promociones',this);renderAdminPromociones()"><span class="nav-icon">🎁</span>Promociones &amp; Campañas</div>
+        <div class="nav-btn nav-btn-promo" onclick="navGo('admin','web',this);renderAdminWebEditor()"><span class="nav-icon">🌐</span>Sitio Web</div>
       </div>
     </div>
     <div id="a-resumen" class="sec active">
@@ -1037,106 +1037,165 @@
       </div>
     </div>
 
-    <!-- ── ADMIN: PROMOCIONES & CAMPAÑAS ── -->
-    <div id="a-promociones" class="sec">
+    <!-- ── ADMIN: SITIO WEB ── -->
+    <div id="a-web" class="sec">
+      <!-- Tabs -->
+      <div class="msg-tabs" style="margin-bottom:14px;">
+        <button class="msg-tab active" id="web-tab-promos"   onclick="switchWebTab('promos',this)">🎁 Promociones</button>
+        <button class="msg-tab"        id="web-tab-textos"   onclick="switchWebTab('textos',this)">✏️ Textos</button>
+        <button class="msg-tab"        id="web-tab-contacto" onclick="switchWebTab('contacto',this)">📞 Contacto</button>
+        <button class="msg-tab"        id="web-tab-redes"    onclick="switchWebTab('redes',this)">📱 Redes</button>
+        <button class="msg-tab"        id="web-tab-valores"  onclick="switchWebTab('valores',this)">💡 Valores</button>
+      </div>
 
-      <!-- ═══ FORM NUEVA PROMO ═══ -->
-      <div class="card promo-admin-card">
-        <p class="ctitle">➕ Nueva promoción</p>
-
-        <!-- Tipo selector -->
-        <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Tipo</p>
-        <div class="promo-tipo-pills" id="promo-tipo-pills">
-          <button class="ptp-btn active" data-tipo="descuento"  onclick="selectPromoTipo('descuento',this)">🏷️ Descuento</button>
-          <button class="ptp-btn"        data-tipo="codigo"     onclick="selectPromoTipo('codigo',this)">🎟️ Código promo</button>
-          <button class="ptp-btn"        data-tipo="referido"   onclick="selectPromoTipo('referido',this)">🔗 Referido</button>
-          <button class="ptp-btn"        data-tipo="campana"    onclick="selectPromoTipo('campana',this)">📢 Campaña</button>
+      <!-- ── PANEL: PROMOCIONES ── -->
+      <div id="web-panel-promos">
+        <div class="card promo-admin-card">
+          <p class="ctitle">➕ Nueva promoción</p>
+          <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Tipo</p>
+          <div class="promo-tipo-pills" id="promo-tipo-pills">
+            <button class="ptp-btn active" data-tipo="descuento" onclick="selectPromoTipo('descuento',this)">🏷️ Descuento</button>
+            <button class="ptp-btn"        data-tipo="codigo"    onclick="selectPromoTipo('codigo',this)">🎟️ Código promo</button>
+            <button class="ptp-btn"        data-tipo="referido"  onclick="selectPromoTipo('referido',this)">🔗 Referido</button>
+            <button class="ptp-btn"        data-tipo="campana"   onclick="selectPromoTipo('campana',this)">📢 Campaña</button>
+          </div>
+          <div id="promo-campana-wrap" style="display:none;margin-bottom:10px;">
+            <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Campaña</p>
+            <div class="promo-campana-pills">
+              <button class="pcp-btn active" data-camp="buen_fin" onclick="selectPromoCampana('buen_fin',this)">🛍️ Buen Fin</button>
+              <button class="pcp-btn"        data-camp="hot_sale" onclick="selectPromoCampana('hot_sale',this)">🔥 Hot Sale</button>
+              <button class="pcp-btn"        data-camp="navidad"  onclick="selectPromoCampana('navidad',this)">🎄 Navidad</button>
+              <button class="pcp-btn"        data-camp="madres"   onclick="selectPromoCampana('madres',this)">💐 Día Madres</button>
+              <button class="pcp-btn"        data-camp="verano"   onclick="selectPromoCampana('verano',this)">☀️ Verano</button>
+              <button class="pcp-btn"        data-camp="custom"   onclick="selectPromoCampana('custom',this)">✏️ Personalizada</button>
+            </div>
+          </div>
+          <div class="promo-form-grid">
+            <div class="fld"><label>Nombre de la promoción</label><input type="text" id="pf-nombre" placeholder="Ej: Descuento inauguración"></div>
+            <div class="fld"><label>Descripción corta</label><input type="text" id="pf-desc" placeholder="Ej: 20% de descuento en tu primer servicio"></div>
+            <div class="fld" id="pf-wrap-pct"><label>Descuento (%)</label><input type="number" id="pf-pct" min="1" max="100" placeholder="Ej: 20"></div>
+            <div class="fld" id="pf-wrap-code" style="display:none;"><label>Código</label><input type="text" id="pf-code" placeholder="Ej: AYALYM20" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()"></div>
+            <div class="fld" id="pf-wrap-ref" style="display:none;"><label>Nombre del referido</label><input type="text" id="pf-ref" placeholder="Nombre de quien refirió"></div>
+            <div class="fld"><label>Fecha inicio</label><input type="date" id="pf-inicio"></div>
+            <div class="fld"><label>Fecha fin</label><input type="date" id="pf-fin"></div>
+            <div class="fld"><label>Emoji</label><input type="text" id="pf-emoji" placeholder="🎉" maxlength="4" style="font-size:20px;text-align:center;"></div>
+            <div class="fld"><label>Color de acento</label>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;">
+                <input type="color" id="pf-color" value="#1A56DB" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;padding:2px;">
+                <button class="pcolor-btn" style="background:#e63946;" onclick="document.getElementById('pf-color').value='#e63946'"></button>
+                <button class="pcolor-btn" style="background:#f4a261;" onclick="document.getElementById('pf-color').value='#f4a261'"></button>
+                <button class="pcolor-btn" style="background:#2a9d8f;" onclick="document.getElementById('pf-color').value='#2a9d8f'"></button>
+                <button class="pcolor-btn" style="background:#1A56DB;" onclick="document.getElementById('pf-color').value='#1A56DB'"></button>
+                <button class="pcolor-btn" style="background:#7209b7;" onclick="document.getElementById('pf-color').value='#7209b7'"></button>
+                <button class="pcolor-btn" style="background:#ef9f27;" onclick="document.getElementById('pf-color').value='#ef9f27'"></button>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;">Vista previa en sitio web</p>
+          <div id="promo-preview-wrap"></div>
+          <button class="btn-royal" style="margin-top:14px;width:100%;" onclick="addPromocion()">🚀 Publicar en sitio web</button>
         </div>
-
-        <!-- Sub-tipo campaña (solo visible cuando tipo=campana) -->
-        <div id="promo-campana-wrap" style="display:none;margin-bottom:10px;">
-          <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Campaña</p>
-          <div class="promo-campana-pills">
-            <button class="pcp-btn active" data-camp="buen_fin"  onclick="selectPromoCampana('buen_fin',this)">🛍️ Buen Fin</button>
-            <button class="pcp-btn"        data-camp="hot_sale"  onclick="selectPromoCampana('hot_sale',this)">🔥 Hot Sale</button>
-            <button class="pcp-btn"        data-camp="navidad"   onclick="selectPromoCampana('navidad',this)">🎄 Navidad</button>
-            <button class="pcp-btn"        data-camp="madres"    onclick="selectPromoCampana('madres',this)">💐 Día Madres</button>
-            <button class="pcp-btn"        data-camp="verano"    onclick="selectPromoCampana('verano',this)">☀️ Verano</button>
-            <button class="pcp-btn"        data-camp="custom"    onclick="selectPromoCampana('custom',this)">✏️ Personalizada</button>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <p class="ctitle" style="margin:0;">📋 Promociones publicadas</p>
+            <span id="promo-count-badge" class="badge" style="background:#E6F1FB;color:#1A56DB;font-size:11px;padding:2px 9px;border-radius:10px;">0 activas</span>
           </div>
+          <div id="promo-list-admin"><p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin promociones publicadas aún.</p></div>
         </div>
+      </div>
 
-        <!-- Campos comunes -->
-        <div class="promo-form-grid">
-          <div class="fld">
-            <label>Nombre de la promoción</label>
-            <input type="text" id="pf-nombre" placeholder="Ej: Descuento inauguración">
-          </div>
-          <div class="fld">
-            <label>Descripción corta</label>
-            <input type="text" id="pf-desc" placeholder="Ej: 20% de descuento en tu primer servicio">
-          </div>
-
-          <!-- Descuento % (visible para: descuento, campana) -->
-          <div class="fld" id="pf-wrap-pct">
-            <label>Descuento (%)</label>
-            <input type="number" id="pf-pct" min="1" max="100" placeholder="Ej: 20">
-          </div>
-
-          <!-- Código (visible para: codigo, referido) -->
-          <div class="fld" id="pf-wrap-code" style="display:none;">
-            <label>Código</label>
-            <input type="text" id="pf-code" placeholder="Ej: AYALYM20" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
-          </div>
-
-          <!-- Generado por referido (solo referido) -->
-          <div class="fld" id="pf-wrap-ref" style="display:none;">
-            <label>Nombre del referido</label>
-            <input type="text" id="pf-ref" placeholder="Nombre de quien refirió">
-          </div>
-
-          <div class="fld">
-            <label>Fecha inicio</label>
-            <input type="date" id="pf-inicio">
-          </div>
-          <div class="fld">
-            <label>Fecha fin</label>
-            <input type="date" id="pf-fin">
-          </div>
-
-          <div class="fld">
-            <label>Emoji</label>
-            <input type="text" id="pf-emoji" placeholder="🎉" maxlength="4" style="font-size:20px;text-align:center;">
-          </div>
-          <div class="fld">
-            <label>Color de acento</label>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;">
-              <input type="color" id="pf-color" value="#1A56DB" style="width:36px;height:36px;border:none;border-radius:8px;cursor:pointer;padding:2px;">
-              <button class="pcolor-btn" style="background:#e63946;" onclick="document.getElementById('pf-color').value='#e63946'"></button>
-              <button class="pcolor-btn" style="background:#f4a261;" onclick="document.getElementById('pf-color').value='#f4a261'"></button>
-              <button class="pcolor-btn" style="background:#2a9d8f;" onclick="document.getElementById('pf-color').value='#2a9d8f'"></button>
-              <button class="pcolor-btn" style="background:#1A56DB;" onclick="document.getElementById('pf-color').value='#1A56DB'"></button>
-              <button class="pcolor-btn" style="background:#7209b7;" onclick="document.getElementById('pf-color').value='#7209b7'"></button>
-              <button class="pcolor-btn" style="background:#ef9f27;" onclick="document.getElementById('pf-color').value='#ef9f27'"></button>
+      <!-- ── PANEL: TEXTOS ── -->
+      <div id="web-panel-textos" style="display:none;">
+        <div class="card">
+          <p class="ctitle">✏️ Textos del Hero</p>
+          <div class="fld"><label>Eyebrow (etiqueta sobre el título)</label><input type="text" id="we-hero-eyebrow" placeholder="Limpieza profesional" oninput="webPreviewHero()"></div>
+          <div class="fld"><label>Título — parte 1</label><input type="text" id="we-hero-h1intro" placeholder="¡Espacios" oninput="webPreviewHero()"></div>
+          <div class="fld"><label>Título — parte resaltada (cursiva)</label><input type="text" id="we-hero-h1em" placeholder="limpios," oninput="webPreviewHero()"></div>
+          <div class="fld"><label>Título — cierre</label><input type="text" id="we-hero-h1close" placeholder="entornos felices!" oninput="webPreviewHero()"></div>
+          <div class="fld"><label>Etiqueta precio (antes del monto)</label><input type="text" id="we-hero-pricelabel" placeholder="Reserva desde" oninput="webPreviewHero()"></div>
+          <div class="fld"><label>Botón principal</label><input type="text" id="we-hero-btnprimary" placeholder="✨ Reserva tu limpieza" oninput="webPreviewHero()"></div>
+          <div class="fld"><label>Botón secundario</label><input type="text" id="we-hero-btnsecondary" placeholder="Ver servicios" oninput="webPreviewHero()"></div>
+          <div style="background:#f0f4f8;border-radius:10px;padding:14px;margin:12px 0;" id="web-hero-preview">
+            <p style="font-size:11px;color:#5C7A9A;font-weight:600;text-transform:uppercase;margin-bottom:8px;">Vista previa</p>
+            <div style="font-size:11px;color:#5A8CB0;font-weight:600;margin-bottom:2px;" id="wp-eyebrow"></div>
+            <div style="font-size:18px;font-weight:700;color:#042C53;" id="wp-h1"></div>
+            <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span style="background:#1A56DB;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;" id="wp-btn1"></span>
+              <span style="border:1.5px solid #1A56DB;color:#1A56DB;padding:4px 10px;border-radius:6px;font-size:12px;" id="wp-btn2"></span>
             </div>
           </div>
         </div>
-
-        <!-- Preview card -->
-        <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;">Vista previa en sitio web</p>
-        <div id="promo-preview-wrap"></div>
-
-        <button class="btn-royal" style="margin-top:14px;width:100%;" onclick="addPromocion()">🚀 Publicar en sitio web</button>
+        <div class="card">
+          <p class="ctitle">📊 Stats / Números clave</p>
+          <div class="frow">
+            <div><label>Stat 1 — número</label><input type="text" id="we-s1num" placeholder="+500"></div>
+            <div><label>Stat 1 — etiqueta</label><input type="text" id="we-s1lbl" placeholder="Servicios realizados"></div>
+          </div>
+          <div class="frow">
+            <div><label>Stat 2 — número</label><input type="text" id="we-s2num" placeholder="100%"></div>
+            <div><label>Stat 2 — etiqueta</label><input type="text" id="we-s2lbl" placeholder="Satisfacción garantizada"></div>
+          </div>
+          <div class="frow">
+            <div><label>Stat 3 — número</label><input type="text" id="we-s3num" placeholder="REPSE"></div>
+            <div><label>Stat 3 — etiqueta</label><input type="text" id="we-s3lbl" placeholder="ACR15827 / 2025"></div>
+          </div>
+          <div class="frow">
+            <div><label>Stat 4 — número</label><input type="text" id="we-s4num" placeholder="CDMX"></div>
+            <div><label>Stat 4 — etiqueta</label><input type="text" id="we-s4lbl" placeholder="Área Metropolitana"></div>
+          </div>
+        </div>
+        <div class="card">
+          <p class="ctitle">🏢 Sección Nosotros</p>
+          <div class="fld"><label>Párrafo destacado</label><textarea id="we-nos-highlight" rows="3" style="resize:vertical;"></textarea></div>
+          <div class="fld"><label>Párrafo 1</label><textarea id="we-nos-p1" rows="3" style="resize:vertical;"></textarea></div>
+          <div class="fld"><label>Párrafo 2</label><textarea id="we-nos-p2" rows="3" style="resize:vertical;"></textarea></div>
+        </div>
+        <button class="btn-royal" style="width:100%;" onclick="saveWebTextos()">💾 Guardar textos</button>
       </div>
 
-      <!-- ═══ LISTA DE PROMOS ═══ -->
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <p class="ctitle" style="margin:0;">📋 Promociones publicadas</p>
-          <span id="promo-count-badge" class="badge" style="background:#E6F1FB;color:#1A56DB;font-size:11px;padding:2px 9px;border-radius:10px;">0 activas</span>
+      <!-- ── PANEL: CONTACTO ── -->
+      <div id="web-panel-contacto" style="display:none;">
+        <div class="card">
+          <p class="ctitle">📞 Datos de contacto</p>
+          <div class="fld"><label>Dirección</label><textarea id="we-ctc-dir" rows="3" style="resize:vertical;" placeholder="Prol. Paseo de la Reforma No. 799..."></textarea></div>
+          <div class="fld"><label>Horario de atención</label><textarea id="we-ctc-horario" rows="2" style="resize:vertical;" placeholder="Lunes a Viernes: 8:00 — 18:00 hrs"></textarea></div>
+          <div class="fld"><label>Enlace WhatsApp (wa.me/...)</label><input type="url" id="we-ctc-wa" placeholder="https://wa.me/521XXXXXXXXXX"></div>
         </div>
-        <div id="promo-list-admin">
-          <p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin promociones publicadas aún.</p>
+        <div class="card">
+          <p class="ctitle">📜 Registro REPSE</p>
+          <div class="fld"><label>Número de registro</label><input type="text" id="we-repse-num" placeholder="Aviso de registro REPSE"></div>
+          <div class="fld"><label>Empresa registrada</label><input type="text" id="we-repse-empresa" placeholder="No. ACR15827/2025 — AYA..."></div>
+        </div>
+        <button class="btn-royal" style="width:100%;" onclick="saveWebContacto()">💾 Guardar contacto</button>
+      </div>
+
+      <!-- ── PANEL: REDES SOCIALES ── -->
+      <div id="web-panel-redes" style="display:none;">
+        <div class="card">
+          <p class="ctitle">📱 Redes sociales</p>
+          <div class="fld">
+            <label>📘 Facebook</label>
+            <input type="url" id="we-social-fb" placeholder="https://www.facebook.com/ayalym23">
+          </div>
+          <div class="fld">
+            <label>📷 Instagram</label>
+            <input type="url" id="we-social-ig" placeholder="https://www.instagram.com/ayalym23">
+          </div>
+          <div class="fld">
+            <label>🎵 TikTok</label>
+            <input type="url" id="we-social-tiktok" placeholder="https://www.tiktok.com/@ayalym23">
+          </div>
+          <button class="btn-royal" style="width:100%;margin-top:8px;" onclick="saveWebRedes()">💾 Guardar redes</button>
+        </div>
+      </div>
+
+      <!-- ── PANEL: VALORES ── -->
+      <div id="web-panel-valores" style="display:none;">
+        <div class="card">
+          <p class="ctitle">💡 Valores de la empresa</p>
+          <p style="font-size:12px;color:#5C7A9A;margin-bottom:14px;">Estos aparecen en la sección "Nosotros" de la página web.</p>
+          <div id="we-values-list"></div>
+          <button class="btn-royal" style="width:100%;margin-top:8px;" onclick="saveWebValores()">💾 Guardar valores</button>
         </div>
       </div>
     </div>
@@ -1417,7 +1476,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=142"></script>
+<script src="js/app.js?v=143"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 
