@@ -794,6 +794,10 @@ select option {
 .toggle-btn                        { background: var(--dk-mid) !important; color: var(--dk-muted) !important; }
 .toggle-btn.on                     { background: rgba(5,150,105,.2) !important; color: #34d399 !important; }
 
+/* ─── PLAN DE TRABAJO ─── */
+#plan-trabajo-body                 { background: #0D1B2C !important; }
+.pt-fila                           { background: #132030 !important; border-color: rgba(255,255,255,.12) !important; }
+
 /* ─── INACTIVE WORKER STATES ─── */
 .srow--inactive                    { background: var(--dk-mid) !important; }
 .sv-worker-card--inactive          { background: var(--dk-mid) !important; border-color: var(--dk-border) !important; }

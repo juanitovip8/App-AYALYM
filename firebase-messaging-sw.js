@@ -4,7 +4,7 @@
    2. Web Push notifications
    ═══════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'ayalym-v7';
+const CACHE_NAME = 'ayalym-v8';
 
 /* ── Instalar: activar inmediatamente sin pre-cachear (evita fallos de instalación) ── */
 self.addEventListener('install', e => {

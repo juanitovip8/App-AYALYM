@@ -5625,8 +5625,8 @@ function toggleInmFiscal(btnEl){
    PERSONAL DE INMUEBLES
 ═══════════════════════════════════════════════ */
 const _puestoLabel={encargado:'Encargado de servicio',aux_limpieza:'Aux. de limpieza',pulidor:'Pulidor'};
-const _puestoBg={encargado:'#FFE8CC',aux_limpieza:'#E8F5FF',pulidor:'#EEF5FF'};
-const _puestoCol={encargado:'#A05C00',aux_limpieza:'#185FA5',pulidor:'#5A3DB5'};
+const _puestoBg={encargado:'#E07B00',aux_limpieza:'#1565C0',pulidor:'#5A3DB5'};
+const _puestoCol={encargado:'#fff',aux_limpieza:'#fff',pulidor:'#fff'};
 
 function renderPersonalInmPanel(){
   // Reset to Inicio tab on every login
@@ -5946,7 +5946,7 @@ function renderPersonalInmAdmin(){
         <div style="display:flex;align-items:center;gap:10px;">
           <div class="av" style="width:38px;height:38px;font-size:${p.photo?'0':'13px'};font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
           <div>
-            <p style="font-size:13px;font-weight:600;color:#042C53;">${p.nombre} <span style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:8px;background:${_puestoBg[p.puesto]||'#F0F4F8'};color:${_puestoCol[p.puesto]||'#5C7A9A'};">${_puestoLabel[p.puesto]||'Personal'}</span></p>
+            <p style="font-size:13px;font-weight:600;">${p.nombre} <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:${_puestoBg[p.puesto]||'#3D5A7A'};color:${_puestoCol[p.puesto]||'#fff'};">${_puestoLabel[p.puesto]||'Personal'}</span></p>
             <span style="font-size:11px;color:#185FA5;">${p.email}</span>
             <span style="font-size:11px;color:#5C7A9A;display:block;">${p.tel||'—'} · Hoy: ${statusAsis}</span>
           </div>
@@ -6706,21 +6706,21 @@ function _renderPlanVer(ps){
   const body=document.getElementById('plan-trabajo-body');if(!body)return;
   const filas=(ps.planTrabajo&&ps.planTrabajo.filas)||[];
   if(!filas.length){
-    body.innerHTML=`<div style="padding:40px 20px;text-align:center;color:#5C7A9A;font-size:13px;">Sin plan de trabajo registrado.</div>`;
+    body.innerHTML=`<div style="padding:40px 20px;text-align:center;color:#6EAAD8;font-size:13px;background:#0D1B2C;">Sin plan de trabajo registrado.</div>`;
     return;
   }
-  const rowsHtml=filas.map((f,i)=>`<tr style="background:${i%2===0?'#fff':'#F7FAFF'};">
-    <td style="padding:9px 12px;font-size:12px;color:#042C53;font-weight:700;white-space:nowrap;border-bottom:.5px solid #EBF1FA;">${f.horaInicio||'—'}</td>
-    <td style="padding:9px 12px;font-size:12px;color:#042C53;white-space:nowrap;border-bottom:.5px solid #EBF1FA;">${f.horaFin||'—'}</td>
-    <td style="padding:9px 12px;font-size:12px;color:#042C53;font-weight:600;border-bottom:.5px solid #EBF1FA;">${f.area||'—'}</td>
-    <td style="padding:9px 12px;font-size:12px;color:#1C2B3A;line-height:1.55;border-bottom:.5px solid #EBF1FA;">${f.actividades||'—'}</td>
-    <td style="padding:9px 12px;font-size:11px;color:#185FA5;font-weight:600;border-bottom:.5px solid #EBF1FA;">${(f.dias||[]).map(d=>_DIAS_PLAN.find(x=>x.key===d)?.full||d).join(', ')}</td>
+  const rowsHtml=filas.map((f,i)=>`<tr style="background:${i%2===0?'#132030':'#0D1B2C'};">
+    <td style="padding:9px 12px;font-size:12px;color:#D8EAF7;font-weight:700;white-space:nowrap;border-bottom:.5px solid rgba(255,255,255,.08);">${f.horaInicio||'—'}</td>
+    <td style="padding:9px 12px;font-size:12px;color:#D8EAF7;white-space:nowrap;border-bottom:.5px solid rgba(255,255,255,.08);">${f.horaFin||'—'}</td>
+    <td style="padding:9px 12px;font-size:12px;color:#D8EAF7;font-weight:600;border-bottom:.5px solid rgba(255,255,255,.08);">${f.area||'—'}</td>
+    <td style="padding:9px 12px;font-size:12px;color:#B0CCDF;line-height:1.55;border-bottom:.5px solid rgba(255,255,255,.08);">${f.actividades||'—'}</td>
+    <td style="padding:9px 12px;font-size:11px;color:#6EAAD8;font-weight:600;border-bottom:.5px solid rgba(255,255,255,.08);">${(f.dias||[]).map(d=>_DIAS_PLAN.find(x=>x.key===d)?.full||d).join(', ')}</td>
   </tr>`).join('');
-  body.innerHTML=`<div style="padding:16px 20px;">
+  body.innerHTML=`<div style="padding:16px 20px;background:#0D1B2C!important;">
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;">
       <button class="btn-sm" onclick="exportarPlanTrabajoPDF(${ps.id})">⬇ PDF</button>
     </div>
-    <div style="overflow-x:auto;border:1px solid #D0E3F7;border-radius:10px;overflow:hidden;">
+    <div style="overflow-x:auto;border:.5px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;">
       <table style="width:100%;border-collapse:collapse;">
         <thead><tr style="background:#042C53;">
           <th style="padding:9px 12px;font-size:9.5px;font-weight:700;color:#fff;text-align:left;white-space:nowrap;">HORA INICIO</th>
@@ -6732,7 +6732,7 @@ function _renderPlanVer(ps){
         <tbody>${rowsHtml}</tbody>
       </table>
     </div>
-    ${ps.planTrabajo.updatedAt?`<p style="font-size:10px;color:#8A9BB0;margin-top:10px;text-align:right;">Actualizado: ${ps.planTrabajo.updatedAt}${ps.planTrabajo.updatedBy?' · '+ps.planTrabajo.updatedBy:''}</p>`:''}
+    ${ps.planTrabajo.updatedAt?`<p style="font-size:10px;color:#6EAAD8;margin-top:10px;text-align:right;">Actualizado: ${ps.planTrabajo.updatedAt}${ps.planTrabajo.updatedBy?' · '+ps.planTrabajo.updatedBy:''}</p>`:''}
   </div>`;
 }
 
@@ -6745,38 +6745,38 @@ function _renderPlanEditor(ps){
     :[{id:1,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]},
       {id:2,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]},
       {id:3,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]}];
-  body.innerHTML=`<div style="padding:16px 20px;">
+  body.innerHTML=`<div style="padding:16px 20px;background:#0D1B2C!important;">
     <div id="plan-filas-container">${filas.map(f=>_planFilaHtml(f)).join('')}</div>
-    <button onclick="agregarFilaPlan()" style="margin-top:10px;padding:7px 18px;border-radius:8px;background:#EEF5FF;color:#185FA5;border:.5px solid #B5D4F4;font-size:12px;font-weight:600;cursor:pointer;">+ Agregar fila</button>
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:.5px solid #D0E3F7;">
-      <button onclick="cerrarPlanTrabajo()" style="padding:9px 20px;border-radius:9px;background:transparent;color:#5C7A9A;border:.5px solid #C5D8EC;font-size:13px;cursor:pointer;">Cancelar</button>
+    <button onclick="agregarFilaPlan()" style="margin-top:10px;padding:7px 18px;border-radius:8px;background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);font-size:12px;font-weight:600;cursor:pointer;">+ Agregar fila</button>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:.5px solid rgba(255,255,255,.1);">
+      <button onclick="cerrarPlanTrabajo()" style="padding:9px 20px;border-radius:9px;background:transparent;color:#8AAEC8;border:.5px solid rgba(255,255,255,.15);font-size:13px;cursor:pointer;">Cancelar</button>
       <button onclick="guardarPlanTrabajo(${ps.id})" style="padding:9px 26px;border-radius:9px;background:#185FA5;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;">💾 Guardar plan</button>
     </div>
   </div>`;
 }
 function _planFilaHtml(f){
   const idx=_planFilaCount++;
-  const iS='width:100%;padding:5px 8px;border-radius:7px;border:.5px solid #C5D8EC;font-size:12px;background:#fff;box-sizing:border-box;';
+  const iS='width:100%;padding:5px 8px;border-radius:7px;border:.5px solid rgba(255,255,255,.15);font-size:12px;background:#0D1B2C;color:#D8EAF7;box-sizing:border-box;color-scheme:dark;';
   const diasCbs=_DIAS_PLAN.map(d=>`<label style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
-    <input type="checkbox" id="pt-d-${idx}-${d.key}" ${(f.dias||[]).includes(d.key)?'checked':''} style="accent-color:#185FA5;width:15px;height:15px;">
-    <span style="font-size:10px;font-weight:700;color:#185FA5;">${d.short}</span>
+    <input type="checkbox" id="pt-d-${idx}-${d.key}" ${(f.dias||[]).includes(d.key)?'checked':''} style="accent-color:#3B9EFF;width:15px;height:15px;">
+    <span style="font-size:10px;font-weight:700;color:#6EAAD8;">${d.short}</span>
   </label>`).join('');
-  return`<div class="pt-fila" id="pt-fila-${idx}" style="border:.5px solid #D0E3F7;border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#fff;position:relative;">
-    <button onclick="this.closest('.pt-fila').remove()" style="position:absolute;top:8px;right:10px;background:#FFEDEC;border:.5px solid #C0392B;color:#C0392B;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer;">✕</button>
+  return`<div class="pt-fila" id="pt-fila-${idx}" style="border:.5px solid rgba(255,255,255,.12)!important;border-radius:10px;padding:12px 14px;margin-bottom:8px;background:#132030!important;position:relative;">
+    <button onclick="this.closest('.pt-fila').remove()" style="position:absolute;top:8px;right:10px;background:rgba(192,57,43,.25);border:.5px solid #C0392B;color:#FF7B6B;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer;">✕</button>
     <div style="display:grid;grid-template-columns:110px 110px 1fr;gap:8px;margin-bottom:8px;padding-right:50px;">
-      <div><p style="font-size:10px;font-weight:700;color:#5C7A9A;margin:0 0 3px;text-transform:uppercase;">Hora inicio</p>
+      <div><p style="font-size:10px;font-weight:700;color:#6EAAD8;margin:0 0 3px;text-transform:uppercase;">Hora inicio</p>
         <input type="time" id="pt-hi-${idx}" value="${f.horaInicio||''}" style="${iS}"></div>
-      <div><p style="font-size:10px;font-weight:700;color:#5C7A9A;margin:0 0 3px;text-transform:uppercase;">Hora fin</p>
+      <div><p style="font-size:10px;font-weight:700;color:#6EAAD8;margin:0 0 3px;text-transform:uppercase;">Hora fin</p>
         <input type="time" id="pt-hf-${idx}" value="${f.horaFin||''}" style="${iS}"></div>
-      <div><p style="font-size:10px;font-weight:700;color:#5C7A9A;margin:0 0 3px;text-transform:uppercase;">Área</p>
+      <div><p style="font-size:10px;font-weight:700;color:#6EAAD8;margin:0 0 3px;text-transform:uppercase;">Área</p>
         <input type="text" id="pt-area-${idx}" value="${(f.area||'').replace(/"/g,'&quot;')}" placeholder="Ej: Lobby, Baños, Oficinas…" style="${iS}"></div>
     </div>
     <div style="margin-bottom:10px;">
-      <p style="font-size:10px;font-weight:700;color:#5C7A9A;margin:0 0 3px;text-transform:uppercase;">Actividades a realizar</p>
+      <p style="font-size:10px;font-weight:700;color:#6EAAD8;margin:0 0 3px;text-transform:uppercase;">Actividades a realizar</p>
       <textarea id="pt-act-${idx}" rows="2" placeholder="Describe las actividades…" style="${iS}resize:vertical;">${f.actividades||''}</textarea>
     </div>
     <div>
-      <p style="font-size:10px;font-weight:700;color:#5C7A9A;margin:0 0 7px;text-transform:uppercase;">Días</p>
+      <p style="font-size:10px;font-weight:700;color:#6EAAD8;margin:0 0 7px;text-transform:uppercase;">Días</p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;">${diasCbs}</div>
     </div>
   </div>`;
