@@ -7906,7 +7906,8 @@ function renderSVPersonalInm(){
       .filter(sid=>misServIds.includes(sid))
       .map(sid=>{
         const ps=PROPERTY_SERVICES.find(x=>x.id===sid);
-        return ps?`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:${dark?'rgba(26,86,219,.25)':'#DBEAFE'};color:${dark?'#93C5FD':'#1A56DB'};white-space:nowrap;">${ps.folio}</span>`:'';
+        const cli=ps?.cliente?.nombre||ps?.clienteNombre||'';
+        return ps?`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:${dark?'rgba(26,86,219,.25)':'#DBEAFE'};color:${dark?'#93C5FD':'#1A56DB'};white-space:nowrap;">${ps.folio}${cli?' — '+cli:''}</span>`:'';
       }).filter(Boolean).join(' ');
 
     /* Asistencia hoy */
