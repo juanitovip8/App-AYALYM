@@ -746,7 +746,7 @@
   <!-- SUPERVISOR -->
   <div id="role-supervisor" class="role-section" style="display:none">
     <!-- Nav superior -->
-    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(8,1fr);">
+    <div class="bottom-nav" id="nav-supervisor" style="grid-template-columns:repeat(9,1fr);">
       <div class="bnav-btn active" onclick="navGo('supervisor','resumen',this)"><span class="bnav-icon">🏠</span>Inicio</div>
       <div class="bnav-btn" onclick="navGo('supervisor','trabajadores',this)"><span class="bnav-icon">👥</span>Equipo</div>
       <div class="bnav-btn" onclick="navGo('supervisor','eval-sv',this)"><span class="bnav-icon">⭐</span>Evaluar</div>
@@ -755,6 +755,7 @@
       <div class="bnav-btn" onclick="navGo('supervisor','asistencias-sv',this)"><span class="bnav-icon">📋</span>Asistencias</div>
       <div class="bnav-btn" onclick="navGo('supervisor','inmuebles-sv',this)"><span class="bnav-icon">🏢</span>Inmuebles</div>
       <div class="bnav-btn" onclick="navGo('supervisor','insumos-sv',this)"><span class="bnav-icon">🧹</span>Insumos</div>
+      <div class="bnav-btn" onclick="navGo('supervisor','personal-inm-sv',this)"><span class="bnav-icon">👷</span>Personal</div>
     </div>
     <!-- Tarjeta de perfil -->
     <div class="card role-profile-card" style="background:linear-gradient(135deg,#042C53,#185FA5);border:none;">
@@ -873,6 +874,7 @@
       </div>
     </div>
     <div id="sv-insumos-sv" class="sec"><div id="sv-insumos-content" style="padding:16px;"></div></div>
+    <div id="sv-personal-inm-sv" class="sec"><div id="sv-personal-inm-content" style="padding:16px;"></div></div>
   </div>
 
   <!-- ADMIN -->
@@ -1408,7 +1410,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=137"></script>
+<script src="js/app.js?v=138"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 

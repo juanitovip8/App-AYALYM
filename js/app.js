@@ -1382,6 +1382,7 @@ function navGo(role,sec,btn){
   if(role==='personal_inm'&&sec==='asistencias')renderPIAsistencias();
   if(role==='personal_inm'&&sec==='perfil')renderPIPerfil();
   if(role==='supervisor'&&sec==='insumos-sv')renderSVInsumos();
+  if(role==='supervisor'&&sec==='personal-inm-sv')renderSVPersonalInm();
   if(role==='cliente_inm'&&sec==='insumos-ci')renderCIInsumos();
   // Cliente Inmuebles
   if(role==='cliente_inm'&&sec==='inicio')renderClienteInmInicio();
@@ -7872,6 +7873,78 @@ function toggleSVCatGroup(gid){
   el.style.display=open?'none':'block';
   if(arrow)arrow.textContent=open?'▼':'▲';
 }
+
+/* ══ Personal de inmuebles — vista supervisor (solo sus contratos) ══ */
+function renderSVPersonalInm(){
+  const el=document.getElementById('sv-personal-inm-content');if(!el)return;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txt=dark?'#e8edf4':'#042C53';
+  const lbl=dark?'#8AACCA':'#5C7A9A';
+  const bdr=dark?'rgba(255,255,255,.08)':'#DCE8F5';
+  const cardBg=dark?'rgba(255,255,255,.03)':'#F8FBFF';
+
+  /* IDs de contratos supervisados por este supervisor */
+  const mySvId=currentSupervisorRef?currentSupervisorRef.id:null;
+  const misServIds=(PROPERTY_SERVICES||[]).filter(ps=>ps.supervisorId===mySvId).map(ps=>ps.id);
+
+  /* Personal que tiene al menos un contrato de este supervisor */
+  const miPersonal=(PERSONAL_INM||[]).filter(pi=>
+    (pi.serviciosAsignados||[]).some(sid=>misServIds.includes(sid))
+  );
+
+  if(!miPersonal.length){
+    el.innerHTML=`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">No hay personal asignado a tus contratos.</p>`;
+    return;
+  }
+
+  const hoyStr=new Date().toISOString().split('T')[0];
+
+  const cardsHtml=miPersonal.map(pi=>{
+    const isOn=pi.activo!==false;
+    /* Solo mostrar los contratos que corresponden a este supervisor */
+    const misContratos=(pi.serviciosAsignados||[])
+      .filter(sid=>misServIds.includes(sid))
+      .map(sid=>{
+        const ps=PROPERTY_SERVICES.find(x=>x.id===sid);
+        return ps?`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:${dark?'rgba(26,86,219,.25)':'#DBEAFE'};color:${dark?'#93C5FD':'#1A56DB'};white-space:nowrap;">${ps.folio}</span>`:'';
+      }).filter(Boolean).join(' ');
+
+    /* Asistencia hoy */
+    const todayA=(pi.asistencias||[]).find(a=>a.fecha===hoyStr);
+    const asistHoy=todayA?.salida
+      ? `✅ Salida ${todayA.salida}`
+      : todayA?.entrada
+        ? `🟡 Entrada ${todayA.entrada}`
+        : `⚪ Sin registro hoy`;
+
+    /* Avatar */
+    const avHtml=pi.photo
+      ?`<img src="${pi.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      :(pi.initials||'?');
+
+    return`<div style="border:.5px solid ${bdr};border-radius:12px;padding:12px 14px;margin-bottom:10px;background:${cardBg};opacity:${isOn?1:0.55};">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="av" style="width:42px;height:42px;font-size:${pi.photo?'0':'13px'};font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${avHtml}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:13px;font-weight:600;color:${txt};">${pi.nombre}</span>
+            <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:${_puestoBg[pi.puesto]||'#3D5A7A'};color:${_puestoCol[pi.puesto]||'#fff'};">${_puestoLabel[pi.puesto]||'Personal'}</span>
+            ${isOn?'':'<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:8px;background:#5C3A3A;color:#FCA5A5;">Inactivo</span>'}
+          </div>
+          <p style="font-size:11px;color:${lbl};margin:2px 0 0;">${pi.tel||pi.email||'—'}</p>
+          <p style="font-size:11px;color:${lbl};margin:1px 0 0;">${asistHoy}</p>
+        </div>
+      </div>
+      ${misContratos?`<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;"><span style="font-size:10px;color:${lbl};margin-right:2px;">Contratos:</span>${misContratos}</div>`:''}
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 4px;">👷 Personal de inmuebles</p>
+    <p style="font-size:12px;color:${lbl};margin:0 0 14px;">${miPersonal.length} persona${miPersonal.length!==1?'s':''} asignada${miPersonal.length!==1?'s':''} a tus contratos</p>
+    ${cardsHtml}`;
+}
+
 function svFiltrarHistorial(){
   const el=document.getElementById('sv-insumos-content');if(!el||!el._allReqs)return;
   const mes=(document.getElementById('sv-f-mes')||{}).value||'';
