@@ -105,6 +105,11 @@
       <div class="recover-step active" id="rec-1">
         <div class="fld" style="margin-bottom:10px"><label>Correo electrónico</label><input type="email" id="rec-email" placeholder="correo@ejemplo.com"></div>
         <button class="btn-royal" style="width:100%" onclick="recoverStep1()">Enviar código</button>
+        <!-- Mensaje bloqueado (roles internos) -->
+        <div id="rec-blocked" style="display:none;background:#FEF3C7;border-radius:10px;padding:14px 16px;margin-top:12px;border:.5px solid #F59E0B;">
+          <p style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:6px;">🔒 Recuperación no disponible</p>
+          <p style="font-size:12px;color:#78350F;line-height:1.6;">Esta opción es solo para clientes de reservas.<br>Para restablecer tu contraseña comunícate con tu <strong>supervisor</strong> o <strong>administrador</strong>.</p>
+        </div>
       </div>
       <div class="recover-step" id="rec-2">
         <p style="font-size:13px;font-weight:500;color:#042C53;margin-bottom:6px">Código enviado a <span id="rec-email-shown"></span></p>
@@ -904,6 +909,8 @@
     <div id="a-resumen" class="sec active">
       <div id="admin-kpi-bar"></div>
       <div class="card" id="top-cards-card"><p class="ctitle">🏆 Destacados del mes</p><div id="top-cards-list"></div></div>
+      <!-- Cambiar contraseña admin -->
+      <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleCpPanel('admin')"><p style="font-size:13px;font-weight:500;color:#042C53;">🔐 Cambiar contraseña</p><span style="font-size:12px;color:#185FA5;">Editar</span></div><div class="cp-panel" id="cp-panel-admin"><div class="fld" style="margin-top:12px;"><label>Contraseña actual</label><input type="password" id="cp-current-admin" placeholder="••••••••"></div><div class="fld"><label>Nueva contraseña</label><input type="password" id="cp-new1-admin" placeholder="Mínimo 8 caracteres"></div><div class="fld"><label>Confirmar</label><input type="password" id="cp-new2-admin" placeholder="Repite la nueva contraseña"></div><div style="display:flex;gap:8px;margin-top:4px;"><button class="btn-royal" style="flex:2;" onclick="changePassword('admin')">Guardar</button><button class="btn-sec" style="flex:1;" onclick="toggleCpPanel('admin')">Cancelar</button></div></div></div>
       <div class="card"><p class="ctitle">📈 Análisis</p>
         <div class="dash-tabs">
           <div class="dash-tab active" onclick="selectDashTab('resumen',this)">📊 Resumen</div>
@@ -1410,7 +1417,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=139"></script>
+<script src="js/app.js?v=140"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 

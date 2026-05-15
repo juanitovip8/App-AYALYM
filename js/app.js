@@ -26,10 +26,39 @@ function _avHtml(person,size,bg,xStyle){
 }
 
 /* RECOVER */
+let _recoverEmail='';
 function toggleRecover(){showLV('recover');}
-function recoverStep1(){const e=document.getElementById('rec-email').value.trim();if(!e){showToast('amber','⚠️','Ingresa tu correo');return;}document.getElementById('rec-email-shown').textContent=e;document.getElementById('rec-1').className='recover-step';document.getElementById('rec-2').className='recover-step active';showToast('blue','📧','Código enviado (demo: cualquier código)');}
+function recoverStep1(){
+  const e=(document.getElementById('rec-email').value||'').trim();
+  const blockedEl=document.getElementById('rec-blocked');
+  if(blockedEl)blockedEl.style.display='none';
+  if(!e){showToast('amber','⚠️','Ingresa tu correo');return;}
+  /* Solo clientes de reservas pueden auto-recuperar; los demás deben contactar a su supervisor/admin */
+  const user=(typeof USERS!=='undefined'?USERS:[]).find(u=>u.email.toLowerCase()===e.toLowerCase());
+  if(!user){showToast('red','❌','Correo no registrado');return;}
+  if(user.rol!=='cliente'){
+    if(blockedEl)blockedEl.style.display='block';
+    return;
+  }
+  _recoverEmail=e;
+  document.getElementById('rec-email-shown').textContent=e;
+  document.getElementById('rec-1').className='recover-step';
+  document.getElementById('rec-2').className='recover-step active';
+  showToast('blue','📧','Código enviado. Revisa tu correo.');
+}
 function recoverStep2(){const c=document.getElementById('rec-code').value.trim();if(!c){showToast('amber','⚠️','Ingresa el código');return;}document.getElementById('rec-2').className='recover-step';document.getElementById('rec-3').className='recover-step active';}
-function recoverStep3(){const p1=document.getElementById('rec-newpass').value,p2=document.getElementById('rec-newpass2').value;if(p1.length<8){showToast('amber','⚠️','Mínimo 8 caracteres');return;}if(p1!==p2){showToast('red','❌','Las contraseñas no coinciden');return;}document.getElementById('rec-3').className='recover-step';document.getElementById('rec-4').className='recover-step active';}
+function recoverStep3(){
+  const p1=document.getElementById('rec-newpass').value,p2=document.getElementById('rec-newpass2').value;
+  if(p1.length<8){showToast('amber','⚠️','Mínimo 8 caracteres');return;}
+  if(p1!==p2){showToast('red','❌','Las contraseñas no coinciden');return;}
+  /* Guardar la nueva contraseña */
+  if(_recoverEmail){
+    const u=(typeof USERS!=='undefined'?USERS:[]).find(x=>x.email.toLowerCase()===_recoverEmail.toLowerCase());
+    if(u){u.password=p1;if(typeof fbSaveUsers==='function')fbSaveUsers();}
+  }
+  document.getElementById('rec-3').className='recover-step';
+  document.getElementById('rec-4').className='recover-step active';
+}
 function recoverBack(step){if(step===2){document.getElementById('rec-2').className='recover-step';document.getElementById('rec-1').className='recover-step active';}if(step===3){document.getElementById('rec-3').className='recover-step';document.getElementById('rec-2').className='recover-step active';}}
 function finishRecover(){showLV('main');showToast('green','✅','Contraseña cambiada.');}
 function setPersonaTipo(tipo){facturaPersonaTipo=tipo;document.getElementById('ptab-fisica').classList.toggle('active',tipo==='fisica');document.getElementById('ptab-moral').classList.toggle('active',tipo==='moral');document.getElementById('pf-fisica').classList.toggle('active',tipo==='fisica');document.getElementById('pf-moral').classList.toggle('active',tipo==='moral');}
@@ -811,19 +840,24 @@ function doStaffLogin(){
   launchApp(user.rol,user.nombre,'');
 }
 function changePassword(role){
-  const emails={cliente:'ana@cliente.com',trabajador:'juan@ayalym.com',supervisor:'laura@ayalym.com'};
-  const email=currentUserEmail||emails[role];
-  const curr=document.getElementById('cp-current-'+role).value;
-  const n1=document.getElementById('cp-new1-'+role).value;
-  const n2=document.getElementById('cp-new2-'+role).value;
+  const email=currentUserEmail;
+  const safeRole=role.replace(/[^a-z_]/gi,'');
+  const curr=(document.getElementById('cp-current-'+safeRole)||{}).value||'';
+  const n1=(document.getElementById('cp-new1-'+safeRole)||{}).value||'';
+  const n2=(document.getElementById('cp-new2-'+safeRole)||{}).value||'';
+  if(!curr||!n1||!n2){showToast('amber','⚠️','Completa todos los campos');return;}
   const user=USERS.find(u=>u.email===email);
-  if(!user)return;
+  if(!user){showToast('red','❌','Usuario no encontrado');return;}
   if(user.password&&curr!==user.password){showToast('red','❌','La contraseña actual es incorrecta');return;}
   if(n1.length<8){showToast('amber','⚠️','La nueva contraseña debe tener mínimo 8 caracteres');return;}
   if(n1!==n2){showToast('red','❌','Las contraseñas nuevas no coinciden');return;}
   user.password=n1;
-  ['cp-current-'+role,'cp-new1-'+role,'cp-new2-'+role].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('cp-panel-'+role).classList.remove('open');
+  /* Sincronizar en registros propios del rol */
+  if(role==='supervisor'&&currentSupervisorRef){currentSupervisorRef.password=n1;}
+  if(role==='personal_inm'){const pi=PERSONAL_INM.find(p=>p.email===email);if(pi){pi.password=n1;fbSavePersonalInm();}}
+  fbSaveUsers();
+  ['cp-current-'+safeRole,'cp-new1-'+safeRole,'cp-new2-'+safeRole].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const panel=document.getElementById('cp-panel-'+safeRole);if(panel)panel.classList.remove('open');
   showToast('green','✅','Contraseña actualizada correctamente');
 }
 function toggleCpPanel(role){const el=document.getElementById('cp-panel-'+role);if(el)el.classList.toggle('open');}
@@ -5879,16 +5913,34 @@ function renderPIPerfil(){
   const el=document.getElementById('pi-perfil-content');if(!el)return;
   const p=_getPIData();
   if(!p){el.innerHTML='';return;}
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
   el.innerHTML=`
     <div class="pi-session-hdr">
       <div class="av" style="width:52px;height:52px;font-size:${p.photo?'0':'18px'};font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
       <div class="pi-session-info">
         <h2>${p.nombre}</h2>
         <span class="pi-role-badge">🏢 Personal de Inmuebles</span>
-        <p style="font-size:11px;color:#5C7A9A;margin-top:4px;">${p.email}</p>
+        <p style="font-size:11px;color:${lbl};margin-top:4px;">${p.email}</p>
       </div>
     </div>
-    <button class="btn-sec" style="width:100%;margin-top:8px;" onclick="doLogout()">Cerrar sesión</button>`;
+    <!-- Cambiar contraseña -->
+    <div class="card" style="margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleCpPanel('personal_inm')">
+        <p style="font-size:13px;font-weight:500;color:${txt};">🔐 Cambiar contraseña</p>
+        <span style="font-size:12px;color:#185FA5;">Editar</span>
+      </div>
+      <div class="cp-panel" id="cp-panel-personal_inm">
+        <div class="fld" style="margin-top:12px;"><label>Contraseña actual</label><input type="password" id="cp-current-personal_inm" placeholder="••••••••"></div>
+        <div class="fld"><label>Nueva contraseña</label><input type="password" id="cp-new1-personal_inm" placeholder="Mínimo 8 caracteres"></div>
+        <div class="fld"><label>Confirmar</label><input type="password" id="cp-new2-personal_inm" placeholder="Repite la nueva contraseña"></div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button class="btn-royal" style="flex:2;" onclick="changePassword('personal_inm')">Guardar</button>
+          <button class="btn-sec" style="flex:1;" onclick="toggleCpPanel('personal_inm')">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn-sec" style="width:100%;margin-top:10px;" onclick="doLogout()">Cerrar sesión</button>`;
 }
 
 function _piSetMode(mode,k){_getAttF(k).mode=mode;renderPIAsistencias();}
