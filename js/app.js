@@ -6517,8 +6517,32 @@ function _buildAndOpenReportePDF(ps,r,logoB64){
   /* Personal asignado al contrato */
   const piAsignados=(PERSONAL_INM||[]).filter(p=>(p.serviciosAsignados||[]).includes(ps.id));
   const piListHtml=piAsignados.length
-    ?piAsignados.map(p=>`<span style="display:inline-block;background:#EEF5FF;border:.5px solid #C5D8EC;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;color:#042C53;margin:2px 3px 2px 0;">${p.nombre}</span>`).join('')
+    ?piAsignados.map(p=>{
+        const avPi=p.photo
+          ?`<img src="${p.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid #D0E3F7;flex-shrink:0;">`
+          :`<div style="width:44px;height:44px;border-radius:50%;background:#085041;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;">${p.initials}</div>`;
+        const puestoColor={encargado:'#E07B00',aux_limpieza:'#1565C0',pulidor:'#5A3DB5'}[p.puesto]||'#3D5A7A';
+        return`<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:#F7FAFF;border:.5px solid #D0E3F7;border-radius:10px;margin:2px 4px 2px 0;min-width:140px;">
+          ${avPi}
+          <div>
+            <p style="font-size:11.5px;font-weight:700;color:#042C53;margin:0;">${p.nombre}</p>
+            <span style="font-size:9px;font-weight:600;padding:1px 7px;border-radius:6px;background:${puestoColor};color:#fff;">${_puestoLabel[p.puesto]||'Personal'}</span>
+          </div>
+        </div>`;
+      }).join('')
     :`<span style="font-size:11px;color:#8A9BB0;">Sin personal asignado</span>`;
+  /* Supervisor */
+  const svObj=(SUPERVISORS||[]).find(sv=>sv.name===r.supervisorNombre);
+  const svAvHtml=svObj&&svObj.photo
+    ?`<img src="${svObj.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid #D0E3F7;">`
+    :`<div style="width:44px;height:44px;border-radius:50%;background:#042C53;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">${(r.supervisorNombre||'SV').split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}</div>`;
+  const svCardHtml=`<div style="display:flex;align-items:center;gap:8px;padding:5px 10px;background:#F7FAFF;border:.5px solid #D0E3F7;border-radius:10px;min-width:140px;">
+    ${svAvHtml}
+    <div>
+      <p style="font-size:11.5px;font-weight:700;color:#042C53;margin:0;">${r.supervisorNombre||'—'}</p>
+      <span style="font-size:9px;font-weight:600;padding:1px 7px;border-radius:6px;background:#042C53;color:#fff;">Supervisor</span>
+    </div>
+  </div>`;
 
   /* Fotos */
   const fotosHtml=r.fotos&&r.fotos.length
@@ -6592,7 +6616,8 @@ body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;color:#1C2
     <div class="ifield"><b>Contrato</b><span>${ps.folio} · ${ps.tipo}</span></div>
     <div class="ifield"><b>Inmueble</b><span>${ps.inmueble.tipo}${ps.inmueble.m2?' · '+ps.inmueble.m2+' m²':''}</span></div>
     <div class="ifield"><b>Dirección</b><span>${ps.inmueble.direccion}</span></div>
-    <div class="ifield-full"><b>Personal asignado</b><div style="margin-top:2px;">${piListHtml}</div></div>
+    <div class="ifield-full"><b>Personal asignado</b><div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">${piListHtml}</div></div>
+    <div class="ifield-full"><b>Supervisor responsable</b><div style="margin-top:6px;">${svCardHtml}</div></div>
   </div>
 </div>
 
@@ -6613,6 +6638,7 @@ ${fotosHtml?`<div class="section">
 
 <div class="sign-grid">
   <div class="sign-box">
+    ${svObj&&svObj.photo?`<div style="display:flex;justify-content:center;margin-bottom:6px;"><img src="${svObj.photo}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:1.5px solid #D0E3F7;"></div>`:''}
     <div class="sign-line"></div>
     <div class="sign-name">${r.supervisorNombre||'Supervisor'}</div>
     <div class="sign-role">Supervisor responsable</div>
@@ -6665,35 +6691,60 @@ const _DIAS_PLAN=[
   {key:'D',  short:'D',  full:'Domingo'},
 ];
 let _planPsId=null;
+let _planPersonalId=null;
 let _planFilaCount=0;
 
-/* Botón/bloque que aparece dentro del detalle de cada contrato */
+/* Botón/bloque que aparece dentro del detalle de cada contrato — un plan por persona */
 function _buildPlanTrabajoBtn(ps,canEdit){
-  const tienePlan=ps.planTrabajo&&(ps.planTrabajo.filas||[]).length>0;
-  const cntBadge=tienePlan
-    ?`<span style="font-size:10px;font-weight:600;color:#34d399;background:rgba(5,150,105,.2);padding:1px 9px;border-radius:10px;margin-left:6px;">${ps.planTrabajo.filas.length} actividades</span>`
-    :'';
-  const verBtn=tienePlan?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);" onclick="abrirPlanTrabajo(${ps.id},false)">👁 Ver</button>`:'';
-  const pdfBtn=tienePlan?`<button class="btn-sm" onclick="exportarPlanTrabajoPDF(${ps.id})">⬇ PDF</button>`:'';
-  const editBtn=canEdit
-    ?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);" onclick="abrirPlanTrabajo(${ps.id},true)">${tienePlan?'✏️ Editar plan':'➕ Crear plan'}</button>`
-    :(tienePlan?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);" onclick="abrirPlanTrabajo(${ps.id},false)">👁 Ver plan de trabajo</button>`:'');
-  if(!editBtn&&!tienePlan)return'';
-  return`<div style="margin-top:10px;padding:10px 14px;border:.5px solid rgba(255,255,255,.12);border-radius:10px;background:#132030;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-    <p style="font-size:12px;font-weight:700;color:#D8EAF7;margin:0;">📋 Plan de Trabajo${cntBadge}</p>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;">${verBtn}${pdfBtn}${editBtn}</div>
+  const asignados=PERSONAL_INM.filter(p=>(p.serviciosAsignados||[]).includes(ps.id));
+  if(!asignados.length&&!canEdit)return'';
+  if(!asignados.length)return`<div style="margin-top:10px;padding:10px 14px;border:.5px solid rgba(255,255,255,.12);border-radius:10px;background:#132030;">
+    <p style="font-size:12px;font-weight:700;color:#D8EAF7;margin:0 0 6px;">📋 Plan de Trabajo</p>
+    <p style="font-size:11px;color:#6EAAD8;">Asigna personal a este contrato para poder crear planes de trabajo.</p>
+  </div>`;
+  const rows=asignados.map(p=>{
+    const plan=(ps.planesTrabajo||{})[p.id];
+    const tienePlan=plan&&(plan.filas||[]).length>0;
+    const cntBadge=tienePlan
+      ?`<span style="font-size:10px;font-weight:600;color:#34d399;background:rgba(5,150,105,.2);padding:1px 8px;border-radius:10px;">${plan.filas.length} act.</span>`
+      :`<span style="font-size:10px;color:#6EAAD8;font-style:italic;">Sin plan</span>`;
+    const puestoBadge=`<span style="font-size:9px;font-weight:600;padding:1px 7px;border-radius:7px;background:${_puestoBg[p.puesto]||'#3D5A7A'};color:${_puestoCol[p.puesto]||'#fff'};">${_puestoLabel[p.puesto]||'Personal'}</span>`;
+    const avHtml=p.photo
+      ?`<img src="${p.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+      :`<div style="width:28px;height:28px;border-radius:50%;background:#085041;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;flex-shrink:0;">${p.initials}</div>`;
+    const editBtn=canEdit
+      ?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);font-size:11px;" onclick="abrirPlanTrabajo(${ps.id},true,${p.id})">${tienePlan?'✏️ Editar':'➕ Crear'}</button>`:'';
+    const verBtn=tienePlan?`<button class="btn-sm" style="background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);font-size:11px;" onclick="abrirPlanTrabajo(${ps.id},false,${p.id})">👁 Ver</button>`:'';
+    const pdfBtn=tienePlan?`<button class="btn-sm" style="font-size:11px;" onclick="exportarPlanTrabajoPDF(${ps.id},${p.id})">⬇ PDF</button>`:'';
+    return`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid rgba(255,255,255,.07);">
+      ${avHtml}
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:12px;font-weight:600;color:#D8EAF7;">${p.nombre}</span>
+          ${puestoBadge}
+          ${cntBadge}
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;flex-shrink:0;">${verBtn}${pdfBtn}${editBtn}</div>
+    </div>`;
+  }).join('');
+  return`<div style="margin-top:10px;padding:10px 14px;border:.5px solid rgba(255,255,255,.12);border-radius:10px;background:#132030;">
+    <p style="font-size:12px;font-weight:700;color:#D8EAF7;margin:0 0 6px;">📋 Plan de Trabajo por persona</p>
+    ${rows}
   </div>`;
 }
 
-function abrirPlanTrabajo(psId,canEdit){
+function abrirPlanTrabajo(psId,canEdit,personalId){
   _planPsId=psId;
+  _planPersonalId=personalId||null;
   const ps=PROPERTY_SERVICES.find(p=>p.id===psId);if(!ps)return;
+  const pi=personalId?PERSONAL_INM.find(p=>p.id===personalId):null;
   const ov=document.getElementById('plan-trabajo-ov');if(!ov)return;
   const sub=document.getElementById('plan-trabajo-subtitle');
-  if(sub)sub.textContent=ps.folio+' · '+ps.cliente.nombre;
+  if(sub)sub.textContent=ps.folio+(pi?' · '+pi.nombre:'');
   ov.style.display='block';
   document.body.style.overflow='hidden';
-  if(canEdit)_renderPlanEditor(ps);else _renderPlanVer(ps);
+  if(canEdit)_renderPlanEditor(ps,personalId);else _renderPlanVer(ps,personalId);
 }
 function cerrarPlanTrabajo(){
   const ov=document.getElementById('plan-trabajo-ov');
@@ -6701,12 +6752,29 @@ function cerrarPlanTrabajo(){
   document.body.style.overflow='';
 }
 
+/* ── Cabecera de persona dentro del overlay ── */
+function _piHeaderHtml(pi){
+  if(!pi)return'';
+  const avHtml=pi.photo
+    ?`<img src="${pi.photo}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`
+    :`<div style="width:38px;height:38px;border-radius:50%;background:#085041;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;">${pi.initials}</div>`;
+  return`<div style="display:flex;align-items:center;gap:10px;padding:10px 20px;background:#0A1628;border-bottom:.5px solid rgba(255,255,255,.1);">
+    ${avHtml}
+    <div>
+      <p style="font-size:13px;font-weight:700;color:#D8EAF7;margin:0;">${pi.nombre}</p>
+      <span style="font-size:10px;font-weight:600;padding:1px 8px;border-radius:7px;background:${_puestoBg[pi.puesto]||'#3D5A7A'};color:${_puestoCol[pi.puesto]||'#fff'};">${_puestoLabel[pi.puesto]||'Personal'}</span>
+    </div>
+  </div>`;
+}
+
 /* ── Vista (read-only) ── */
-function _renderPlanVer(ps){
+function _renderPlanVer(ps,personalId){
   const body=document.getElementById('plan-trabajo-body');if(!body)return;
-  const filas=(ps.planTrabajo&&ps.planTrabajo.filas)||[];
+  const pi=personalId?PERSONAL_INM.find(p=>p.id===personalId):null;
+  const plan=(ps.planesTrabajo||{})[personalId]||ps.planTrabajo||null;
+  const filas=(plan&&plan.filas)||[];
   if(!filas.length){
-    body.innerHTML=`<div style="padding:40px 20px;text-align:center;color:#6EAAD8;font-size:13px;background:#0D1B2C;">Sin plan de trabajo registrado.</div>`;
+    body.innerHTML=_piHeaderHtml(pi)+`<div style="padding:40px 20px;text-align:center;color:#6EAAD8;font-size:13px;background:#0D1B2C;">Sin plan de trabajo registrado.</div>`;
     return;
   }
   const rowsHtml=filas.map((f,i)=>`<tr style="background:${i%2===0?'#132030':'#0D1B2C'};">
@@ -6716,9 +6784,9 @@ function _renderPlanVer(ps){
     <td style="padding:9px 12px;font-size:12px;color:#B0CCDF;line-height:1.55;border-bottom:.5px solid rgba(255,255,255,.08);">${f.actividades||'—'}</td>
     <td style="padding:9px 12px;font-size:11px;color:#6EAAD8;font-weight:600;border-bottom:.5px solid rgba(255,255,255,.08);">${(f.dias||[]).map(d=>_DIAS_PLAN.find(x=>x.key===d)?.full||d).join(', ')}</td>
   </tr>`).join('');
-  body.innerHTML=`<div style="padding:16px 20px;background:#0D1B2C!important;">
+  body.innerHTML=_piHeaderHtml(pi)+`<div style="padding:16px 20px;background:#0D1B2C!important;">
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;">
-      <button class="btn-sm" onclick="exportarPlanTrabajoPDF(${ps.id})">⬇ PDF</button>
+      <button class="btn-sm" onclick="exportarPlanTrabajoPDF(${ps.id},${personalId||'null'})">⬇ PDF</button>
     </div>
     <div style="overflow-x:auto;border:.5px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;">
       <table style="width:100%;border-collapse:collapse;">
@@ -6732,25 +6800,27 @@ function _renderPlanVer(ps){
         <tbody>${rowsHtml}</tbody>
       </table>
     </div>
-    ${ps.planTrabajo.updatedAt?`<p style="font-size:10px;color:#6EAAD8;margin-top:10px;text-align:right;">Actualizado: ${ps.planTrabajo.updatedAt}${ps.planTrabajo.updatedBy?' · '+ps.planTrabajo.updatedBy:''}</p>`:''}
+    ${plan.updatedAt?`<p style="font-size:10px;color:#6EAAD8;margin-top:10px;text-align:right;">Actualizado: ${plan.updatedAt}${plan.updatedBy?' · '+plan.updatedBy:''}</p>`:''}
   </div>`;
 }
 
 /* ── Editor ── */
-function _renderPlanEditor(ps){
+function _renderPlanEditor(ps,personalId){
   const body=document.getElementById('plan-trabajo-body');if(!body)return;
+  const pi=personalId?PERSONAL_INM.find(p=>p.id===personalId):null;
   _planFilaCount=0;
-  const filas=(ps.planTrabajo&&ps.planTrabajo.filas&&ps.planTrabajo.filas.length)
-    ?ps.planTrabajo.filas
+  const plan=(ps.planesTrabajo||{})[personalId]||ps.planTrabajo||null;
+  const filas=(plan&&plan.filas&&plan.filas.length)
+    ?plan.filas
     :[{id:1,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]},
       {id:2,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]},
       {id:3,horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]}];
-  body.innerHTML=`<div style="padding:16px 20px;background:#0D1B2C!important;">
+  body.innerHTML=_piHeaderHtml(pi)+`<div style="padding:16px 20px;background:#0D1B2C!important;">
     <div id="plan-filas-container">${filas.map(f=>_planFilaHtml(f)).join('')}</div>
     <button onclick="agregarFilaPlan()" style="margin-top:10px;padding:7px 18px;border-radius:8px;background:rgba(24,95,165,.25);color:#6EAAD8;border:.5px solid rgba(24,95,165,.5);font-size:12px;font-weight:600;cursor:pointer;">+ Agregar fila</button>
     <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:.5px solid rgba(255,255,255,.1);">
       <button onclick="cerrarPlanTrabajo()" style="padding:9px 20px;border-radius:9px;background:transparent;color:#8AAEC8;border:.5px solid rgba(255,255,255,.15);font-size:13px;cursor:pointer;">Cancelar</button>
-      <button onclick="guardarPlanTrabajo(${ps.id})" style="padding:9px 26px;border-radius:9px;background:#185FA5;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;">💾 Guardar plan</button>
+      <button onclick="guardarPlanTrabajo(${ps.id},${personalId||'null'})" style="padding:9px 26px;border-radius:9px;background:#185FA5;color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer;">💾 Guardar plan</button>
     </div>
   </div>`;
 }
@@ -6787,7 +6857,7 @@ function agregarFilaPlan(){
   div.innerHTML=_planFilaHtml({horaInicio:'',horaFin:'',area:'',actividades:'',dias:[]});
   c.appendChild(div.firstElementChild);
 }
-function guardarPlanTrabajo(psId){
+function guardarPlanTrabajo(psId,personalId){
   const ps=PROPERTY_SERVICES.find(p=>p.id===psId);if(!ps)return;
   const filas=[];let id=1;
   document.querySelectorAll('.pt-fila').forEach(el=>{
@@ -6801,27 +6871,43 @@ function guardarPlanTrabajo(psId){
     if(area||actividades||horaInicio)filas.push({id:id++,horaInicio,horaFin,area,actividades,dias});
   });
   if(!filas.length){showToast('amber','⚠️','Agrega al menos una actividad antes de guardar.');return;}
-  ps.planTrabajo={filas,updatedBy:currentUserEmail,updatedAt:_localDateStr()};
+  if(!ps.planesTrabajo)ps.planesTrabajo={};
+  const key=personalId||'general';
+  ps.planesTrabajo[key]={filas,updatedBy:currentUserEmail,updatedAt:_localDateStr()};
   fbSavePropertyServices();
   cerrarPlanTrabajo();
   renderPropServices(_propFilter);
   showToast('green','📋','Plan de trabajo guardado.');
 }
 
-/* ── PDF ── */
-function exportarPlanTrabajoPDF(psId){
+/* ── PDF Plan de Trabajo ── */
+function exportarPlanTrabajoPDF(psId,personalId){
   const ps=PROPERTY_SERVICES.find(p=>p.id===psId);if(!ps)return;
-  if(!(ps.planTrabajo&&ps.planTrabajo.filas&&ps.planTrabajo.filas.length)){showToast('amber','⚠️','El plan de trabajo está vacío.');return;}
+  const plan=(ps.planesTrabajo||{})[personalId]||ps.planTrabajo||null;
+  if(!(plan&&plan.filas&&plan.filas.length)){showToast('amber','⚠️','El plan de trabajo está vacío.');return;}
+  const pi=personalId?PERSONAL_INM.find(p=>p.id===personalId):null;
   const logo=new Image();
-  logo.onload=function(){const c=document.createElement('canvas');c.width=logo.naturalWidth;c.height=logo.naturalHeight;c.getContext('2d').drawImage(logo,0,0);_abrirPlanPDF(ps,c.toDataURL());};
-  logo.onerror=function(){_abrirPlanPDF(ps,null);};
+  logo.onload=function(){const c=document.createElement('canvas');c.width=logo.naturalWidth;c.height=logo.naturalHeight;c.getContext('2d').drawImage(logo,0,0);_abrirPlanPDF(ps,plan,pi,c.toDataURL());};
+  logo.onerror=function(){_abrirPlanPDF(ps,plan,pi,null);};
   logo.src='/img/logo.png';
 }
-function _abrirPlanPDF(ps,logoB64){
-  const filas=ps.planTrabajo.filas;
+function _abrirPlanPDF(ps,plan,pi,logoB64){
+  const filas=plan.filas;
   const gen=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
   const logoHtml=logoB64?`<img src="${logoB64}" style="height:54px;object-fit:contain;">`:`<div style="font-size:22px;font-weight:900;color:#042C53;">AYA<span style="color:#1A56DB;">LYM</span></div>`;
-  const piStr=(PERSONAL_INM||[]).filter(p=>(p.serviciosAsignados||[]).includes(ps.id)).map(p=>p.nombre).join(', ')||'—';
+  /* Foto del trabajador */
+  const piAvHtml=pi
+    ?(pi.photo
+      ?`<img src="${pi.photo}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #D0E3F7;">`
+      :`<div style="width:60px;height:60px;border-radius:50%;background:#085041;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff;">${pi.initials}</div>`)
+    :'';
+  const piInfoHtml=pi?`<div style="display:flex;align-items:center;gap:14px;padding:12px 28px;background:#F0F6FF;border-bottom:1.5px solid #D0E3F7;">
+    ${piAvHtml}
+    <div>
+      <p style="font-size:14px;font-weight:700;color:#042C53;margin:0 0 3px;">${pi.nombre}</p>
+      <span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_puestoBg[pi.puesto]||'#3D5A7A'};color:${_puestoCol[pi.puesto]||'#fff'};">${_puestoLabel[pi.puesto]||'Personal'}</span>
+    </div>
+  </div>`:'';
   const rows=filas.map((f,i)=>`<tr style="background:${i%2===0?'#fff':'#F7FAFF'};">
     <td style="padding:8px 11px;font-size:11px;border-bottom:.5px solid #EBF1FA;white-space:nowrap;font-weight:700;color:#042C53;">${f.horaInicio||'—'}</td>
     <td style="padding:8px 11px;font-size:11px;border-bottom:.5px solid #EBF1FA;white-space:nowrap;color:#042C53;">${f.horaFin||'—'}</td>
@@ -6849,17 +6935,17 @@ thead tr{background:#042C53;}th{padding:9px 11px;font-size:9.5px;font-weight:700
   <div class="hbrand">${logoHtml}<div class="hbt"><h1>AYALYM</h1><p>Servicios de limpieza profesional</p></div></div>
   <div class="hr"><h2>Plan de Trabajo</h2><div class="badge">${ps.folio}</div><div class="hdate">Generado el ${gen}</div></div>
 </div>
+${piInfoHtml}
 <div class="info">
   <div class="ib"><span class="ibl">Cliente</span><span class="ibv">${ps.cliente.nombre}</span></div>
   <div class="ib"><span class="ibl">Inmueble</span><span class="ibv">${ps.inmueble.tipo} · ${ps.inmueble.direccion}</span></div>
-  <div class="ib"><span class="ibl">Personal asignado</span><span class="ibv">${piStr}</span></div>
 </div>
 <div class="body">
 <table><thead><tr>
   <th style="width:80px;">HORA INICIO</th><th style="width:80px;">HORA FIN</th>
   <th style="width:140px;">ÁREA</th><th>ACTIVIDADES A REALIZAR</th><th style="width:170px;">DÍAS</th>
 </tr></thead><tbody>${rows}</tbody></table>
-${ps.planTrabajo.updatedAt?`<p style="font-size:9px;color:#8A9BB0;margin-top:10px;text-align:right;">Última actualización: ${ps.planTrabajo.updatedAt}</p>`:''}
+${plan.updatedAt?`<p style="font-size:9px;color:#8A9BB0;margin-top:10px;text-align:right;">Última actualización: ${plan.updatedAt}</p>`:''}
 </div>
 <div class="ftr"><span>AYALYM · Servicios de limpieza profesional</span><span>Plan de Trabajo <strong>${ps.folio}</strong> · ${ps.cliente.nombre}</span></div>
 <script>window.onload=function(){window.print();}<\/script>
