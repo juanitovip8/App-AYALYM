@@ -10927,7 +10927,7 @@ function openAgendaModal(id){
   const estados=['pendiente','confirmado','en_curso','completado','cancelado'];
   const selA=item?.asignadoA?`${item.asignadoA.rol}:${item.asignadoA.id}`:'';
   const modal=document.getElementById('modal-agenda');if(!modal)return;
-  modal.innerHTML=`<div class="modal-card" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+  modal.innerHTML=`<div class="confirm-card" style="max-width:480px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <p class="ctitle" style="margin:0;">${item?'✏️ Editar servicio':'➕ Nuevo servicio en agenda'}</p>
       <button class="btn-sec" style="padding:4px 10px;" onclick="document.getElementById('modal-agenda').style.display='none'">✕</button>
@@ -11084,7 +11084,7 @@ function openRedirectModal(agendaId){
   const myIds=currentSupervisorRef.assignedWorkers||[];
   const myWorkers=WORKERS.filter(w=>myIds.includes(w.id)&&w.id!==item.asignadoA?.id);
   const modal=document.getElementById('modal-agenda');if(!modal)return;
-  modal.innerHTML=`<div class="modal-card" style="max-width:380px;">
+  modal.innerHTML=`<div class="confirm-card" style="max-width:380px;">
     <p class="ctitle">↪️ Redirigir servicio</p>
     <p style="font-size:12px;color:#5C7A9A;margin-bottom:14px;">Reasignar "<strong>${_esc(item.titulo)}</strong>" (actualmente: ${_esc(item.asignadoA?.nombre||'—')}) a otro trabajador de tu equipo.</p>
     <div class="fld"><label>Reasignar a</label><select id="redir-wid">
