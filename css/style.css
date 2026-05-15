@@ -78,7 +78,8 @@ input,select,textarea,a{-webkit-tap-highlight-color:transparent;}
 .brand-logo-img{width:64px;height:64px;object-fit:contain;display:block;flex-shrink:0;}
 .brand-logo-text{font-family:'Inter',sans-serif;font-size:28px;font-weight:800;color:#042C53;letter-spacing:.5px;line-height:1;}
 .brand-logo-text span{color:#1A56DB;}
-.brand-tag{font-size:12px;color:var(--blue-mid);margin-top:4px;letter-spacing:.01em;}
+.brand-tag{font-size:12px;color:var(--blue-mid);margin-top:6px;letter-spacing:.01em;line-height:1.6;text-align:center;}
+.brand-tag span{display:block;}
 .client-panel{background:#fff;border:.5px solid var(--blue-border);border-radius:12px;padding:1.25rem 2rem 1.5rem;margin-bottom:0;}
 .staff-access-link{text-align:center;font-size:11px;color:#185FA5;cursor:pointer;padding:8px 14px;border-radius:8px;background:rgba(26,86,219,.05);border:1px dashed #B5D4F4;transition:all .2s;}
 .staff-access-link:hover{background:rgba(26,86,219,.1);color:#042C53;}

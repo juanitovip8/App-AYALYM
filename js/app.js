@@ -6592,7 +6592,7 @@ body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;color:#1C2
 <div class="header">
   <div class="hbrand">
     ${logoHtml}
-    <div class="hbrand-txt"><h1>AYALYM</h1><p>Servicios de limpieza profesional</p></div>
+    <div class="hbrand-txt"><h1>AYALYM</h1><p style="line-height:1.3;">Servicios de limpieza profesional.<br><span style="color:#7ec8f5;font-size:8px;font-weight:600;">¡Espacios limpios, Entornos felices!</span></p></div>
   </div>
   <div class="hright">
     <h2>Reporte de Visita</h2>
@@ -6653,7 +6653,7 @@ ${fotosHtml?`<div class="section">
 </div>
 
 <div class="footer">
-  <span>AYALYM · Servicios de limpieza profesional</span>
+  <span>AYALYM · Servicios de limpieza profesional · ¡Espacios limpios, Entornos felices!</span>
   <span>Folio <strong>${ps.folio}</strong> &nbsp;·&nbsp; Visita del ${r.fecha}</span>
 </div>
 
@@ -6918,7 +6918,7 @@ function _abrirPlanPDF(ps,plan,pi,logoB64){
   const html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Plan de Trabajo — ${ps.folio}</title>
 <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1C2B3A;background:#fff;}
 .hdr{background:#042C53;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;}
-.hbrand{display:flex;align-items:center;gap:10px;}.hbt h1{font-size:17px;font-weight:800;color:#fff;line-height:1;}.hbt p{font-size:9px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.hbrand{display:flex;align-items:center;gap:10px;}.hbt h1{font-size:17px;font-weight:800;color:#fff;line-height:1;}.hbt p{font-size:9px;color:rgba(255,255,255,.55);letter-spacing:.3px;margin-top:2px;line-height:1.4;}
 .hr{text-align:right;}.hr h2{font-size:14px;font-weight:700;color:#fff;margin-bottom:5px;}
 .badge{display:inline-block;background:rgba(255,255,255,.18);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:20px;}
 .hdate{font-size:9px;color:rgba(255,255,255,.45);margin-top:4px;}
@@ -6932,7 +6932,7 @@ thead tr{background:#042C53;}th{padding:9px 11px;font-size:9.5px;font-weight:700
 @media print{body,div,table,thead{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
 </style></head><body>
 <div class="hdr">
-  <div class="hbrand">${logoHtml}<div class="hbt"><h1>AYALYM</h1><p>Servicios de limpieza profesional</p></div></div>
+  <div class="hbrand">${logoHtml}<div class="hbt"><h1>AYALYM</h1><p style="line-height:1.3;">Servicios de limpieza profesional.<br><span style="color:#7ec8f5;font-size:8px;font-weight:600;">¡Espacios limpios, Entornos felices!</span></p></div></div>
   <div class="hr"><h2>Plan de Trabajo</h2><div class="badge">${ps.folio}</div><div class="hdate">Generado el ${gen}</div></div>
 </div>
 ${piInfoHtml}
@@ -6947,7 +6947,7 @@ ${piInfoHtml}
 </tr></thead><tbody>${rows}</tbody></table>
 ${plan.updatedAt?`<p style="font-size:9px;color:#8A9BB0;margin-top:10px;text-align:right;">Última actualización: ${plan.updatedAt}</p>`:''}
 </div>
-<div class="ftr"><span>AYALYM · Servicios de limpieza profesional</span><span>Plan de Trabajo <strong>${ps.folio}</strong> · ${ps.cliente.nombre}</span></div>
+<div class="ftr"><span>AYALYM · Servicios de limpieza profesional · ¡Espacios limpios, Entornos felices!</span><span>Plan de Trabajo <strong>${ps.folio}</strong> · ${ps.cliente.nombre}</span></div>
 <script>window.onload=function(){window.print();}<\/script>
 </body></html>`;
   const w=window.open('','_blank');
@@ -8508,7 +8508,7 @@ function _exportInsumosPDF(){
   @media print{body,.hdr,.totals,.ftr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
   </style></head><body>
   <div class="hdr">
-    <div><h1>AYALYM</h1><p>Limpieza profesional</p></div>
+    <div><h1>AYALYM</h1><p style="line-height:1.3;">Servicios de limpieza profesional.<br><span style="color:#7ec8f5;font-size:8px;">¡Espacios limpios, Entornos felices!</span></p></div>
     <div class="hdr-r"><h2>Resumen de Compras de Insumos</h2><p>${mesNom} ${hoy.getFullYear()} · Generado: ${generado}</p></div>
   </div>
   <div class="section">
@@ -9196,7 +9196,7 @@ body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;color:#1C2
 @media print{body,.page-header,.info-bar,.page-footer{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}
 </style></head><body>
 <div class="page-header">
-  <div class="ph-brand">${logoHtml}<div class="ph-brand-text"><h1>AYALYM</h1><p>Servicios de limpieza profesional</p></div></div>
+  <div class="ph-brand">${logoHtml}<div class="ph-brand-text"><h1>AYALYM</h1><p style="line-height:1.3;">Servicios de limpieza profesional.<br><span style="color:#7ec8f5;font-size:8px;font-weight:600;">¡Espacios limpios, Entornos felices!</span></p></div></div>
   <div class="ph-right"><h2>Reportes de Visita</h2><p>Periodo: ${periodoLabel}</p></div>
 </div>
 <div class="info-bar">
@@ -9210,7 +9210,7 @@ body{font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:12px;color:#1C2
   ${reportsHtml}
 </div>
 <div class="page-footer">
-  <span>AYALYM · Servicios de limpieza profesional</span>
+  <span>AYALYM · Servicios de limpieza profesional · ¡Espacios limpios, Entornos felices!</span>
   <span>Folio: <strong>${ps.folio}</strong> &nbsp;·&nbsp; ${periodoLabel} &nbsp;·&nbsp; Generado: ${generadoTxt}</span>
 </div>
 <script>window.onload=function(){window.print();}<\/script>
@@ -9356,7 +9356,7 @@ function _renderAsisPDF(asis,workerName,label,ps,logoB64){
     :`<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;">AYA<span style="color:#5B9FE8;">LYM</span></div>`;
   const w=window.open('','_blank','width=860,height=720');if(!w)return;
   w.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Asistencias — ${workerName}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1C2B3A;}.hdr{background:#042C53;padding:18px 36px;display:flex;justify-content:space-between;align-items:center;color:#fff;}.hdr-brand{display:flex;align-items:center;gap:13px;}.hdr-brand h1{font-size:20px;font-weight:800;letter-spacing:.5px;line-height:1;}.hdr-sub{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}.hdr-r{text-align:right;}.hdr-r h2{font-size:14px;font-weight:700;}.hdr-r p{font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;}.meta{background:#F0F4FA;border-bottom:1px solid #D8E5F3;padding:10px 36px;}.meta table{width:100%;border-collapse:collapse;font-size:12px;}.meta td{padding:4px 6px;}.meta td:first-child{font-weight:600;color:#5C7A9A;width:130px;}.stats{display:flex;border-bottom:1px solid #D8E5F3;}.stat{flex:1;padding:12px 0;text-align:center;border-right:1px solid #D8E5F3;}.stat:last-child{border-right:none;}.sv{font-size:20px;font-weight:700;color:#042C53;}.sl{font-size:10px;color:#8A9BB0;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}.body{padding:16px 36px;}h3{font-size:12px;font-weight:700;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}table.tbl{width:100%;border-collapse:collapse;font-size:12px;}table.tbl thead th{background:#F0F4FA;color:#5C7A9A;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:8px;border-bottom:1.5px solid #D8E5F3;text-align:left;}table.tbl tbody tr:nth-child(even){background:#F8FAFB;}table.tbl tbody td{padding:7px 8px;border-bottom:.5px solid #E8EEF7;}.ftr{padding:10px 36px;background:#F0F4FA;border-top:1px solid #D8E5F3;font-size:10px;color:#8A9BB0;display:flex;justify-content:space-between;margin-top:16px;}@media print{body,.hdr,.meta,.stats,.ftr{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>
-<div class="hdr"><div class="hdr-brand">${logoHtml}<div><h1>AYALYM</h1><p class="hdr-sub">Limpieza profesional</p></div></div><div class="hdr-r"><h2>Reporte de Asistencias</h2><p>Generado: ${generado}</p></div></div>
+<div class="hdr"><div class="hdr-brand">${logoHtml}<div><h1>AYALYM</h1><p class="hdr-sub" style="line-height:1.3;">Servicios de limpieza profesional.<br><span style="color:#7ec8f5;font-size:8px;">¡Espacios limpios, Entornos felices!</span></p></div></div><div class="hdr-r"><h2>Reporte de Asistencias</h2><p>Generado: ${generado}</p></div></div>
 <div class="meta"><table><tbody><tr><td>Trabajador</td><td>${workerName}</td></tr><tr><td>Período</td><td>${label}</td></tr>${psRow}</tbody></table></div>
 <div class="stats"><div class="stat"><div class="sv">${asis.length}</div><div class="sl">Registros</div></div><div class="stat"><div class="sv">${cmpl.length}</div><div class="sl">Completos</div></div><div class="stat"><div class="sv">${asis.length-cmpl.length}</div><div class="sl">Sin salida</div></div><div class="stat"><div class="sv">${dStrMin(avgMin)}</div><div class="sl">Promedio turno</div></div></div>
 <div class="body"><h3>Detalle de registros</h3><table class="tbl"><thead><tr><th>Fecha</th><th>Día</th><th>Entrada</th><th>Salida</th><th>Duración</th></tr></thead><tbody>${rows||'<tr><td colspan="5" style="text-align:center;color:#8A9BB0;padding:16px;">Sin registros en el período.</td></tr>'}</tbody></table></div>
