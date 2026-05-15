@@ -8069,27 +8069,33 @@ function _renderAdminCatalogo(dark,txt,lbl,bdr){
   const catalogHtml=cats.map(cat=>{
     const items=INSUMOS_CATALOGO.filter(x=>x.categoria===cat);
     const activos=items.filter(x=>x.activo).length;
+    const gid='adm-cat-grp-'+cat;
     return`<div style="border:.5px solid ${bdr};border-radius:10px;overflow:hidden;margin-bottom:10px;">
-      <div style="padding:8px 14px;background:${dark?'rgba(255,255,255,.05)':'#EEF5FF'};display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-size:12px;font-weight:700;color:#185FA5;">${_CATS_LABEL[cat]||cat}</span>
-        <span style="font-size:11px;color:${lbl};">${activos}/${items.length} activos</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 58px 82px 96px;background:${dark?'rgba(255,255,255,.03)':'#F8FBFF'};">
-        <div style="padding:5px 14px;font-size:10px;font-weight:700;color:${lbl};">PRODUCTO</div>
-        <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:center;">UNIDAD</div>
-        <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:right;">PRECIO</div>
-        <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:right;">ACCIONES</div>
-      </div>
-      ${items.map(item=>`<div id="adm-cat-row-${item.id}" style="display:grid;grid-template-columns:1fr 58px 82px 96px;border-top:.5px solid ${bdr};align-items:center;opacity:${item.activo?1:0.5};">
-        <span style="padding:8px 14px;font-size:11px;color:${txt};">${item.nombre}</span>
-        <span style="padding:8px;font-size:11px;color:${lbl};text-align:center;">${item.unidad}</span>
-        <span style="padding:8px;font-size:11px;font-weight:700;color:${txt};text-align:right;">$${item.precio.toFixed(2)}</span>
-        <div style="padding:5px 8px;display:flex;gap:3px;justify-content:flex-end;">
-          <button onclick="admToggleCatItem(${item.id})" title="${item.activo?'Desactivar':'Activar'}" style="padding:3px 6px;border-radius:6px;background:${item.activo?'#E8F5EC':'#F5F5F5'};border:.5px solid ${item.activo?'#1A7A3B':'#ccc'};font-size:12px;cursor:pointer;">${item.activo?'✅':'⭕'}</button>
-          <button onclick="admEditCatItem(${item.id})" title="Editar" style="padding:3px 6px;border-radius:6px;background:#EEF5FF;border:.5px solid #C5D8EC;font-size:12px;cursor:pointer;">✏️</button>
-          <button onclick="admDeleteCatItem(${item.id})" title="Eliminar" style="padding:3px 6px;border-radius:6px;background:#FFEDEC;border:.5px solid #C0392B;font-size:12px;cursor:pointer;">🗑️</button>
+      <div onclick="toggleAdmCatGroup('${gid}')" style="padding:10px 14px;background:${dark?'rgba(255,255,255,.05)':'#EEF5FF'};display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:13px;font-weight:700;color:#185FA5;">${_CATS_LABEL[cat]||cat}</span>
+          <span style="font-size:11px;color:${lbl};background:${dark?'rgba(255,255,255,.08)':'#D9ECFF'};padding:2px 9px;border-radius:10px;">${activos}/${items.length} activos</span>
         </div>
-      </div>`).join('')}
+        <span id="${gid}-arrow" style="font-size:11px;color:${lbl};">▼</span>
+      </div>
+      <div id="${gid}" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 58px 82px 96px;background:${dark?'rgba(255,255,255,.03)':'#F8FBFF'};">
+          <div style="padding:5px 14px;font-size:10px;font-weight:700;color:${lbl};">PRODUCTO</div>
+          <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:center;">UNIDAD</div>
+          <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:right;">PRECIO</div>
+          <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:right;">ACCIONES</div>
+        </div>
+        ${items.map(item=>`<div id="adm-cat-row-${item.id}" style="display:grid;grid-template-columns:1fr 58px 82px 96px;border-top:.5px solid ${bdr};align-items:center;opacity:${item.activo?1:0.5};">
+          <span style="padding:8px 14px;font-size:11px;color:${txt};">${item.nombre}</span>
+          <span style="padding:8px;font-size:11px;color:${lbl};text-align:center;">${item.unidad}</span>
+          <span style="padding:8px;font-size:11px;font-weight:700;color:${txt};text-align:right;">$${item.precio.toFixed(2)}</span>
+          <div style="padding:5px 8px;display:flex;gap:3px;justify-content:flex-end;">
+            <button onclick="admToggleCatItem(${item.id})" title="${item.activo?'Desactivar':'Activar'}" style="padding:3px 6px;border-radius:6px;background:${item.activo?'#E8F5EC':'#F5F5F5'};border:.5px solid ${item.activo?'#1A7A3B':'#ccc'};font-size:12px;cursor:pointer;">${item.activo?'✅':'⭕'}</button>
+            <button onclick="admEditCatItem(${item.id})" title="Editar" style="padding:3px 6px;border-radius:6px;background:#EEF5FF;border:.5px solid #C5D8EC;font-size:12px;cursor:pointer;">✏️</button>
+            <button onclick="admDeleteCatItem(${item.id})" title="Eliminar" style="padding:3px 6px;border-radius:6px;background:#FFEDEC;border:.5px solid #C0392B;font-size:12px;cursor:pointer;">🗑️</button>
+          </div>
+        </div>`).join('')}
+      </div>
     </div>`;
   }).join('');
 
@@ -8154,6 +8160,15 @@ function admGuardarEditCatItem(id){
 }
 
 function admCancelarEditCatItem(){renderAdminInsumos('catalogo');}
+
+function toggleAdmCatGroup(gid){
+  const body=document.getElementById(gid);
+  const arrow=document.getElementById(gid+'-arrow');
+  if(!body)return;
+  const open=body.style.display==='block';
+  body.style.display=open?'none':'block';
+  if(arrow)arrow.textContent=open?'▼':'▲';
+}
 
 function admToggleCatItem(id){
   const item=INSUMOS_CATALOGO.find(x=>x.id===id);if(!item)return;
