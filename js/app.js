@@ -5737,7 +5737,7 @@ function renderPIServicios(){
           <p style="font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px;">📦 Insumos</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
             <span style="font-size:11px;color:${_txt};font-weight:600;">💰 Presupuesto: $${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
-            <span style="font-size:11px;color:${_txt};font-weight:600;">🔁 ${frLbl} · Solicitud el día 15</span>
+            <span style="font-size:11px;color:${_txt};font-weight:600;">🔁 ${frLbl} · Solicitud del 15 al 25</span>
           </div>
         </div>`;})()}
       </div>`;}).join('')
@@ -6131,7 +6131,7 @@ function _insumosInfoBlock(ps){
     <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;">📦 Insumos</p>
     <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
       ${ps.presupuestoInsumos?`<span style="font-size:12px;font-weight:600;color:${txt};">💰 Presupuesto: $${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
-      <span style="font-size:12px;font-weight:600;color:${txt};">🔁 ${frLbl} · Solicitud el día 15</span>
+      <span style="font-size:12px;font-weight:600;color:${txt};">🔁 ${frLbl} · Solicitud del 15 al 25</span>
       ${tieneSol
         ?`<span style="font-size:11px;color:#1A7A3B;font-weight:600;">✅ Período cubierto: ${solInfo}</span>`
         :`<span style="font-size:11px;color:#C0392B;font-weight:600;">⏳ Sin solicitud en el período actual</span>`}
@@ -6139,37 +6139,41 @@ function _insumosInfoBlock(ps){
   </div>`;
 }
 
-/* ── Recordatorios del día 15 ── */
+/* ── Recordatorios de insumos (días 15, 20, 24 del mes) ── */
 function _checkInsumosReminders(){
   const hoy=new Date();
-  if(hoy.getDate()!==15)return; /* Solo el día 15 */
+  const dia=hoy.getDate();
+  /* Solo disparar en días clave del período 15-25 */
+  if(dia!==15&&dia!==20&&dia!==24)return;
+  /* Evitar enviar más de una vez por día (localStorage dedup) */
+  const dedupKey='ins-reminder-'+hoy.toISOString().slice(0,10);
+  if(localStorage.getItem(dedupKey))return;
   const mesBase15=hoy.getMonth();
   const yearBase=hoy.getFullYear();
-  /* Servicios activos con insumos configurados */
   const svActivos=(PROPERTY_SERVICES||[]).filter(ps=>ps.status==='activo'&&(ps.presupuestoInsumos||ps.frecuenciaInsumos));
   if(!svActivos.length)return;
-  /* Para cada servicio, verificar si hay solicitud en el período actual */
   const faltantes=svActivos.filter(ps=>{
     const frecMeses=ps.frecuenciaInsumos||1;
     const mesBase=Math.floor(mesBase15/frecMeses)*frecMeses;
-    if(mesBase15!==mesBase)return false; // este mes no le toca
+    if(mesBase15!==mesBase)return false;
     const pInicio=new Date(yearBase,mesBase,1).toISOString().slice(0,7);
     const pFin=new Date(yearBase,mesBase+frecMeses,1).toISOString().slice(0,7);
     return!(INSUMOS_REQUESTS||[]).some(r=>r.servicioId===ps.id&&r.status!=='rechazado'&&(r.fecha||'')>=pInicio&&(r.fecha||'')<pFin);
   });
   if(!faltantes.length)return;
-  /* Notificar a PI de cada servicio faltante */
+  localStorage.setItem(dedupKey,'1');
+  const msgPI = dia===15 ? 'Ya puedes enviar tu solicitud de insumos (del 15 al 25)'
+              : dia===20 ? '⏰ Recuerda: aún no has enviado tu solicitud de insumos'
+              : '⚠️ Último día mañana — envía hoy tu solicitud de insumos';
+  const msgSV = dia===15 ? `${faltantes.length} contrato(s) esperan su solicitud de insumos este período`
+              : dia===20 ? `Recordatorio: ${faltantes.length} contrato(s) aún sin solicitud`
+              : `⚠️ Último aviso: ${faltantes.length} contrato(s) sin solicitud de insumos`;
   faltantes.forEach(ps=>{
     const piAsignados=(PERSONAL_INM||[]).filter(p=>p.puedeInsumos&&(p.serviciosAsignados||[]).includes(ps.id));
-    piAsignados.forEach(()=>{
-      pushNotif('personal_inm','📦','amber','📅 Recordatorio: Solicitud de insumos',`Hoy es día 15 — solicita tus insumos para ${ps.folio} · ${ps.cliente.nombre}`);
-    });
+    if(piAsignados.length)pushNotif('personal_inm','📦','amber','📅 Solicitud de insumos',`${msgPI} — ${ps.folio} · ${ps.cliente.nombre}`);
   });
-  /* Notificar al supervisor con resumen de faltantes */
-  if(faltantes.length){
-    const folios=faltantes.map(ps=>ps.folio).join(', ');
-    pushNotif('supervisor','📋','amber','📅 Insumos pendientes',`${faltantes.length} contrato(s) sin solicitud de insumos hoy: ${folios}`);
-  }
+  const folios=faltantes.map(ps=>`${ps.folio} · ${ps.cliente.nombre}`).join(', ');
+  pushNotif('supervisor','📋','amber','📅 Insumos pendientes',`${msgSV}: ${folios}`);
 }
 
 /* ── Detalle expandido de un servicio ── */
@@ -7314,76 +7318,174 @@ function _insItemsHtml(items,dark){
   </div>`;
 }
 
-function renderPIInsumos(){
+function renderPIInsumos(activeTab){
   const el=document.getElementById('pi-insumos-content');if(!el)return;
   const p=_getPIData();if(!p||!p.puedeInsumos){el.innerHTML='';return;}
   const dark=document.documentElement.classList.contains('dark-mode');
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const tab=activeTab||'solicitudes';
+  const tabBtnStyle=(active)=>`font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;${active?'background:#185FA5;color:#fff;':'background:transparent;color:'+lbl+';'}`;
   const misReqs=(INSUMOS_REQUESTS||[]).filter(r=>r.personalId===p.id).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
-  const listaHtml=misReqs.length
-    ?misReqs.map(r=>{
-      const isRechazado=r.status==='rechazado';
-      const borderColor=isRechazado?'#C0392B':dark?'rgba(255,255,255,.1)':'#DCE8F5';
-      return`<div style="border:.5px solid ${borderColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;${isRechazado?'background:'+( dark?'rgba(192,57,43,.07)':'#FFF5F5')+';':''}">
+
+  /* ── Pestaña: Solicitudes (período actual + botón nueva) ── */
+  const _renderTabSolicitudes=()=>{
+    const hoyDia=new Date().getDate();
+    const ventanaAbierta=hoyDia>=15&&hoyDia<=25;
+    /* solicitudes del período actual de cada servicio */
+    const misPS=PROPERTY_SERVICES.filter(ps=>(p.serviciosAsignados||[]).includes(ps.id)&&ps.status==='activo');
+    const recentReqs=misReqs.slice(0,5);
+    const listaHtml=recentReqs.length
+      ?recentReqs.map(r=>{
+        const isRechazado=r.status==='rechazado';
+        const bdr=isRechazado?'#C0392B':dark?'rgba(255,255,255,.1)':'#DCE8F5';
+        return`<div style="border:.5px solid ${bdr};border-radius:10px;padding:12px 14px;margin-bottom:8px;${isRechazado?'background:'+(dark?'rgba(192,57,43,.07)':'#FFF5F5')+';':''}">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
+            <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+          </div>
+          <p style="font-size:11px;color:${lbl};margin:0 0 2px;">🏢 ${r.servicioFolio||'—'} · 🏦 ${r.clienteNombre||'—'}</p>
+          <p style="font-size:11px;color:${lbl};margin:0;">📅 ${r.fecha} · Total: <strong style="color:${txt};">$${(r.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</strong></p>
+          ${isRechazado&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:6px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
+          ${isRechazado?`<button class="btn-royal" style="width:100%;margin-top:10px;font-size:12px;padding:7px;" onclick="editarInsumoRechazado(${r.id})">✏️ Editar y reenviar</button>`:''}
+        </div>`;}).join('')
+      :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:20px 0;">Sin solicitudes aún.</p>';
+    const ventanaBanner=ventanaAbierta
+      ?`<div style="padding:8px 12px;border-radius:8px;background:${dark?'rgba(26,122,59,.15)':'#E8F5EC'};border:.5px solid #1A7A3B;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:13px;">✅</span>
+          <span style="font-size:12px;font-weight:600;color:#1A7A3B;">Ventana de solicitudes abierta (días 15-25)</span>
+        </div>`
+      :`<div style="padding:8px 12px;border-radius:8px;background:${dark?'rgba(160,92,0,.12)':'#FFF3CD'};border:.5px solid #A05C00;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:13px;">📅</span>
+          <span style="font-size:12px;font-weight:600;color:#A05C00;">Las solicitudes se envían del día 15 al 25 de cada mes</span>
+        </div>`;
+    return`${ventanaBanner}
+      <button class="btn-royal" style="width:100%;margin-bottom:14px;" onclick="abrirNuevaInsumoSol()">+ Nueva solicitud</button>
+      ${listaHtml}`;
+  };
+
+  /* ── Pestaña: Historial (últimas 3 con clonar) ── */
+  const _renderTabHistorial=()=>{
+    const ultimas=misReqs.slice(0,3);
+    if(!ultimas.length)return`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin historial aún.</p>`;
+    return ultimas.map(r=>{
+      const bdr=dark?'rgba(255,255,255,.1)':'#DCE8F5';
+      const itemsPreview=(r.items||[]).filter(it=>it.cantidad>0).slice(0,3).map(it=>`<span style="font-size:10px;color:${lbl};">${it.nombre} ×${it.cantidad}</span>`).join(' · ');
+      return`<div style="border:.5px solid ${bdr};border-radius:10px;padding:12px 14px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
           <span style="font-size:12px;font-weight:700;color:${txt};">${r.folio}</span>
           <span style="font-size:11px;font-weight:600;padding:2px 9px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
         </div>
         <p style="font-size:11px;color:${lbl};margin:0 0 2px;">🏢 ${r.servicioFolio||'—'} · 🏦 ${r.clienteNombre||'—'}</p>
-        <p style="font-size:11px;color:${lbl};margin:0;">📅 ${r.fecha} · Total: <strong style="color:${txt};">$${(r.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</strong></p>
-        ${isRechazado&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:6px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
-        ${isRechazado?`<button class="btn-royal" style="width:100%;margin-top:10px;font-size:12px;padding:7px;" onclick="editarInsumoRechazado(${r.id})">✏️ Editar y reenviar</button>`:''}
-      </div>`;}).join('')
-    :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:30px 0;">Sin solicitudes aún. Crea la primera.</p>';
+        <p style="font-size:11px;color:${lbl};margin:0 0 4px;">📅 ${r.fecha} · $${(r.total||0).toLocaleString('es-MX',{minimumFractionDigits:2})}</p>
+        ${itemsPreview?`<p style="font-size:10px;color:${lbl};margin:0 0 8px;line-height:1.5;">${itemsPreview}${(r.items||[]).length>3?' …':''}</p>`:''}
+        <button onclick="clonarInsumoSol(${r.id})" style="width:100%;padding:7px;border-radius:8px;border:.5px dashed #185FA5;background:transparent;color:#185FA5;font-size:12px;font-weight:600;cursor:pointer;">📋 Usar como base para nueva solicitud</button>
+      </div>`;
+    }).join('');
+  };
+
   el.innerHTML=`
-    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Mis solicitudes de insumos</p>
-    <button class="btn-royal" style="width:100%;margin-bottom:16px;" onclick="abrirNuevaInsumoSol()">+ Nueva solicitud</button>
-    ${listaHtml}`;
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Mis solicitudes de insumos</p>
+    <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
+      <button style="${tabBtnStyle(tab==='solicitudes')}" onclick="renderPIInsumos('solicitudes')">📋 Solicitudes</button>
+      <button style="${tabBtnStyle(tab==='historial')}" onclick="renderPIInsumos('historial')">🕐 Historial</button>
+    </div>
+    ${tab==='solicitudes'?_renderTabSolicitudes():_renderTabHistorial()}`;
 }
 
-/* ── Panel del supervisor: ver y gestionar todas las solicitudes de su personal ── */
-function renderSVInsumos(){
+/* ── Helper: card de solicitud de insumos (supervisor/admin) ── */
+function _insReqCard(r,dark,showActions){
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
+  const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
+  const presupuesto=r.presupuesto||ps?.presupuestoInsumos||0;
+  const total=r.total||0;
+  const dentroPres=!presupuesto||total<=presupuesto;
+  const statusBorder=r.status==='rechazado'?'#C0392B':r.status==='aprobado'?'#1A7A3B':dark?'rgba(255,255,255,.1)':'#DCE8F5';
+  return`<div style="border:.5px solid ${statusBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-size:13px;font-weight:700;color:${txt};">${r.folio}</span>
+      <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
+    </div>
+    <p style="font-size:12px;font-weight:600;color:${txt};margin:0 0 2px;">👷 ${pi?pi.nombre:r.personalNombre||'—'}</p>
+    <p style="font-size:11px;color:${lbl};margin:0 0 2px;">🏢 ${r.servicioFolio||ps?.folio||'—'} · 🏦 ${r.clienteNombre||ps?.cliente?.nombre||'—'}</p>
+    <p style="font-size:11px;color:${lbl};margin:0 0 8px;">📅 ${r.fecha}${r.notas?` · <em>${r.notas}</em>`:''}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      ${presupuesto?`<span style="font-size:11px;font-weight:600;color:${lbl};background:${dark?'rgba(255,255,255,.07)':'#EEF5FF'};padding:3px 10px;border-radius:7px;">💰 $${presupuesto.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
+      <span style="font-size:11px;font-weight:700;color:${dentroPres?'#1A7A3B':'#C0392B'};background:${dentroPres?(dark?'rgba(26,122,59,.15)':'#E8F5EC'):(dark?'rgba(192,57,43,.15)':'#FFEDED')};padding:3px 10px;border-radius:7px;">📋 $${total.toLocaleString('es-MX',{minimumFractionDigits:2})} s/IVA${!dentroPres?' ⚠️':''}</span>
+    </div>
+    ${_insItemsHtml(r.items,dark)}
+    ${showActions&&r.status==='pendiente'?`<div style="display:flex;gap:6px;margin-top:10px;">
+      <button class="btn-royal" style="flex:1;font-size:12px;padding:8px;" onclick="cambiarStatusInsumo(${r.id},'aprobado')">✅ Aprobar</button>
+      <button class="btn-danger" style="flex:1;font-size:12px;padding:8px;" onclick="_svRechazarInsumo(${r.id})">❌ Rechazar</button>
+    </div>`:''}
+    ${showActions&&r.status==='aprobado'?`<button class="btn-sec" style="width:100%;margin-top:8px;font-size:12px;padding:7px;" onclick="cambiarStatusInsumo(${r.id},'entregado')">📦 Marcar entregado</button>`:''}
+    ${r.status==='rechazado'&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:8px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
+  </div>`;
+}
+
+/* ── Helper: selector de filtros de historial ── */
+function _insHistorialFiltros(reqs,prefijo){
+  const meses=[...new Set(reqs.map(r=>(r.fecha||'').slice(0,7)))].sort((a,b)=>b.localeCompare(a));
+  const contratos=[...new Set(reqs.map(r=>r.servicioFolio||''))].filter(Boolean).sort();
+  const trabajadores=[...new Set(reqs.map(r=>r.personalNombre||''))].filter(Boolean).sort();
+  return`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+    <select id="${prefijo}-f-mes" onchange="${prefijo}FiltrarHistorial()" style="font-size:12px;padding:5px 8px;border-radius:7px;border:.5px solid #C5D8EC;background:transparent;">
+      <option value="">📅 Todos los meses</option>
+      ${meses.map(m=>{const [y,mo]=m.split('-');const nom=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)-1];return`<option value="${m}">${nom} ${y}</option>`;}).join('')}
+    </select>
+    <select id="${prefijo}-f-cont" onchange="${prefijo}FiltrarHistorial()" style="font-size:12px;padding:5px 8px;border-radius:7px;border:.5px solid #C5D8EC;background:transparent;">
+      <option value="">🏢 Todos los contratos</option>
+      ${contratos.map(c=>{const ps=PROPERTY_SERVICES.find(x=>x.folio===c);return`<option value="${c}">${c}${ps?' · '+ps.cliente.nombre:''}</option>`;}).join('')}
+    </select>
+    <select id="${prefijo}-f-trab" onchange="${prefijo}FiltrarHistorial()" style="font-size:12px;padding:5px 8px;border-radius:7px;border:.5px solid #C5D8EC;background:transparent;">
+      <option value="">👷 Todos los trabajadores</option>
+      ${trabajadores.map(t=>`<option value="${t}">${t}</option>`).join('')}
+    </select>
+  </div>`;
+}
+
+/* ── Panel del supervisor: tabs Período Actual / Historial ── */
+function renderSVInsumos(activeTab){
   const el=document.getElementById('sv-insumos-content');if(!el)return;
   const dark=document.documentElement.classList.contains('dark-mode');
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const tab=activeTab||'actual';
+  const tabBtnStyle=(active)=>`font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;${active?'background:#185FA5;color:#fff;':'background:transparent;color:'+lbl+';'}`;
   const mySvId=currentSupervisorRef?currentSupervisorRef.id:null;
-  const misServicios=(PROPERTY_SERVICES||[]).filter(ps=>ps.supervisorId===mySvId).map(ps=>ps.id);
-  const reqs=(INSUMOS_REQUESTS||[]).filter(r=>misServicios.includes(r.servicioId)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
-  const listaHtml=reqs.length
-    ?reqs.map(r=>{
-        const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
-        const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
-        const presupuesto=r.presupuesto||ps?.presupuestoInsumos||0;
-        const total=r.total||0;
-        const dentroPres=!presupuesto||total<=presupuesto;
-        const statusBorder=r.status==='rechazado'?'#C0392B':r.status==='aprobado'?'#1A7A3B':dark?'rgba(255,255,255,.1)':'#DCE8F5';
-        return`<div style="border:.5px solid ${statusBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;">
-          <!-- Encabezado -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:700;color:${txt};">${r.folio}</span>
-            <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
-          </div>
-          <!-- Info principal -->
-          <p style="font-size:12px;font-weight:600;color:${txt};margin:0 0 2px;">👷 ${pi?pi.nombre:r.personalNombre||'—'}</p>
-          <p style="font-size:11px;color:${lbl};margin:0 0 2px;">🏢 ${ps?ps.folio:'—'} · 🏦 ${r.clienteNombre||ps?.cliente?.nombre||'—'}</p>
-          <p style="font-size:11px;color:${lbl};margin:0 0 8px;">📅 ${r.fecha}${r.notas?` · <em>${r.notas}</em>`:''}</p>
-          <!-- Presupuesto vs total -->
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
-            ${presupuesto?`<span style="font-size:11px;font-weight:600;color:${lbl};background:${dark?'rgba(255,255,255,.07)':'#EEF5FF'};padding:3px 10px;border-radius:7px;">💰 Presupuesto: $${presupuesto.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
-            <span style="font-size:11px;font-weight:700;color:${dentroPres?'#1A7A3B':'#C0392B'};background:${dentroPres?(dark?'rgba(26,122,59,.15)':'#E8F5EC'):(dark?'rgba(192,57,43,.15)':'#FFEDED')};padding:3px 10px;border-radius:7px;">📋 Total: $${total.toLocaleString('es-MX',{minimumFractionDigits:2})} s/IVA${!dentroPres?' ⚠️ Excede presupuesto':''}</span>
-          </div>
-          <!-- Lista de ítems -->
-          ${_insItemsHtml(r.items,dark)}
-          <!-- Acciones -->
-          ${r.status==='pendiente'?`<div style="display:flex;gap:6px;margin-top:10px;">
-            <button class="btn-royal" style="flex:1;font-size:12px;padding:8px;" onclick="cambiarStatusInsumo(${r.id},'aprobado')">✅ Aprobar</button>
-            <button class="btn-danger" style="flex:1;font-size:12px;padding:8px;" onclick="_svRechazarInsumo(${r.id})">❌ Rechazar</button>
-          </div>`:''}
-          ${r.status==='aprobado'?`<button class="btn-sec" style="width:100%;margin-top:8px;font-size:12px;padding:7px;" onclick="cambiarStatusInsumo(${r.id},'entregado')">📦 Marcar como entregado</button>`:''}
-          ${r.status==='rechazado'&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:8px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
-        </div>`;}).join('')
-    :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:40px 0;">Sin solicitudes de insumos pendientes.</p>';
-  el.innerHTML=`<p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Solicitudes de insumos</p>${listaHtml}`;
+  const misServiciosIds=(PROPERTY_SERVICES||[]).filter(ps=>ps.supervisorId===mySvId).map(ps=>ps.id);
+  const allReqs=(INSUMOS_REQUESTS||[]).filter(r=>misServiciosIds.includes(r.servicioId)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  /* Período actual */
+  const hoy=new Date();
+  const mesActual=hoy.toISOString().slice(0,7);
+  const mesNom=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][hoy.getMonth()];
+  const reqsActual=allReqs.filter(r=>(r.fecha||'').startsWith(mesActual));
+  const tabActualHtml=reqsActual.length
+    ?reqsActual.map(r=>_insReqCard(r,dark,true)).join('')
+    :`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`;
+  const tabHistorialHtml=`${_insHistorialFiltros(allReqs,'sv')}
+    <div id="sv-historial-list">${allReqs.length?allReqs.map(r=>_insReqCard(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes registradas.</p>`}</div>`;
+  el.innerHTML=`
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Solicitudes de insumos</p>
+    <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
+      <button style="${tabBtnStyle(tab==='actual')}" onclick="renderSVInsumos('actual')">📅 ${mesNom} ${hoy.getFullYear()}</button>
+      <button style="${tabBtnStyle(tab==='historial')}" onclick="renderSVInsumos('historial')">🕐 Historial</button>
+    </div>
+    ${tab==='actual'?tabActualHtml:tabHistorialHtml}`;
+  /* Guardar reqs para filtro */
+  el._allReqs=allReqs;el._dark=dark;
+}
+function svFiltrarHistorial(){
+  const el=document.getElementById('sv-insumos-content');if(!el||!el._allReqs)return;
+  const mes=(document.getElementById('sv-f-mes')||{}).value||'';
+  const cont=(document.getElementById('sv-f-cont')||{}).value||'';
+  const trab=(document.getElementById('sv-f-trab')||{}).value||'';
+  let reqs=el._allReqs;
+  if(mes)reqs=reqs.filter(r=>(r.fecha||'').startsWith(mes));
+  if(cont)reqs=reqs.filter(r=>r.servicioFolio===cont);
+  if(trab)reqs=reqs.filter(r=>r.personalNombre===trab);
+  const lbl=el._dark?'#8AACCA':'#5C7A9A';
+  const listEl=document.getElementById('sv-historial-list');
+  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqCard(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados con los filtros seleccionados.</p>`;
 }
 
 /* Rechazar con motivo */
@@ -7445,9 +7547,9 @@ function abrirNuevaInsumoSol(psId){
   /* Si no se pasa psId y tiene 1 solo servicio, usarlo directo */
   const misPS=PROPERTY_SERVICES.filter(ps=>p.serviciosAsignados.includes(ps.id)&&ps.status==='activo');
   if(!misPS.length){showToast('amber','⚠️','No tienes servicios activos asignados.');return;}
-  /* Verificar que sea día 15 */
+  /* Verificar ventana de envío: del 15 al 25 de cada mes */
   const hoyDia=new Date().getDate();
-  if(hoyDia!==15){showToast('amber','📅','Las solicitudes de insumos solo se pueden enviar el día 15 de cada mes.');return;}
+  if(hoyDia<15||hoyDia>25){showToast('amber','📅','Las solicitudes de insumos se pueden enviar del día 15 al 25 de cada mes.');return;}
   /* Si tiene múltiples y no se pasó ID, mostrar selector */
   if(!psId&&misPS.length>1){_insumoSeleccionarServicio(p,misPS);return;}
   const ps=psId?PROPERTY_SERVICES.find(x=>x.id===psId):misPS[0];
@@ -7672,6 +7774,38 @@ function cerrarInsumoSol(){
   _insumoSolServicioId=null;_insumoEditId=null;_insCustomCount=0;
 }
 
+/* Clonar una solicitud anterior como base para una nueva */
+function clonarInsumoSol(reqId){
+  const r=INSUMOS_REQUESTS.find(x=>x.id===reqId);if(!r)return;
+  const p=_getPIData();if(!p)return;
+  const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);if(!ps)return;
+  const hoyDia=new Date().getDate();
+  if(hoyDia<15||hoyDia>25){showToast('amber','📅','Las solicitudes se envían del día 15 al 25 de cada mes.');return;}
+  _insumoSolServicioId=ps.id;
+  _insumoEditId=null; /* es nueva solicitud, no edición */
+  _renderInsumoForm(p,ps);
+  setTimeout(()=>{
+    (r.items||[]).forEach(it=>{
+      if(!it.esPersonalizado&&it.catalogoId!=null){
+        const inp=document.getElementById('ins-qty-'+it.catalogoId);
+        if(inp){inp.value=it.cantidad;inp.dispatchEvent(new Event('input'));}
+      }
+    });
+    const custom=(r.items||[]).filter(it=>it.esPersonalizado);
+    custom.forEach(it=>{
+      _insAgregarCustom(ps.presupuestoInsumos||0);
+      const n=_insCustomCount-1;
+      const nomEl=document.getElementById('ins-c-nom-'+n);
+      const pEl=document.getElementById('ins-c-precio-'+n);
+      const qEl=document.getElementById('ins-c-qty-'+n);
+      if(nomEl)nomEl.value=it.nombre;
+      if(pEl)pEl.value=it.precio;
+      if(qEl)qEl.value=it.cantidad;
+    });
+    _insActualizarTotal(ps.presupuestoInsumos||0);
+  },120);
+}
+
 /* Editar una solicitud rechazada: abre el formulario pre-llenado */
 function editarInsumoRechazado(reqId){
   const r=INSUMOS_REQUESTS.find(x=>x.id===reqId);if(!r||r.status!=='rechazado')return;
@@ -7708,50 +7842,46 @@ function editarInsumoRechazado(reqId){
 }
 
 /* ── Render de insumos en panel admin ── */
-function renderAdminInsumos(){
+function renderAdminInsumos(activeTab){
   const el=document.getElementById('admin-insumos-content');if(!el)return;
   const dark=document.documentElement.classList.contains('dark-mode');
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
   const bdr=dark?'rgba(255,255,255,.08)':'#DCE8F5';
+  const tab=activeTab||'actual';
+  const tabBtnStyle=(active)=>`font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;${active?'background:#185FA5;color:#fff;':'background:transparent;color:'+lbl+';'}`;
+  const hoy=new Date();
+  const mesActual=hoy.toISOString().slice(0,7);
+  const mesNom=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][hoy.getMonth()];
   const reqs=[...INSUMOS_REQUESTS].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
 
-  /* ── Resumen general: agrega ítems de solicitudes aprobadas + pendientes ── */
-  const reqsActivas=reqs.filter(r=>r.status==='aprobado'||r.status==='pendiente');
-  const totalGeneral=reqsActivas.reduce((s,r)=>s+(r.total||0),0);
-  /* Tabla consolidada de materiales */
-  const matMap={}; // key: catalogoId ?? nombre → {nombre,unidad,cantidad,subtotal}
-  reqsActivas.forEach(r=>(r.items||[]).forEach(it=>{
+  /* ── Resumen de compras del período actual ── */
+  const reqsActual=reqs.filter(r=>(r.fecha||'').startsWith(mesActual));
+  const reqsActivasActual=reqsActual.filter(r=>r.status==='aprobado'||r.status==='pendiente');
+  const totalGeneral=reqsActivasActual.reduce((s,r)=>s+(r.total||0),0);
+  const matMap={};
+  reqsActivasActual.forEach(r=>(r.items||[]).forEach(it=>{
     const key=it.catalogoId!=null?'cat_'+it.catalogoId:'cus_'+(it.nombre||'').toLowerCase().trim();
     if(!matMap[key])matMap[key]={nombre:it.nombre,unidad:it.unidad,precio:it.precio,cantidad:0,subtotal:0};
-    matMap[key].cantidad+=it.cantidad;
-    matMap[key].subtotal+=it.subtotal;
+    matMap[key].cantidad+=it.cantidad;matMap[key].subtotal+=it.subtotal;
   }));
   const matRows=Object.values(matMap).sort((a,b)=>b.subtotal-a.subtotal);
-
-  const resumenHtml=reqsActivas.length?`
-  <div style="border:.5px solid ${bdr};border-radius:12px;overflow:hidden;margin-bottom:16px;">
+  const resumenHtml=reqsActivasActual.length?`
+  <div style="border:.5px solid ${bdr};border-radius:12px;overflow:hidden;margin-bottom:14px;">
     <div style="background:linear-gradient(135deg,#042C53,#185FA5);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
       <div>
-        <p style="font-size:13px;font-weight:700;color:#fff;margin:0;">📊 Resumen general de compras</p>
-        <p style="font-size:11px;color:rgba(255,255,255,.75);margin:2px 0 0;">${reqsActivas.length} solicitud(es) · precios s/IVA</p>
+        <p style="font-size:13px;font-weight:700;color:#fff;margin:0;">📊 Resumen de compras · ${mesNom} ${hoy.getFullYear()}</p>
+        <p style="font-size:11px;color:rgba(255,255,255,.75);margin:2px 0 0;">${reqsActivasActual.length} solicitud(es) · precios s/IVA</p>
       </div>
-      <div style="text-align:right;">
-        <p style="font-size:11px;color:rgba(255,255,255,.75);margin:0;">Total a gastar</p>
-        <p style="font-size:20px;font-weight:700;color:#fff;margin:0;">$${totalGeneral.toLocaleString('es-MX',{minimumFractionDigits:2})}</p>
-      </div>
-    </div>
-    <!-- Tabla materiales consolidados -->
-    <div style="background:${dark?'rgba(255,255,255,.04)':'#EEF5FF'};padding:6px 14px;">
-      <p style="font-size:10px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:6px 0 4px;">Materiales a comprar</p>
+      <p style="font-size:20px;font-weight:700;color:#fff;margin:0;">$${totalGeneral.toLocaleString('es-MX',{minimumFractionDigits:2})}</p>
     </div>
     <div style="max-height:260px;overflow-y:auto;">
       <div style="display:grid;grid-template-columns:1fr 52px 70px 72px;gap:4px;padding:5px 14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};">
         <span style="font-size:10px;font-weight:700;color:${lbl};">Producto</span>
-        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:center;">Cant.</span>
+        <span style="font-size:10px;font-weight:700;color:${lbl};text-align:center;">Total cant.</span>
         <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">P. Unit.</span>
         <span style="font-size:10px;font-weight:700;color:${lbl};text-align:right;">Subtotal</span>
       </div>
-      ${matRows.map((m,i)=>`<div style="display:grid;grid-template-columns:1fr 52px 70px 72px;gap:4px;padding:7px 14px;border-top:.5px solid ${bdr};background:${dark?'#1b2a3a':'#fff'};">
+      ${matRows.map(m=>`<div style="display:grid;grid-template-columns:1fr 52px 70px 72px;gap:4px;padding:7px 14px;border-top:.5px solid ${bdr};background:${dark?'#1b2a3a':'#fff'};">
         <span style="font-size:11px;color:${txt};line-height:1.3;">${m.nombre}</span>
         <span style="font-size:11px;font-weight:700;color:#185FA5;text-align:center;">${m.cantidad} ${m.unidad}</span>
         <span style="font-size:11px;color:${lbl};text-align:right;">$${m.precio.toFixed(2)}</span>
@@ -7761,45 +7891,38 @@ function renderAdminInsumos(){
     <div style="display:flex;justify-content:flex-end;padding:10px 14px;border-top:.5px solid ${bdr};background:${dark?'rgba(255,255,255,.04)':'#EEF5FF'};">
       <span style="font-size:13px;font-weight:700;color:${txt};">Total s/IVA: $${totalGeneral.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
     </div>
-  </div>`:
-  `<p style="font-size:12px;color:${lbl};text-align:center;padding:12px 0 8px;">Sin solicitudes aprobadas o pendientes aún.</p>`;
+  </div>`:`<p style="font-size:12px;color:${lbl};text-align:center;padding:10px 0 8px;">Sin solicitudes aprobadas o pendientes en ${mesNom}.</p>`;
 
-  /* ── Solicitudes individuales ── */
-  const listaHtml=reqs.length
-    ?reqs.map(r=>{
-        const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
-        const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
-        const presupuesto=r.presupuesto||ps?.presupuestoInsumos||0;
-        const total=r.total||0;
-        const dentroPres=!presupuesto||total<=presupuesto;
-        const statusBorder=r.status==='rechazado'?'#C0392B':r.status==='aprobado'?'#1A7A3B':dark?'rgba(255,255,255,.1)':'#DCE8F5';
-        return`<div style="border:.5px solid ${statusBorder};border-radius:12px;padding:14px 16px;margin-bottom:10px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-            <span style="font-size:13px;font-weight:700;color:${txt};">${r.folio}</span>
-            <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:8px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${_insStatusLabel[r.status]||r.status}</span>
-          </div>
-          <p style="font-size:12px;font-weight:600;color:${txt};margin:0 0 2px;">👷 ${pi?pi.nombre:r.personalNombre||'—'}</p>
-          <p style="font-size:11px;color:${lbl};margin:0 0 2px;">🏢 ${ps?ps.folio:'—'} · 🏦 ${r.clienteNombre||ps?.cliente?.nombre||'—'}</p>
-          <p style="font-size:11px;color:${lbl};margin:0 0 8px;">📅 ${r.fecha}${r.notas?` · <em>${r.notas}</em>`:''}</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
-            ${presupuesto?`<span style="font-size:11px;font-weight:600;color:${lbl};background:${dark?'rgba(255,255,255,.07)':'#EEF5FF'};padding:3px 10px;border-radius:7px;">💰 Presupuesto: $${presupuesto.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
-            <span style="font-size:11px;font-weight:700;color:${dentroPres?'#1A7A3B':'#C0392B'};background:${dentroPres?(dark?'rgba(26,122,59,.15)':'#E8F5EC'):(dark?'rgba(192,57,43,.15)':'#FFEDED')};padding:3px 10px;border-radius:7px;">📋 Total: $${total.toLocaleString('es-MX',{minimumFractionDigits:2})} s/IVA</span>
-          </div>
-          ${_insItemsHtml(r.items,dark)}
-          ${r.status==='pendiente'?`<div style="display:flex;gap:6px;margin-top:10px;">
-            <button class="btn-royal" style="flex:1;font-size:12px;padding:8px;" onclick="cambiarStatusInsumo(${r.id},'aprobado')">✅ Aprobar</button>
-            <button class="btn-danger" style="flex:1;font-size:12px;padding:8px;" onclick="_svRechazarInsumo(${r.id})">❌ Rechazar</button>
-          </div>`:''}
-          ${r.status==='aprobado'?`<button class="btn-sec" style="width:100%;margin-top:8px;font-size:12px;padding:7px;" onclick="cambiarStatusInsumo(${r.id},'entregado')">📦 Marcar entregado</button>`:''}
-          ${r.status==='rechazado'&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:8px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
-        </div>`;}).join('')
-    :'<p style="font-size:13px;color:'+lbl+';text-align:center;padding:30px 0;">Sin solicitudes de insumos registradas.</p>';
+  /* ── Tab: Período actual ── */
+  const tabActualHtml=`${resumenHtml}
+    <p style="font-size:11px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px;">Detalle de solicitudes</p>
+    ${reqsActual.length?reqsActual.map(r=>_insReqCard(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`}`;
+
+  /* ── Tab: Historial con filtros ── */
+  const tabHistorialHtml=`${_insHistorialFiltros(reqs,'adm')}
+    <div id="adm-historial-list">${reqs.length?reqs.map(r=>_insReqCard(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes registradas.</p>`}</div>`;
 
   el.innerHTML=`
-    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 14px;">📦 Solicitudes de insumos</p>
-    ${resumenHtml}
-    <p style="font-size:12px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;">Detalle por solicitud</p>
-    ${listaHtml}`;
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Solicitudes de insumos</p>
+    <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
+      <button style="${tabBtnStyle(tab==='actual')}" onclick="renderAdminInsumos('actual')">📅 ${mesNom} ${hoy.getFullYear()}</button>
+      <button style="${tabBtnStyle(tab==='historial')}" onclick="renderAdminInsumos('historial')">🕐 Historial</button>
+    </div>
+    ${tab==='actual'?tabActualHtml:tabHistorialHtml}`;
+  el._allReqs=reqs;el._dark=dark;
+}
+function admFiltrarHistorial(){
+  const el=document.getElementById('admin-insumos-content');if(!el||!el._allReqs)return;
+  const mes=(document.getElementById('adm-f-mes')||{}).value||'';
+  const cont=(document.getElementById('adm-f-cont')||{}).value||'';
+  const trab=(document.getElementById('adm-f-trab')||{}).value||'';
+  let reqs=el._allReqs;
+  if(mes)reqs=reqs.filter(r=>(r.fecha||'').startsWith(mes));
+  if(cont)reqs=reqs.filter(r=>r.servicioFolio===cont);
+  if(trab)reqs=reqs.filter(r=>r.personalNombre===trab);
+  const lbl=el._dark?'#8AACCA':'#5C7A9A';
+  const listEl=document.getElementById('adm-historial-list');
+  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqCard(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados con los filtros seleccionados.</p>`;
 }
 
 /* ── Autocompletado de cliente existente en el formulario de nuevo inmueble ── */
