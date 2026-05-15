@@ -10897,13 +10897,16 @@ function _renderAgCalendar(){
   const lastDate=new Date(y,m+1,0).getDate();
   const monPad=String(m+1).padStart(2,'0');
   const dateColors={};
-  AGENDA_ITEMS.forEach(a=>{
-    if(!a.fecha||a.estado==='cancelado')return;
-    const [ay,am]=a.fecha.split('-').map(Number);
-    if(ay!==y||am!==m+1)return;
-    if(_agFilter!=='all'&&a.asignadoA?.rol!==_agFilter)return;
-    if(!dateColors[a.fecha])dateColors[a.fecha]=new Set();
-    dateColors[a.fecha].add(AGENDA_ROL_COLORS[a.asignadoA?.rol]||'#6B7280');
+  AGENDA_ITEMS.filter(a=>_agFilter==='all'?true:a.asignadoA?.rol===_agFilter).forEach(a=>{
+    const aIni=a.fechaInicio||a.fecha||'';const aFin=a.fechaFin||aIni;
+    if(!aIni)return;
+    let d=new Date(aIni+'T12:00:00');const dEnd=new Date(aFin+'T12:00:00');
+    while(d<=dEnd){
+      const ds=d.toISOString().split('T')[0];
+      if(!dateColors[ds])dateColors[ds]=new Set();
+      dateColors[ds].add(AGENDA_ROL_COLORS[a.asignadoA?.rol]||'#6B7280');
+      d.setDate(d.getDate()+1);
+    }
   });
   const days=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
   let cells='';
@@ -10928,16 +10931,17 @@ function _renderAgCalendar(){
 function _renderAgDayEvents(ctx){
   const ds=_agSelDate;
   if(!ds)return`<p style="font-size:12px;color:#5C7A9A;text-align:center;padding:8px 0;">Selecciona un día en el calendario</p>`;
-  let items=AGENDA_ITEMS.filter(a=>a.fecha===ds);
-  if(_agFilter!=='all')items=items.filter(a=>a.asignadoA?.rol===_agFilter);
-  if(ctx==='supervisor'&&currentSupervisorRef){
-    const myIds=currentSupervisorRef.assignedWorkers||[];
-    items=items.filter(a=>(a.asignadoA?.rol==='trabajador'&&myIds.includes(a.asignadoA?.id))||(a.asignadoA?.rol==='supervisor'&&a.asignadoA?.id===currentSupervisorRef.id));
-  }
+  const items=AGENDA_ITEMS
+    .filter(a=>{
+      if(ctx==='admin')return _agFilter==='all'?true:a.asignadoA?.rol===_agFilter;
+      if(ctx==='supervisor'){if(!currentSupervisorRef)return false;const myIds=currentSupervisorRef.assignedWorkers||[];return(a.asignadoA?.rol==='trabajador'&&myIds.includes(a.asignadoA.id))||(a.asignadoA?.rol==='supervisor'&&a.asignadoA.id===currentSupervisorRef.id)||(a.asignadoA?.rol==='personal_inm');}
+      return false;
+    })
+    .filter(a=>{const aIni=a.fechaInicio||a.fecha||'';const aFin=a.fechaFin||aIni;return ds>=aIni&&ds<=aFin;})
+    .sort((a,b)=>(a.horaInicio||'')>(b.horaInicio||'')?1:-1);
   const[yr,mo,dy]=ds.split('-');
   const lbl=`${parseInt(dy)} de ${MESES[parseInt(mo)-1]} ${yr}`;
   if(!items.length)return`<p style="font-size:12px;color:#5C7A9A;text-align:center;padding:8px 0;">Sin servicios el ${lbl}</p>`;
-  items=items.sort((a,b)=>(a.horaInicio||'')>(b.horaInicio||'')?1:-1);
   return`<p class="csub" style="margin-bottom:8px;font-weight:600;">📋 ${lbl}</p><div style="display:flex;flex-direction:column;gap:8px;">
     ${items.map(a=>{const c=AGENDA_ROL_COLORS[a.asignadoA?.rol]||'#6B7280';
       const canEdit=currentRole==='admin'||(currentRole==='supervisor'&&a.asignadoPor?.rol==='supervisor'&&a.asignadoPor?.id===currentSupervisorRef?.id);
@@ -10964,11 +10968,12 @@ function openAgendaModal(id){
   _agEditId=id;
   const item=id!=null?AGENDA_ITEMS.find(a=>a.id===id):null;
   const isSinAsignar=item?.asignadoA?.rol==='admin';
-  const tipos=['limpieza','mantenimiento','inspeccion','capacitacion','reunion','otro'];
   const estados=['pendiente','confirmado','en_curso','completado','cancelado'];
   const modal=document.getElementById('modal-agenda');if(!modal)return;
   const initFiltro=(!item||isSinAsignar)?'trabajador':(item.asignadoA?.rol==='personal_inm'?'personal_inm':item.asignadoA?.rol==='supervisor'?'supervisor':'trabajador');
   const selA=item&&!isSinAsignar?`${item.asignadoA.rol}:${item.asignadoA.id}`:'';
+  const todayISO=new Date().toISOString().split('T')[0];
+  const svcTypes=SVC_TYPES.filter(s=>s.activo!==false);
   const _buildOpts=(rolF,selV)=>{
     let lst=[];
     if(rolF==='trabajador'){
@@ -10990,7 +10995,10 @@ function openAgendaModal(id){
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div class="fld"><label>Título *</label><input type="text" id="ag-titulo" placeholder="Ej: Limpieza de oficinas" value="${_esc(item?.titulo||'')}"></div>
-      <div class="fld"><label>Tipo de servicio</label><select id="ag-tipo">${tipos.map(t=>`<option value="${t}"${item?.tipo===t?' selected':''}>${AGENDA_TIPO_LABELS[t]}</option>`).join('')}</select></div>
+      <div class="fld"><label>Tipo de servicio</label><select id="ag-tipo">
+        ${svcTypes.map(s=>`<option value="${s.id}"${(item?.tipo===s.id)?' selected':''}>${_esc(s.nombre)}</option>`).join('')}
+        <option value="otro"${(item?.tipo==='otro'||!item)?' selected':''}>Otro / Especial</option>
+      </select></div>
       ${currentRole==='admin'?`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;padding:8px 10px;border-radius:8px;background:var(--blue-light,#EFF6FF);">
         <input type="checkbox" id="ag-sin-asignar" ${isSinAsignar?'checked':''} style="width:15px;height:15px;accent-color:#042C53;" onchange="_toggleSinAsignar()">
         Sin asignar a trabajador — lo realiza el Admin</label>`:''}
@@ -11009,8 +11017,10 @@ function openAgendaModal(id){
         </div>
       </div>
       <div class="frow">
-        <div class="fld"><label>Fecha *</label><input type="date" id="ag-fecha" value="${item?.fecha||new Date().toISOString().split('T')[0]}" onchange="_checkAgDisp()"></div>
+        <div class="fld"><label>Fecha inicio *</label><input type="date" id="ag-fecha-ini" value="${item?.fechaInicio||item?.fecha||todayISO}" onchange="_checkAgDisp()"></div>
+        <div class="fld"><label>Fecha fin</label><input type="date" id="ag-fecha-fin" value="${item?.fechaFin||item?.fechaInicio||item?.fecha||todayISO}" onchange="_checkAgDisp()"></div>
       </div>
+      <div style="font-size:11px;color:#5C7A9A;margin-top:-6px;">Las horas aplican a cada día del rango seleccionado.</div>
       <div class="frow">
         <div class="fld"><label>Hora inicio</label><input type="time" id="ag-hora-ini" value="${item?.horaInicio||''}" onchange="_checkAgDisp()"></div>
         <div class="fld"><label>Hora fin</label><input type="time" id="ag-hora-fin" value="${item?.horaFin||''}"></div>
@@ -11029,29 +11039,66 @@ function openAgendaModal(id){
 
 function _checkAgDisp(){
   const aVal=(document.getElementById('ag-asignado')||{}).value||'';
-  const fecha=(document.getElementById('ag-fecha')||{}).value||'';
+  const sinAsignarCb=document.getElementById('ag-sin-asignar');
+  if(sinAsignarCb&&sinAsignarCb.checked){return;}
+  const fechaIni=(document.getElementById('ag-fecha-ini')||{}).value||'';
+  const fechaFin=(document.getElementById('ag-fecha-fin')||{}).value||fechaIni;
   const horaIni=(document.getElementById('ag-hora-ini')||{}).value||'';
   const horaFin=(document.getElementById('ag-hora-fin')||{}).value||'23:59';
   const div=document.getElementById('ag-disp-msg');if(!div)return;
-  if(!aVal||!fecha){div.style.display='none';return;}
+  if(!aVal||!fechaIni){div.style.display='none';return;}
   const[rol,idStr]=aVal.split(':');const id=parseInt(idStr);
+  /* ── Conflictos en AGENDA_ITEMS ── */
   const conflicts=AGENDA_ITEMS.filter(a=>{
     if(_agEditId!=null&&a.id===_agEditId)return false;
     if(!a.asignadoA||a.asignadoA.rol!==rol||a.asignadoA.id!==id)return false;
-    if(a.fecha!==fecha||a.estado==='cancelado'||!a.horaInicio)return false;
-    const aI=a.horaInicio,aF=a.horaFin||'23:59';
-    const bI=horaIni||'00:00',bF=horaFin;
-    return!(bF<=aI||bI>=aF);
+    if(a.estado==='cancelado')return false;
+    const aIni=a.fechaInicio||a.fecha||'',aFin=a.fechaFin||aIni;
+    if(aFin<fechaIni||aIni>fechaFin)return false; /* rangos de fecha no solapan */
+    if(!a.horaInicio)return true; /* sin hora → consideramos conflicto de día */
+    const aH=a.horaInicio,bH=a.horaFin||'23:59';
+    const cI=horaIni||'00:00',cF=horaFin;
+    return!(cF<=aH||cI>=bH);
   });
+  /* ── Conflicto de horario de personal_inm con sus servicios asignados ── */
+  let piScheduleWarn=false;
+  if(rol==='personal_inm'&&horaIni){
+    const pi=PERSONAL_INM.find(x=>x.id===id);
+    if(pi){
+      const piSvcs=PROPERTY_SERVICES.filter(ps=>(pi.serviciosAsignados||[]).includes(ps.id));
+      const DAY_MAP={0:'dom',1:'lun',2:'mar',3:'mie',4:'jue',5:'vie',6:'sab'};
+      let cur=new Date(fechaIni+'T12:00:00');const end=new Date(fechaFin+'T12:00:00');
+      while(cur<=end&&!piScheduleWarn){
+        const dk=DAY_MAP[cur.getDay()];
+        for(const ps of piSvcs){
+          if((ps.diasServicio||[]).includes(dk)){
+            const psI=ps.hora||'00:00',psF=ps.horaSalida||'23:59';
+            const cI=horaIni||'00:00',cF=horaFin;
+            if(!(cF<=psI||cI>=psF)){piScheduleWarn=true;break;}
+          }
+        }
+        cur.setDate(cur.getDate()+1);
+      }
+    }
+  }
+  /* ── Trabajador con servicios de reserva en rango ── */
   let wConf=false;
-  if(rol==='trabajador'){const w=WORKERS.find(x=>x.id===id);if(w&&w.todayJobs?.length&&fecha===new Date().toISOString().split('T')[0])wConf=true;}
+  if(rol==='trabajador'){
+    const todayISO=new Date().toISOString().split('T')[0];
+    const w=WORKERS.find(x=>x.id===id);
+    if(w&&w.todayJobs?.length&&fechaIni<=todayISO&&fechaFin>=todayISO)wConf=true;
+  }
   div.style.display='block';
-  if(conflicts.length||wConf){
+  const warns=[];
+  if(conflicts.length)warns.push(`⚠️ Tiene ${conflicts.length} servicio(s) en agenda con conflicto de horario.`);
+  if(piScheduleWarn)warns.push('⚠️ Coincide con su horario de trabajo asignado en inmuebles.');
+  if(wConf)warns.push('⚠️ Tiene servicios de reserva activos en algún día del rango.');
+  if(warns.length){
     div.style.cssText='display:block;padding:8px 10px;border-radius:8px;font-size:12px;background:#FEF3C7;color:#92400E;';
-    div.innerHTML='⚠️ '+(conflicts.length?`Tiene ${conflicts.length} servicio(s) asignado(s) en conflicto de horario.`:'')+' '+(wConf?'Tiene servicios de reserva activos ese día.':'');
+    div.innerHTML=warns.join('<br>');
   } else {
     div.style.cssText='display:block;padding:8px 10px;border-radius:8px;font-size:12px;background:#D1FAE5;color:#065F46;';
-    div.innerHTML='✅ Disponible en el horario seleccionado';
+    div.innerHTML='✅ Disponible en el rango de fechas/horario seleccionado';
   }
 }
 
@@ -11085,7 +11132,8 @@ function saveAgendaItem(){
   const titulo=((document.getElementById('ag-titulo')||{}).value||'').trim();
   const tipo=(document.getElementById('ag-tipo')||{}).value||'otro';
   const aVal=(document.getElementById('ag-asignado')||{}).value||'';
-  const fecha=(document.getElementById('ag-fecha')||{}).value||'';
+  const fechaIni=(document.getElementById('ag-fecha-ini')||{}).value||new Date().toISOString().split('T')[0];
+  const fechaFinV=(document.getElementById('ag-fecha-fin')||{}).value||fechaIni;
   const horaIni=(document.getElementById('ag-hora-ini')||{}).value||'';
   const horaFin=(document.getElementById('ag-hora-fin')||{}).value||'';
   const notas=((document.getElementById('ag-notas')||{}).value||'').trim();
@@ -11095,7 +11143,7 @@ function saveAgendaItem(){
   const sinAsignar=sinAsignarCb&&sinAsignarCb.checked;
   if(!titulo){showToast('amber','⚠️','Escribe un título');return;}
   if(!sinAsignar&&!aVal){showToast('amber','⚠️','Selecciona a quién asignar');return;}
-  if(!fecha){showToast('amber','⚠️','Selecciona una fecha');return;}
+  if(!fechaIni){showToast('amber','⚠️','Selecciona una fecha de inicio');return;}
   let rol,assigneeId,nombre;
   if(sinAsignar){rol='admin';assigneeId=0;nombre='Admin';}
   else{
@@ -11109,17 +11157,17 @@ function saveAgendaItem(){
   if(currentRole==='supervisor'&&currentSupervisorRef){porNombre=currentSupervisorRef.name;porId=currentSupervisorRef.id;}
   if(_agEditId!=null){
     const idx=AGENDA_ITEMS.findIndex(a=>a.id===_agEditId);
-    if(idx>=0){Object.assign(AGENDA_ITEMS[idx],{titulo,tipo,fecha,horaInicio:horaIni,horaFin,notas,estado,asignadoA:{id:assigneeId,nombre,rol}});fbSaveAgendaItem(AGENDA_ITEMS[idx]);showToast('green','✅','Servicio actualizado');}
+    if(idx>=0){Object.assign(AGENDA_ITEMS[idx],{titulo,tipo,fecha:fechaIni,fechaInicio:fechaIni,fechaFin:fechaFinV,horaInicio:horaIni,horaFin,notas,estado,asignadoA:{id:assigneeId,nombre,rol}});fbSaveAgendaItem(AGENDA_ITEMS[idx]);showToast('green','✅','Servicio actualizado');}
   } else {
     const newId=_agNextId();
-    const it={id:newId,titulo,tipo,descripcion:'',fecha,horaInicio:horaIni,horaFin,notas,estado:'pendiente',asignadoA:{id:assigneeId,nombre,rol},asignadoPor:{id:porId,nombre:porNombre,rol:porRol},redirectedBy:null,createdAt:Date.now()};
+    const it={id:newId,titulo,tipo,descripcion:'',fecha:fechaIni,fechaInicio:fechaIni,fechaFin:fechaFinV,horaInicio:horaIni,horaFin,notas,estado:'pendiente',asignadoA:{id:assigneeId,nombre,rol},asignadoPor:{id:porId,nombre:porNombre,rol:porRol},redirectedBy:null,createdAt:Date.now()};
     AGENDA_ITEMS.push(it);fbSaveAgendaItem(it);
     const notifRol=rol==='personal_inm'?'personal_inm':rol==='supervisor'?'supervisor':'trabajador';
-    pushNotif(notifRol,'📅','blue',`Nuevo servicio asignado: ${titulo}`,`Fecha: ${fecha}${horaIni?' a las '+horaIni:''}`);
+    pushNotif(notifRol,'📅','blue',`Nuevo servicio asignado: ${titulo}`,`Fecha: ${fechaIni}${horaIni?' a las '+horaIni:''}`);
     showToast('green','📅',`Servicio asignado a ${nombre}`);
   }
   document.getElementById('modal-agenda').style.display='none';
-  _agSelDate=fecha;
+  _agSelDate=fechaIni;
   if(currentRole==='admin')renderAdminAgenda();
   else if(currentRole==='supervisor')renderSupervisorAgenda();
 }
