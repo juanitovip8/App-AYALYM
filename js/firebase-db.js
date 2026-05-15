@@ -258,6 +258,15 @@ async function loadAllData() {
     }
   } catch(e) { console.warn('INSUMOS_CONFIG load', e); }
 
+  /* 12. INSUMOS_CATALOGO — catálogo editable por admin */
+  try {
+    var catSnap = await _col('config').doc('catalogo').get();
+    if (catSnap.exists) {
+      var catData = catSnap.data();
+      if (catData.items && catData.items.length) INSUMOS_CATALOGO = catData.items;
+    }
+  } catch(e) { console.warn('INSUMOS_CATALOGO load', e); }
+
   /* Marcar versión como aplicada en Firestore (persiste en todos los dispositivos) */
   if (forceReseed && typeof DATA_VERSION !== 'undefined') {
     await _col('config').doc('version').set({ v: DATA_VERSION });
@@ -354,6 +363,13 @@ function fbSaveSupervisors() {
     });
     b.commit().catch(function(e){ console.warn('fbSaveSupervisors', e); });
   } catch(e) { console.warn('fbSaveSupervisors', e); }
+}
+
+function fbSaveCatalogo() {
+  try {
+    _col('config').doc('catalogo').set({ items: _clone(INSUMOS_CATALOGO) })
+      .catch(function(e){ console.warn('fbSaveCatalogo', e); });
+  } catch(e) { console.warn('fbSaveCatalogo', e); }
 }
 
 function fbSaveInsumosConfig() {

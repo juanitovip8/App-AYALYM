@@ -7397,7 +7397,7 @@ function renderPIInsumos(activeTab){
 }
 
 /* ── Helper: card de solicitud de insumos (supervisor/admin) ── */
-function _insReqCard(r,dark,showActions){
+function _insReqCard(r,dark,showActions,showDelete){
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
   const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);
   const pi=PERSONAL_INM.find(x=>x.id===r.personalId);
@@ -7424,6 +7424,7 @@ function _insReqCard(r,dark,showActions){
     </div>`:''}
     ${showActions&&r.status==='aprobado'?`<button class="btn-sec" style="width:100%;margin-top:8px;font-size:12px;padding:7px;" onclick="cambiarStatusInsumo(${r.id},'entregado')">📦 Marcar entregado</button>`:''}
     ${r.status==='rechazado'&&r.motivoRechazo?`<p style="font-size:11px;color:#C0392B;margin:8px 0 0;font-weight:600;">⛔ Motivo: ${r.motivoRechazo}</p>`:''}
+    ${showDelete?`<button class="btn-danger" style="width:100%;margin-top:8px;font-size:12px;padding:7px;opacity:.8;" onclick="eliminarInsumoSol(${r.id})">🗑️ Eliminar solicitud</button>`:''}
   </div>`;
 }
 
@@ -7540,6 +7541,16 @@ function cambiarStatusInsumo(id,nuevoStatus){
   renderAdminInsumos();
   if(nuevoStatus==='aprobado')pushNotif('personal_inm','✅','green','Solicitud aprobada',`${r.folio} fue aprobada por el supervisor.`);
   showToast('green','📦','Solicitud actualizada a: '+(_insStatusLabel[nuevoStatus]||nuevoStatus));
+}
+
+/* ── Eliminar solicitud (solo admin) ── */
+function eliminarInsumoSol(id){
+  const r=INSUMOS_REQUESTS.find(x=>x.id===id);if(!r)return;
+  if(!confirm('¿Eliminar la solicitud '+r.folio+'?\nEsta acción no se puede deshacer.'))return;
+  INSUMOS_REQUESTS.splice(INSUMOS_REQUESTS.indexOf(r),1);
+  fbDeleteDoc('insumos_requests',r.id);
+  renderAdminInsumos();
+  showToast('green','🗑️','Solicitud '+r.folio+' eliminada.');
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -7850,7 +7861,7 @@ function editarInsumoRechazado(reqId){
 }
 
 /* ── Card acordeón compacto para solicitudes (click para expandir) ── */
-function _insReqRowAcordeon(r,dark,showActions){
+function _insReqRowAcordeon(r,dark,showActions,showDelete){
   const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
   const bdr=dark?'rgba(255,255,255,.1)':'#DCE8F5';
   const statusBorder=r.status==='rechazado'?'#C0392B':r.status==='aprobado'?'#1A7A3B':dark?'rgba(255,255,255,.12)':'#DCE8F5';
@@ -7874,7 +7885,7 @@ function _insReqRowAcordeon(r,dark,showActions){
       <span style="font-size:10px;color:${lbl};flex-shrink:0;">▼</span>
     </div>
     <div class="ins-req-body" style="display:none;border-top:.5px solid ${bdr};">
-      <div style="padding:12px 14px;">${_insReqCard(r,dark,showActions)}</div>
+      <div style="padding:12px 14px;">${_insReqCard(r,dark,showActions,showDelete)}</div>
     </div>
   </div>`;
 }
@@ -7955,9 +7966,10 @@ function renderAdminInsumos(activeTab){
   const tabActualHtml=`
     ${_insResumenHtml(reqsActivasActual,dark,mesNom,hoy.getFullYear(),bdr,lbl,txt,true)}
     <p style="font-size:11px;font-weight:700;color:${lbl};text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;">Detalle de solicitudes</p>
-    ${reqsActual.length?reqsActual.map(r=>_insReqRowAcordeon(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`}`;
+    ${reqsActual.length?reqsActual.map(r=>_insReqRowAcordeon(r,dark,true,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`}`;
   const tabHistorialHtml=`${_insHistorialFiltros(reqs,'adm')}
-    <div id="adm-historial-list">${reqs.length?reqs.map(r=>_insReqRowAcordeon(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes registradas.</p>`}</div>`;
+    <div id="adm-historial-list">${reqs.length?reqs.map(r=>_insReqRowAcordeon(r,dark,true,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes registradas.</p>`}</div>`;
+  const tabCatalogoHtml=_renderAdminCatalogo(dark,txt,lbl,bdr);
 
   const configHtml=`<div style="border:.5px solid ${bdr};border-radius:10px;padding:11px 16px;margin-bottom:14px;">
     <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px;">⚙️ Período de recepción de insumos</p>
@@ -7976,11 +7988,12 @@ function renderAdminInsumos(activeTab){
   el.innerHTML=`
     <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Solicitudes de insumos</p>
     ${configHtml}
-    <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
+    <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;flex-wrap:wrap;">
       <button style="${tabBtnStyle(tab==='actual')}" onclick="renderAdminInsumos('actual')">📅 ${mesNom} ${hoy.getFullYear()}</button>
       <button style="${tabBtnStyle(tab==='historial')}" onclick="renderAdminInsumos('historial')">🕐 Historial</button>
+      <button style="${tabBtnStyle(tab==='catalogo')}" onclick="renderAdminInsumos('catalogo')">📋 Catálogo</button>
     </div>
-    ${tab==='actual'?tabActualHtml:tabHistorialHtml}`;
+    ${tab==='actual'?tabActualHtml:tab==='historial'?tabHistorialHtml:tabCatalogoHtml}`;
   el._allReqs=reqs;el._dark=dark;
   /* Guardar contexto para PDF */
   el._mesNom=mesNom;el._anio=hoy.getFullYear();el._reqsActivas=reqsActivasActual;el._matRows=Object.values({}).concat();
@@ -8006,7 +8019,7 @@ function admFiltrarHistorial(){
   if(trab)reqs=reqs.filter(r=>r.personalNombre===trab);
   const lbl=el._dark?'#8AACCA':'#5C7A9A';
   const listEl=document.getElementById('adm-historial-list');
-  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqRowAcordeon(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados.</p>`;
+  if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqRowAcordeon(r,el._dark,true,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados.</p>`;
 }
 /* ── Supervisor también usa acordeón ── */
 function svFiltrarHistorial(){
@@ -8021,6 +8034,142 @@ function svFiltrarHistorial(){
   const lbl=el._dark?'#8AACCA':'#5C7A9A';
   const listEl=document.getElementById('sv-historial-list');
   if(listEl)listEl.innerHTML=reqs.length?reqs.map(r=>_insReqRowAcordeon(r,el._dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin resultados.</p>`;
+}
+
+/* ══════════════════════════════════════════════════════════
+   CATÁLOGO DE INSUMOS — editor de admin
+   ══════════════════════════════════════════════════════════ */
+const _CATS_LABEL={jarcieria:'🧹 Jarciería',bolsas:'🗑️ Bolsas',liquidos:'🧴 Líquidos',otro:'📦 Otro'};
+
+function _renderAdminCatalogo(dark,txt,lbl,bdr){
+  const iStyle=`width:100%;padding:5px 8px;border-radius:7px;border:.5px solid ${bdr};font-size:12px;background:${dark?'rgba(255,255,255,.07)':'#F8FBFF'};color:${txt};box-sizing:border-box;`;
+  const cats=[...new Set(INSUMOS_CATALOGO.map(x=>x.categoria||'otro'))];
+
+  const addFormHtml=`<div id="adm-cat-add-form" style="border:.5px solid ${bdr};border-radius:10px;padding:12px 14px;margin-bottom:12px;display:none;background:${dark?'rgba(255,255,255,.03)':'#F4F8FF'};">
+    <p style="font-size:12px;font-weight:700;color:#185FA5;margin:0 0 10px;">➕ Nuevo producto al catálogo</p>
+    <div style="display:grid;grid-template-columns:2fr 70px 90px 120px;gap:8px;margin-bottom:8px;">
+      <div><p style="font-size:10px;font-weight:600;color:${lbl};margin:0 0 3px;">Nombre</p><input id="adm-cat-n-nombre" placeholder="Nombre del producto" style="${iStyle}"></div>
+      <div><p style="font-size:10px;font-weight:600;color:${lbl};margin:0 0 3px;">Unidad</p><input id="adm-cat-n-unidad" placeholder="PZ" style="${iStyle}"></div>
+      <div><p style="font-size:10px;font-weight:600;color:${lbl};margin:0 0 3px;">Precio ($)</p><input id="adm-cat-n-precio" type="number" min="0" step="0.01" placeholder="0.00" style="${iStyle}"></div>
+      <div><p style="font-size:10px;font-weight:600;color:${lbl};margin:0 0 3px;">Categoría</p>
+        <select id="adm-cat-n-categ" style="${iStyle}">
+          <option value="jarcieria">Jarciería</option>
+          <option value="bolsas">Bolsas</option>
+          <option value="liquidos">Líquidos</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button onclick="admGuardarNuevoCatItem()" style="padding:7px 16px;border-radius:8px;background:#185FA5;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;">💾 Guardar</button>
+      <button onclick="document.getElementById('adm-cat-add-form').style.display='none'" style="padding:7px 12px;border-radius:8px;background:transparent;color:${lbl};border:.5px solid ${bdr};font-size:12px;cursor:pointer;">Cancelar</button>
+    </div>
+  </div>`;
+
+  const catalogHtml=cats.map(cat=>{
+    const items=INSUMOS_CATALOGO.filter(x=>x.categoria===cat);
+    const activos=items.filter(x=>x.activo).length;
+    return`<div style="border:.5px solid ${bdr};border-radius:10px;overflow:hidden;margin-bottom:10px;">
+      <div style="padding:8px 14px;background:${dark?'rgba(255,255,255,.05)':'#EEF5FF'};display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:12px;font-weight:700;color:#185FA5;">${_CATS_LABEL[cat]||cat}</span>
+        <span style="font-size:11px;color:${lbl};">${activos}/${items.length} activos</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 58px 82px 96px;background:${dark?'rgba(255,255,255,.03)':'#F8FBFF'};">
+        <div style="padding:5px 14px;font-size:10px;font-weight:700;color:${lbl};">PRODUCTO</div>
+        <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:center;">UNIDAD</div>
+        <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:right;">PRECIO</div>
+        <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:right;">ACCIONES</div>
+      </div>
+      ${items.map(item=>`<div id="adm-cat-row-${item.id}" style="display:grid;grid-template-columns:1fr 58px 82px 96px;border-top:.5px solid ${bdr};align-items:center;opacity:${item.activo?1:0.5};">
+        <span style="padding:8px 14px;font-size:11px;color:${txt};">${item.nombre}</span>
+        <span style="padding:8px;font-size:11px;color:${lbl};text-align:center;">${item.unidad}</span>
+        <span style="padding:8px;font-size:11px;font-weight:700;color:${txt};text-align:right;">$${item.precio.toFixed(2)}</span>
+        <div style="padding:5px 8px;display:flex;gap:3px;justify-content:flex-end;">
+          <button onclick="admToggleCatItem(${item.id})" title="${item.activo?'Desactivar':'Activar'}" style="padding:3px 6px;border-radius:6px;background:${item.activo?'#E8F5EC':'#F5F5F5'};border:.5px solid ${item.activo?'#1A7A3B':'#ccc'};font-size:12px;cursor:pointer;">${item.activo?'✅':'⭕'}</button>
+          <button onclick="admEditCatItem(${item.id})" title="Editar" style="padding:3px 6px;border-radius:6px;background:#EEF5FF;border:.5px solid #C5D8EC;font-size:12px;cursor:pointer;">✏️</button>
+          <button onclick="admDeleteCatItem(${item.id})" title="Eliminar" style="padding:3px 6px;border-radius:6px;background:#FFEDEC;border:.5px solid #C0392B;font-size:12px;cursor:pointer;">🗑️</button>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  return`<div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <p style="font-size:13px;font-weight:700;color:${txt};margin:0;">📋 Catálogo de productos · <span style="color:#185FA5;">${INSUMOS_CATALOGO.filter(x=>x.activo).length} activos / ${INSUMOS_CATALOGO.length} total</span></p>
+      <button onclick="admAbrirFormCatalogo()" style="padding:7px 14px;border-radius:8px;background:#185FA5;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;">➕ Agregar producto</button>
+    </div>
+    ${addFormHtml}
+    ${catalogHtml}
+  </div>`;
+}
+
+function admAbrirFormCatalogo(){
+  const f=document.getElementById('adm-cat-add-form');
+  if(f){f.style.display='block';(document.getElementById('adm-cat-n-nombre')||{}).focus&&document.getElementById('adm-cat-n-nombre').focus();}
+}
+
+function admGuardarNuevoCatItem(){
+  const nombre=(document.getElementById('adm-cat-n-nombre')||{}).value||'';
+  const unidad=((document.getElementById('adm-cat-n-unidad')||{}).value||'PZ').trim().toUpperCase()||'PZ';
+  const precio=parseFloat((document.getElementById('adm-cat-n-precio')||{}).value||0);
+  const categ=(document.getElementById('adm-cat-n-categ')||{}).value||'otro';
+  if(!nombre.trim()){showToast('amber','⚠️','Escribe el nombre del producto.');return;}
+  if(isNaN(precio)||precio<0){showToast('amber','⚠️','Indica un precio válido.');return;}
+  const maxId=Math.max(0,...INSUMOS_CATALOGO.map(x=>x.id||0));
+  INSUMOS_CATALOGO.push({id:maxId+1,categoria:categ,nombre:nombre.trim().toUpperCase(),unidad,precio,activo:true});
+  fbSaveCatalogo();
+  renderAdminInsumos('catalogo');
+  showToast('green','✅','Producto agregado al catálogo.');
+}
+
+function admEditCatItem(id){
+  const item=INSUMOS_CATALOGO.find(x=>x.id===id);if(!item)return;
+  const row=document.getElementById('adm-cat-row-'+id);if(!row)return;
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const bdr=dark?'rgba(255,255,255,.1)':'#DCE8F5';const txt=dark?'#e8edf4':'#042C53';
+  const iS=`padding:4px 6px;border-radius:6px;border:.5px solid ${bdr};font-size:11px;background:${dark?'rgba(255,255,255,.07)':'#F8FBFF'};color:${txt};width:100%;box-sizing:border-box;`;
+  row.style.gridTemplateColumns='1fr 58px 82px 96px';
+  row.style.opacity='1';
+  row.innerHTML=`
+    <div style="padding:6px 14px;"><input id="adm-cat-e-nombre-${id}" value="${item.nombre.replace(/"/g,'&quot;')}" style="${iS}"></div>
+    <div style="padding:6px 8px;"><input id="adm-cat-e-unidad-${id}" value="${item.unidad}" maxlength="5" style="${iS}"></div>
+    <div style="padding:6px 8px;"><input id="adm-cat-e-precio-${id}" type="number" min="0" step="0.01" value="${item.precio}" style="${iS}"></div>
+    <div style="padding:5px 8px;display:flex;gap:3px;justify-content:flex-end;">
+      <button onclick="admGuardarEditCatItem(${id})" style="padding:3px 8px;border-radius:6px;background:#185FA5;color:#fff;border:none;font-size:11px;cursor:pointer;">💾</button>
+      <button onclick="admCancelarEditCatItem()" style="padding:3px 7px;border-radius:6px;background:transparent;color:#888;border:.5px solid #ccc;font-size:11px;cursor:pointer;">✕</button>
+    </div>`;
+}
+
+function admGuardarEditCatItem(id){
+  const item=INSUMOS_CATALOGO.find(x=>x.id===id);if(!item)return;
+  const nombre=(document.getElementById('adm-cat-e-nombre-'+id)||{}).value||'';
+  const unidad=((document.getElementById('adm-cat-e-unidad-'+id)||{}).value||'PZ').trim().toUpperCase()||'PZ';
+  const precio=parseFloat((document.getElementById('adm-cat-e-precio-'+id)||{}).value||0);
+  if(!nombre.trim()){showToast('amber','⚠️','El nombre no puede estar vacío.');return;}
+  if(isNaN(precio)||precio<0){showToast('amber','⚠️','Precio inválido.');return;}
+  item.nombre=nombre.trim().toUpperCase();item.unidad=unidad;item.precio=precio;
+  fbSaveCatalogo();
+  renderAdminInsumos('catalogo');
+  showToast('green','✅','Producto actualizado.');
+}
+
+function admCancelarEditCatItem(){renderAdminInsumos('catalogo');}
+
+function admToggleCatItem(id){
+  const item=INSUMOS_CATALOGO.find(x=>x.id===id);if(!item)return;
+  item.activo=!item.activo;
+  fbSaveCatalogo();
+  renderAdminInsumos('catalogo');
+  showToast(item.activo?'green':'amber',item.activo?'✅':'⭕',`"${item.nombre}" ${item.activo?'activado':'desactivado'} en el catálogo.`);
+}
+
+function admDeleteCatItem(id){
+  const item=INSUMOS_CATALOGO.find(x=>x.id===id);if(!item)return;
+  if(!confirm('¿Eliminar "'+item.nombre+'" del catálogo?\nNo afecta solicitudes ya enviadas.'))return;
+  INSUMOS_CATALOGO.splice(INSUMOS_CATALOGO.indexOf(item),1);
+  fbSaveCatalogo();
+  renderAdminInsumos('catalogo');
+  showToast('green','🗑️','"'+item.nombre+'" eliminado del catálogo.');
 }
 
 /* ── Exportar resumen de compras a PDF ── */
