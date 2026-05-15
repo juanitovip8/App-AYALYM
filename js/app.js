@@ -25,6 +25,40 @@ function _avHtml(person,size,bg,xStyle){
   return`<div class="av" style="width:${s}px;height:${s}px;font-size:${fs};background:${background};flex-shrink:0${extra}">${inner}</div>`;
 }
 
+/* ── COMPRESIÓN DE IMÁGENES ────────────────────────────────────────
+   Redimensiona a maxPx × maxPx (conservando aspecto) y recodifica
+   como JPEG con calidad q (0-1). Llama cb(base64DataURL) al terminar.
+   Reduce fotos de 1-3 MB a ~20-60 KB antes de guardarlas en Firestore.
+   ──────────────────────────────────────────────────────────────── */
+function _compressImage(file,maxPx,q,cb){
+  maxPx=maxPx||400;q=q||0.65;
+  var r=new FileReader();
+  r.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width,h=img.height;
+      if(w>maxPx||h>maxPx){
+        if(w>h){h=Math.round(h*maxPx/w);w=maxPx;}
+        else{w=Math.round(w*maxPx/h);h=maxPx;}
+      }
+      var c=document.createElement('canvas');
+      c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      cb(c.toDataURL('image/jpeg',q));
+    };
+    img.src=ev.target.result;
+  };
+  r.readAsDataURL(file);
+}
+
+/* ── PAGINACIÓN ────────────────────────────────────────────────────
+   PAGE_SIZE  — elementos por página
+   _upPage    — página actual del panel de usuarios (admin)
+   _slPage    — página actual de la lista de staff (admin)
+   ──────────────────────────────────────────────────────────────── */
+const PAGE_SIZE=25;
+let _upPage=1,_slPage=1;
+
 /* RECOVER */
 let _recoverEmail='';
 function toggleRecover(){showLV('recover');}
@@ -991,23 +1025,18 @@ function openWorkerPhotoUpload(){
 function handleWorkerPhotoFile(input){
   const file=input.files[0];if(!file)return;
   if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const b64=e.target.result;
+  _compressImage(file,400,0.65,function(b64){
     if(currentWorkerRef){
       currentWorkerRef.photo=b64;
-      // Actualizar avatar de perfil
       const av=document.getElementById('t-profile-av');
       if(av){av.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;av.style.fontSize='0';av.style.padding='0';}
-      // Actualizar header
       const hav=document.getElementById('header-av');
       if(hav){hav.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;hav.style.fontSize='0';}
       if(typeof fbSaveWorkers==='function')fbSaveWorkers();
       showToast('green','📷','¡Foto actualizada!');
     }
     input.value='';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 /* ── Foto de perfil del cliente ── */
 function clientUploadPhoto(){
@@ -1016,22 +1045,17 @@ function clientUploadPhoto(){
 function handleClientPhotoChange(e){
   const file=e.target.files[0];if(!file)return;
   if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');e.target.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(ev){
-    const b64=ev.target.result;
-    /* Actualizar avatar en perfil y header */
+  _compressImage(file,400,0.65,function(b64){
     ['perfil-av','c-user-av','header-av'].forEach(id=>{
       const el=document.getElementById(id);if(!el)return;
       el.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
       el.style.fontSize='0';
     });
-    /* Guardar en USERS y Firestore */
     const u=USERS.find(u=>u.email===currentUserEmail&&(u.rol==='cliente'||u.rol==='cliente_inm'));
     if(u){u.photo=b64;fbSaveUsers();}
     showToast('green','📷','Foto de perfil actualizada');
     e.target.value='';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
 /* Admin sube foto de un trabajador */
@@ -1043,16 +1067,13 @@ function adminUploadWorkerPhoto(wid){
 function handleAdminWorkerPhotoFile(input,wid){
   const file=input.files[0];if(!file)return;
   if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const b64=e.target.result;
+  _compressImage(file,400,0.65,function(b64){
     const w=WORKERS.find(x=>x.id===wid);if(w)w.photo=b64;
     if(typeof fbSaveWorkers==='function')fbSaveWorkers();
     renderUsersPanel();renderStaffList(null);
     showToast('green','📷',`Foto actualizada para ${w?w.name:'trabajador'}`);
     input.value='';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
 /* Admin sube foto de un supervisor */
@@ -1064,16 +1085,13 @@ function adminUploadSupervisorPhoto(svId){
 function handleAdminSupervisorPhotoFile(input,svId){
   const file=input.files[0];if(!file)return;
   if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const b64=e.target.result;
+  _compressImage(file,400,0.65,function(b64){
     const sv=SUPERVISORS.find(x=>x.id===svId);if(sv)sv.photo=b64;
     if(typeof fbSaveSupervisors==='function')fbSaveSupervisors();
     renderUsersPanel();renderSupervisorsPanel();
     showToast('green','📷',`Foto actualizada para ${sv?sv.name:'supervisor'}`);
     input.value='';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 /* Admin sube foto de personal inmuebles */
 function adminUploadPersonalInmPhoto(pid){
@@ -1084,16 +1102,13 @@ function adminUploadPersonalInmPhoto(pid){
 function handleAdminPersonalInmPhotoFile(input,pid){
   const file=input.files[0];if(!file)return;
   if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const b64=e.target.result;
+  _compressImage(file,400,0.65,function(b64){
     const p=PERSONAL_INM.find(x=>x.id===pid);if(p)p.photo=b64;
     if(typeof fbSavePersonalInm==='function')fbSavePersonalInm();
     renderUsersPanel();
     showToast('green','📷',`Foto actualizada para ${p?p.nombre:'personal'}`);
     input.value='';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 /* Cliente inmuebles sube su propia foto */
 function uploadCinmPhoto(){
@@ -1104,19 +1119,15 @@ function uploadCinmPhoto(){
 function handleCinmPhotoFile(input){
   const file=input.files[0];if(!file)return;
   if(file.size>3*1024*1024){showToast('amber','⚠️','La foto debe pesar menos de 3 MB');input.value='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    const b64=e.target.result;
+  _compressImage(file,400,0.65,function(b64){
     const ci=CLIENTS_INM[currentClientInmId];if(ci)ci.photo=b64;
-    // Actualizar header
     const hav=document.getElementById('header-av');
     if(hav){hav.innerHTML=`<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;hav.style.fontSize='0';}
     if(typeof fbSaveClientsInm==='function')fbSaveClientsInm();
     renderClienteInmPerfil();
     showToast('green','📷','¡Foto de perfil actualizada!');
     input.value='';
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
 /* ── RESERVA WIZARD ── */
@@ -2017,10 +2028,14 @@ function saveSVAssign(si){document.getElementById('sv-ap-'+si).classList.remove(
 const PROTECTED_ADMIN='admin@ayalym.com';
 function renderUsersPanel(filter){
   filter=filter||userRoleFilter||'recientes';
-  let filtered;
-  if(filter==='recientes') filtered=[...USERS].sort((a,b)=>{const ta=a.creadoEn?.toMillis?a.creadoEn.toMillis():(a.creadoEn?new Date(a.creadoEn).getTime():USERS.indexOf(a));const tb=b.creadoEn?.toMillis?b.creadoEn.toMillis():(b.creadoEn?new Date(b.creadoEn).getTime():USERS.indexOf(b));return tb-ta;}).slice(0,10);
-  else if(filter==='all') filtered=USERS;
-  else filtered=USERS.filter(u=>u.rol===filter);
+  /* Resetear página cuando cambia el filtro */
+  if(filter!==userRoleFilter)_upPage=1;
+  userRoleFilter=filter;
+  let fullList;
+  if(filter==='recientes') fullList=[...USERS].sort((a,b)=>{const ta=a.creadoEn?.toMillis?a.creadoEn.toMillis():(a.creadoEn?new Date(a.creadoEn).getTime():USERS.indexOf(a));const tb=b.creadoEn?.toMillis?b.creadoEn.toMillis():(b.creadoEn?new Date(b.creadoEn).getTime():USERS.indexOf(b));return tb-ta;}).slice(0,10);
+  else if(filter==='all') fullList=USERS;
+  else fullList=USERS.filter(u=>u.rol===filter);
+  const filtered=fullList.slice(0,_upPage*PAGE_SIZE);
   document.getElementById('users-list').innerHTML=filtered.map((u)=>{
     const i=USERS.indexOf(u);
     const isProtected=u.rolProtegido===true;
@@ -2163,6 +2178,16 @@ function renderUsersPanel(filter){
   }
   if(!document.getElementById('users-list').innerHTML)
     document.getElementById('users-list').innerHTML='<p style="font-size:13px;color:#185FA5;text-align:center;padding:1rem;">Sin usuarios en esta categoría</p>';
+  /* ── Botón "Cargar más" si hay más usuarios que los mostrados ── */
+  if(filter!=='recientes'&&fullList.length>_upPage*PAGE_SIZE){
+    const remaining=fullList.length-_upPage*PAGE_SIZE;
+    const btn=document.createElement('button');
+    btn.className='btn-sec';
+    btn.style.cssText='width:100%;margin-top:10px;font-size:13px;';
+    btn.textContent=`Cargar más (${remaining} más)`;
+    btn.onclick=function(){_upPage++;renderUsersPanel(filter);};
+    document.getElementById('users-list').appendChild(btn);
+  }
 }
 function openAssignWorkerAccess(wid){
   const w=WORKERS.find(x=>x.id===wid);if(!w)return;
@@ -3243,8 +3268,10 @@ function toggleSvcAssign(wid){
   if(open){const zp=document.getElementById('assign-'+wid);if(zp)zp.classList.remove('open');}
 }
 function renderStaffList(filter){
-  const filtered=filter==='all'?WORKERS:WORKERS.filter(w=>w.type.includes(filter));
-  document.getElementById('staff-list').innerHTML=filtered.map(w=>{
+  const fullList=(filter==='all'||!filter)?WORKERS:WORKERS.filter(w=>w.type.includes(filter));
+  const filtered=fullList.slice(0,_slPage*PAGE_SIZE);
+  const _slEl=document.getElementById('staff-list');
+  _slEl.innerHTML=filtered.map(w=>{
     const isInact=w.status==='inactive';
     const svc=w.type.map(_svcTypeLabel).join(' · ');
     const sb=w.status==='active'?'b-activo':w.status==='busy'?'bwarn':'b-inactivo';
@@ -3288,6 +3315,15 @@ function renderStaffList(filter){
       <div style="margin-top:8px;"><button class="btn-sm" style="background:#085041;" onclick="toggleSvcAssign(${w.id})">Guardar</button></div>
     </div>`;
   }).join('');
+  /* ── Botón "Cargar más" trabajadores ── */
+  if(fullList.length>_slPage*PAGE_SIZE){
+    const _rem=fullList.length-_slPage*PAGE_SIZE;
+    const _btn=document.createElement('button');
+    _btn.className='btn-sec';_btn.style.cssText='width:100%;margin-top:10px;font-size:13px;';
+    _btn.textContent='Cargar más ('+_rem+' más)';
+    _btn.onclick=function(){_slPage++;renderStaffList(filter);};
+    _slEl.appendChild(_btn);
+  }
 }
 function renderRevBreakdown(){const el=document.getElementById('rev-breakdown-list');if(!el)return;el.innerHTML=WORKERS.map((w,i)=>{const total=w.reviews.length;if(!total)return'';const counts=[0,0,0,0,0];w.reviews.forEach(r=>{if(r.stars>=1&&r.stars<=5)counts[r.stars-1]++;});const avg=w.reviews.reduce((a,r)=>a+r.stars,0)/total;const ph=w.photo?`<img src="${w.photo}" alt="">`:'';const bars=[5,4,3,2,1].map(star=>{const cnt=counts[star-1];const pct=total>0?Math.round(cnt/total*100):0;return`<div class="star-bar-row"><span class="star-bar-label">${star}★</span><div class="star-bar-track"><div class="star-bar-fill" style="width:${pct}%;"></div></div><span class="star-bar-count">${cnt}</span></div>`;}).join('');return`<div class="rev-breakdown"><div class="rev-bd-header" onclick="toggleRevBD(${i})"><div class="av" style="width:40px;height:40px;font-size:13px;">${ph||w.initials}</div><div class="rev-bd-info"><p>${w.name}</p><span>${total} reseñas</span></div><div style="text-align:right;flex-shrink:0;"><div style="display:flex;gap:2px;justify-content:flex-end;">${s$(avg,13)}</div><p style="font-size:13px;font-weight:500;color:#042C53;">${avg.toFixed(1)}</p></div></div><div class="rev-bd-body" id="rbd-${i}">${bars}<div class="div"></div>${w.reviews.slice(0,3).map(r=>`<div class="rev-card"><div style="display:flex;gap:2px;margin-bottom:4px;">${s$(r.stars,13)}</div><p class="rev-comment">"${r.comment}"</p><p class="rev-meta">${r.svc}${r.client?' · '+r.client:''}</p></div>`).join('')}</div></div>`;}).join('');}
 function toggleRevBD(i){const el=document.getElementById('rbd-'+i);if(el)el.classList.toggle('open');}
@@ -4878,7 +4914,9 @@ function selectClienteTab(tab,btn){
 function renderClienteResumen(){selectClienteTab('actividad',document.querySelector('#cliente-dash-tabs .dash-tab'));}
 
 /* ── HISTORIAL DINÁMICO DEL CLIENTE ── */
-function renderClientHistorial(){
+let _chPage=1; /* página del historial del cliente */
+function renderClientHistorial(loadMore){
+  if(!loadMore)_chPage=1;
   const el=document.getElementById('c-historial-list');if(!el)return;
   if(!clientReviews.length){
     el.innerHTML=`<div style="text-align:center;padding:2.5rem 0;">
@@ -4890,12 +4928,13 @@ function renderClientHistorial(){
   }
   const totalStars=clientReviews.reduce(function(a,r){return a+(r.stars||0);},0);
   const avg=clientReviews.length?totalStars/clientReviews.length:0;
+  const visibleReviews=clientReviews.slice(0,_chPage*20);
   el.innerHTML=`<div class="rbar-compact" style="margin-bottom:12px;">
     <span class="rscore-sm">${avg.toFixed(1)}</span>
     <div style="display:flex;gap:2px;">${s$(avg,12)}</div>
     <span style="font-size:11px;color:#185FA5;margin-left:4px;">Promedio · ${clientReviews.length} servicio${clientReviews.length!==1?'s':''}</span>
   </div>`+
-  clientReviews.map(function(r,i){
+  visibleReviews.map(function(r,i){
     return`<div class="hrow-c">
       <div class="hrow-c-main">
         <div class="hrow-c-info">
@@ -4910,6 +4949,15 @@ function renderClientHistorial(){
       </div>
     </div>`;
   }).join('');
+  /* ── Botón cargar más historial ── */
+  if(clientReviews.length>_chPage*20){
+    const _rem=clientReviews.length-_chPage*20;
+    const _btn=document.createElement('button');
+    _btn.className='btn-sec';_btn.style.cssText='width:100%;margin-top:10px;font-size:13px;';
+    _btn.textContent='Ver más ('+_rem+' más)';
+    _btn.onclick=function(){_chPage++;renderClientHistorial(true);};
+    el.appendChild(_btn);
+  }
   // Actualizar contadores en el resumen
   var avgEl=document.getElementById('client-avg');if(avgEl)avgEl.textContent=avg.toFixed(1);
   var totEl=document.getElementById('c-total');if(totEl)totEl.textContent=clientReviews.length;
@@ -5450,8 +5498,8 @@ function renderConvs(){const el=document.getElementById('conv-list');if(!el)retu
 function toggleConv(i){const el=document.getElementById('conv-'+i);if(el)el.classList.toggle('open');}
 function toggleAssign(id){document.getElementById('assign-'+id).classList.toggle('open');}
 function twz(wid,zid,checked){const w=WORKERS.find(x=>x.id===wid);if(!w)return;if(checked&&!w.zonas.includes(zid))w.zonas.push(zid);if(!checked)w.zonas=w.zonas.filter(z=>z!==zid);clearTimeout(window._twzTimer);window._twzTimer=setTimeout(fbSaveWorkers,1200);}
-function filterStaff(type,el){document.querySelectorAll('.svc-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderStaffList(type);}
-function previewNWPhoto(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>{nwPhotoData=ev.target.result;document.getElementById('nw-photo-circle').innerHTML=`<img src="${nwPhotoData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;};r.readAsDataURL(file);}
+function filterStaff(type,el){document.querySelectorAll('.svc-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');_slPage=1;renderStaffList(type);}
+function previewNWPhoto(e){const file=e.target.files[0];if(!file)return;_compressImage(file,400,0.65,function(b64){nwPhotoData=b64;document.getElementById('nw-photo-circle').innerHTML=`<img src="${nwPhotoData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;});}
 function addNewWorker(){
   const nombre=document.getElementById('nw-nombre').value.trim();
   if(!nombre){showToast('amber','⚠️','Escribe el nombre');return;}

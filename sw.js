@@ -4,14 +4,14 @@
                Network-first para HTML (siempre versión fresca)
    ═══════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'ayalym-v152';
+const CACHE_NAME = 'ayalym-v153';
 
 /* Assets a pre-cachear en la instalación */
 const PRECACHE = [
   '/app.html',
   '/index.html',
-  '/css/style.css',
-  '/js/app.js',
+  '/css/style.min.css',
+  '/js/app.min.js',
   '/js/firebase-db.js',
   '/js/data.js',
   '/js/site-config.js',

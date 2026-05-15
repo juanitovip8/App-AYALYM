@@ -1,13 +1,17 @@
 {
   "hosting": {
+    "predeploy": ["npm run build"],
     "public": ".",
     "ignore": [
       "firebase.json",
       ".firebaserc",
+      "build.js",
       "**/.*",
       "**/node_modules/**",
       "**/*.md",
-      "**/*.jsonl"
+      "**/*.jsonl",
+      "js/app.js",
+      "css/style.css"
     ],
     "cleanUrls": false,
     "trailingSlash": false,

@@ -8,6 +8,10 @@ App AYALYM/
 node_modules/
 npm-debug.log*
 
+# Archivos minificados (generados por npm run build — no trackear en git)
+js/app.min.js
+css/style.min.css
+
 # OS
 .DS_Store
 Thumbs.db
