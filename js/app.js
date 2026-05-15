@@ -10109,10 +10109,11 @@ function renderAdminWebEditor() {
   _wePopulateContacto();
   _wePopulateRedes();
   _wePopulateValores();
+  _wePopulatePortal();
 }
 
 function switchWebTab(tab, btn) {
-  const panels = ['promos','textos','contacto','redes','valores'];
+  const panels = ['promos','textos','contacto','redes','valores','portal'];
   panels.forEach(p => {
     const el = document.getElementById('web-panel-' + p);
     if (el) el.style.display = p === tab ? 'block' : 'none';
@@ -10123,6 +10124,7 @@ function switchWebTab(tab, btn) {
   if (tab === 'contacto') _wePopulateContacto();
   if (tab === 'redes')    _wePopulateRedes();
   if (tab === 'valores')  _wePopulateValores();
+  if (tab === 'portal')   _wePopulatePortal();
 }
 
 /* ── Populate helpers ── */
@@ -10378,6 +10380,29 @@ function saveWebValores() {
   _weSaveAllValorFields();
   if (typeof fbSaveSiteConfig === 'function') fbSaveSiteConfig();
   showToast('green','💾','Valores actualizados en el sitio web');
+}
+
+/* ── PORTAL section ── */
+function _wePopulatePortal() {
+  const pt = SITE_CONFIG.portal || {};
+  const map = [
+    ['wp-nd1-title', pt.notif1Title], ['wp-nd1-text', pt.notif1Text],
+    ['wp-nd2-title', pt.notif2Title], ['wp-nd2-text', pt.notif2Text],
+    ['wp-nd3-title', pt.notif3Title], ['wp-nd3-text', pt.notif3Text],
+    ['wp-nd4-title', pt.notif4Title], ['wp-nd4-text', pt.notif4Text],
+  ];
+  map.forEach(([id, val]) => { const el=document.getElementById(id); if(el && val!=null) el.value=val; });
+}
+function saveWebPortal() {
+  if (!SITE_CONFIG.portal) SITE_CONFIG.portal = {};
+  const pt = SITE_CONFIG.portal;
+  const g = id => (document.getElementById(id)||{}).value || '';
+  pt.notif1Title = g('wp-nd1-title'); pt.notif1Text = g('wp-nd1-text');
+  pt.notif2Title = g('wp-nd2-title'); pt.notif2Text = g('wp-nd2-text');
+  pt.notif3Title = g('wp-nd3-title'); pt.notif3Text = g('wp-nd3-text');
+  pt.notif4Title = g('wp-nd4-title'); pt.notif4Text = g('wp-nd4-text');
+  if (typeof fbSaveSiteConfig === 'function') fbSaveSiteConfig();
+  showToast('green','🏢','Sección Portal actualizada en el sitio web');
 }
 
 function _renderPromoList() {

@@ -280,6 +280,7 @@ async function loadAllData() {
             SITE_CONFIG.social=_legMap.filter(function(m){return sc.social[m.key];}).map(function(m){return{emoji:m.emoji,label:m.label,url:sc.social[m.key]};});
           }
         }
+        if (sc.portal) Object.assign(SITE_CONFIG.portal, sc.portal);
         /* Persist to localStorage for landing page (cross-tab) */
         try { localStorage.setItem('ayalym-site-config', JSON.stringify(SITE_CONFIG)); } catch(ex){}
       }

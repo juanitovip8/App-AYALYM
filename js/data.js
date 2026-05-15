@@ -268,5 +268,15 @@ let SITE_CONFIG = {
     {emoji:'📘', label:'Facebook',  url:'https://www.facebook.com/ayalym23'},
     {emoji:'📷', label:'Instagram', url:'https://www.instagram.com/ayalym23'},
     {emoji:'🎵', label:'TikTok',    url:'https://www.tiktok.com/@ayalym23'}
-  ]
+  ],
+  portal:{
+    notif1Title:'Entrada registrada',
+    notif1Text: 'María González llegó a las 09:02 — Torre Norte',
+    notif2Title:'Nuevo reporte del supervisor',
+    notif2Text: 'Revisión de área común completada — ver detalles',
+    notif3Title:'Presupuesto autorizado',
+    notif3Text: '$1,800 MXN aprobados para el período',
+    notif4Title:'Salida registrada',
+    notif4Text: 'Carlos Ramírez salió a las 18:15 — Plaza Central'
+  }
 };

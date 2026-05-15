@@ -147,6 +147,17 @@
       setHref('lp-social-ig',    soArr.ig    || DEFAULTS.social[1].url);
       setHref('lp-social-tiktok',soArr.tiktok|| DEFAULTS.social[2].url);
     }
+
+    // Portal notification demo
+    var pt = cfg.portal || {};
+    if(pt.notif1Title) set('lp-nd-1-title', pt.notif1Title);
+    if(pt.notif1Text)  set('lp-nd-1-text',  pt.notif1Text);
+    if(pt.notif2Title) set('lp-nd-2-title', pt.notif2Title);
+    if(pt.notif2Text)  set('lp-nd-2-text',  pt.notif2Text);
+    if(pt.notif3Title) set('lp-nd-3-title', pt.notif3Title);
+    if(pt.notif3Text)  set('lp-nd-3-text',  pt.notif3Text);
+    if(pt.notif4Title) set('lp-nd-4-title', pt.notif4Title);
+    if(pt.notif4Text)  set('lp-nd-4-text',  pt.notif4Text);
   }
 
   // Load from localStorage and apply on DOMContentLoaded

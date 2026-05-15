@@ -1046,6 +1046,7 @@
         <button class="msg-tab"        id="web-tab-contacto" onclick="switchWebTab('contacto',this)">📞 Contacto</button>
         <button class="msg-tab"        id="web-tab-redes"    onclick="switchWebTab('redes',this)">📱 Redes</button>
         <button class="msg-tab"        id="web-tab-valores"  onclick="switchWebTab('valores',this)">💡 Valores</button>
+        <button class="msg-tab"        id="web-tab-portal"   onclick="switchWebTab('portal',this)">🏢 Portal</button>
       </div>
 
       <!-- ── PANEL: PROMOCIONES ── -->
@@ -1106,7 +1107,7 @@
             </div>
           </div>
           <div id="we-c-promo-list" style="padding:0 16px 14px;">
-            <div id="promo-list-admin"><p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin promociones publicadas aún.</p></div>
+            <div id="promo-list-admin" style="max-height:420px;overflow-y:auto;padding-right:4px;scrollbar-width:thin;"><p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin promociones publicadas aún.</p></div>
           </div>
         </div>
       </div>
@@ -1214,6 +1215,36 @@
           <button class="btn-royal" style="width:100%;margin-top:10px;" onclick="saveWebValores()">💾 Guardar valores</button>
         </div>
       </div>
+
+      <!-- ── PANEL: PORTAL ── -->
+      <div id="web-panel-portal" style="display:none;">
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:13px 16px;border-bottom:.5px solid var(--blue-border,#B5D4F4);">
+            <p class="ctitle" style="margin:0;">🔔 Notificaciones de ejemplo — sección Portal</p>
+            <p style="font-size:11px;color:#5C7A9A;margin-top:4px;">Textos de demostración visibles en la página web. Usa datos genéricos, no nombres reales.</p>
+          </div>
+          <div style="padding:14px 16px;">
+            <div class="frow">
+              <div><label>Notif 1 — Título</label><input type="text" id="wp-nd1-title" placeholder="Entrada registrada"></div>
+              <div style="flex:2;"><label>Notif 1 — Texto</label><input type="text" id="wp-nd1-text" placeholder="Ej: María González llegó a las 09:02 — Torre Norte"></div>
+            </div>
+            <div class="frow">
+              <div><label>Notif 2 — Título</label><input type="text" id="wp-nd2-title" placeholder="Nuevo reporte del supervisor"></div>
+              <div style="flex:2;"><label>Notif 2 — Texto</label><input type="text" id="wp-nd2-text" placeholder="Ej: Revisión de área común completada"></div>
+            </div>
+            <div class="frow">
+              <div><label>Notif 3 — Título</label><input type="text" id="wp-nd3-title" placeholder="Presupuesto autorizado"></div>
+              <div style="flex:2;"><label>Notif 3 — Texto</label><input type="text" id="wp-nd3-text" placeholder="Ej: $1,800 MXN aprobados para el período"></div>
+            </div>
+            <div class="frow">
+              <div><label>Notif 4 — Título</label><input type="text" id="wp-nd4-title" placeholder="Salida registrada"></div>
+              <div style="flex:2;"><label>Notif 4 — Texto</label><input type="text" id="wp-nd4-text" placeholder="Ej: Carlos Ramírez salió a las 18:15 — Plaza Central"></div>
+            </div>
+            <button class="btn-royal" style="width:100%;margin-top:8px;" onclick="saveWebPortal()">💾 Guardar en sitio web</button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── ADMIN: SERVICIOS DE INMUEBLES ── -->
@@ -1492,7 +1523,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=149"></script>
+<script src="js/app.js?v=150"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 
