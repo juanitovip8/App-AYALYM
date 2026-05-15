@@ -248,6 +248,16 @@ async function loadAllData() {
     insSnap.docs.forEach(function(d){ INSUMOS_REQUESTS.push(d.data()); });
   }
 
+  /* 11. INSUMOS_CONFIG — período de recepción configurable */
+  try {
+    var insCfgSnap = await _col('config').doc('insumos').get();
+    if (insCfgSnap.exists) {
+      var cfg = insCfgSnap.data();
+      if (cfg.diaInicio) INSUMOS_CONFIG.diaInicio = cfg.diaInicio;
+      if (cfg.diaFin)    INSUMOS_CONFIG.diaFin    = cfg.diaFin;
+    }
+  } catch(e) { console.warn('INSUMOS_CONFIG load', e); }
+
   /* Marcar versión como aplicada en Firestore (persiste en todos los dispositivos) */
   if (forceReseed && typeof DATA_VERSION !== 'undefined') {
     await _col('config').doc('version').set({ v: DATA_VERSION });
@@ -344,6 +354,15 @@ function fbSaveSupervisors() {
     });
     b.commit().catch(function(e){ console.warn('fbSaveSupervisors', e); });
   } catch(e) { console.warn('fbSaveSupervisors', e); }
+}
+
+function fbSaveInsumosConfig() {
+  try {
+    _col('config').doc('insumos').set({
+      diaInicio: INSUMOS_CONFIG.diaInicio,
+      diaFin:    INSUMOS_CONFIG.diaFin
+    }).catch(function(e){ console.warn('fbSaveInsumosConfig', e); });
+  } catch(e) { console.warn('fbSaveInsumosConfig', e); }
 }
 
 function fbSaveInsumos() {

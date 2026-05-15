@@ -85,6 +85,7 @@ let currentClientInmId=null;
 let CLIENTS_INM=[];
 let PERSONAL_INM=[];
 let INSUMOS_REQUESTS=[]; /* {id,personalId,servicioId,folio,fecha,status,items:[{catalogoId,nombre,unidad,precio,cantidad,subtotal,esPersonalizado}],notas,total,presupuesto,revisadoPor,revisadoFecha} */
+let INSUMOS_CONFIG={diaInicio:15,diaFin:25}; /* Período de recepción de solicitudes (días del mes) */
 
 let INSUMOS_CATALOGO=[
   /* JARCIERÍA */

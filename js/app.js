@@ -5737,7 +5737,7 @@ function renderPIServicios(){
           <p style="font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px;">📦 Insumos</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap;">
             <span style="font-size:11px;color:${_txt};font-weight:600;">💰 Presupuesto: $${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
-            <span style="font-size:11px;color:${_txt};font-weight:600;">🔁 ${frLbl} · Solicitud del 15 al 25</span>
+            <span style="font-size:11px;color:${_txt};font-weight:600;">🔁 ${frLbl} · Solicitud días ${INSUMOS_CONFIG.diaInicio||15}-${INSUMOS_CONFIG.diaFin||25}</span>
           </div>
         </div>`;})()}
       </div>`;}).join('')
@@ -6131,7 +6131,7 @@ function _insumosInfoBlock(ps){
     <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;">📦 Insumos</p>
     <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
       ${ps.presupuestoInsumos?`<span style="font-size:12px;font-weight:600;color:${txt};">💰 Presupuesto: $${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
-      <span style="font-size:12px;font-weight:600;color:${txt};">🔁 ${frLbl} · Solicitud del 15 al 25</span>
+      <span style="font-size:12px;font-weight:600;color:${txt};">🔁 ${frLbl} · Solicitud días ${INSUMOS_CONFIG.diaInicio||15}-${INSUMOS_CONFIG.diaFin||25}</span>
       ${tieneSol
         ?`<span style="font-size:11px;color:#1A7A3B;font-weight:600;">✅ Período cubierto: ${solInfo}</span>`
         :`<span style="font-size:11px;color:#C0392B;font-weight:600;">⏳ Sin solicitud en el período actual</span>`}
@@ -6139,17 +6139,20 @@ function _insumosInfoBlock(ps){
   </div>`;
 }
 
-/* ── Recordatorios de insumos (días 15, 20, 24 del mes) ── */
+/* ── Recordatorios de insumos (día inicio, mitad y último día del período) ── */
 function _checkInsumosReminders(){
   const hoy=new Date();
   const dia=hoy.getDate();
-  /* Solo disparar en días clave del período 15-25 */
-  if(dia!==15&&dia!==20&&dia!==24)return;
-  /* Evitar enviar más de una vez por día (localStorage dedup) */
+  const dI=INSUMOS_CONFIG.diaInicio||15;
+  const dF=INSUMOS_CONFIG.diaFin||25;
+  const dMid=dI+Math.floor((dF-dI)/2);
+  const dLast=dF-1;
+  /* Solo disparar en días clave */
+  if(dia!==dI&&dia!==dMid&&dia!==dLast)return;
+  /* Evitar enviar más de una vez por día */
   const dedupKey='ins-reminder-'+hoy.toISOString().slice(0,10);
   if(localStorage.getItem(dedupKey))return;
-  const mesBase15=hoy.getMonth();
-  const yearBase=hoy.getFullYear();
+  const mesBase15=hoy.getMonth();const yearBase=hoy.getFullYear();
   const svActivos=(PROPERTY_SERVICES||[]).filter(ps=>ps.status==='activo'&&(ps.presupuestoInsumos||ps.frecuenciaInsumos));
   if(!svActivos.length)return;
   const faltantes=svActivos.filter(ps=>{
@@ -6162,12 +6165,13 @@ function _checkInsumosReminders(){
   });
   if(!faltantes.length)return;
   localStorage.setItem(dedupKey,'1');
-  const msgPI = dia===15 ? 'Ya puedes enviar tu solicitud de insumos (del 15 al 25)'
-              : dia===20 ? '⏰ Recuerda: aún no has enviado tu solicitud de insumos'
-              : '⚠️ Último día mañana — envía hoy tu solicitud de insumos';
-  const msgSV = dia===15 ? `${faltantes.length} contrato(s) esperan su solicitud de insumos este período`
-              : dia===20 ? `Recordatorio: ${faltantes.length} contrato(s) aún sin solicitud`
-              : `⚠️ Último aviso: ${faltantes.length} contrato(s) sin solicitud de insumos`;
+  const rango=`del ${dI} al ${dF}`;
+  const msgPI = dia===dI  ? `Ya puedes enviar tu solicitud de insumos (${rango})`
+              : dia===dMid? `⏰ Recuerda: aún no has enviado tu solicitud de insumos`
+              : `⚠️ Último día mañana — envía hoy tu solicitud de insumos`;
+  const msgSV = dia===dI  ? `${faltantes.length} contrato(s) esperan solicitud de insumos (${rango})`
+              : dia===dMid? `Recordatorio: ${faltantes.length} contrato(s) aún sin solicitud`
+              : `⚠️ Último aviso: ${faltantes.length} contrato(s) sin solicitud`;
   faltantes.forEach(ps=>{
     const piAsignados=(PERSONAL_INM||[]).filter(p=>p.puedeInsumos&&(p.serviciosAsignados||[]).includes(ps.id));
     if(piAsignados.length)pushNotif('personal_inm','📦','amber','📅 Solicitud de insumos',`${msgPI} — ${ps.folio} · ${ps.cliente.nombre}`);
@@ -7330,7 +7334,7 @@ function renderPIInsumos(activeTab){
   /* ── Pestaña: Solicitudes (período actual + botón nueva) ── */
   const _renderTabSolicitudes=()=>{
     const hoyDia=new Date().getDate();
-    const ventanaAbierta=hoyDia>=15&&hoyDia<=25;
+    const ventanaAbierta=hoyDia>=(INSUMOS_CONFIG.diaInicio||15)&&hoyDia<=(INSUMOS_CONFIG.diaFin||25);
     /* solicitudes del período actual de cada servicio */
     const misPS=PROPERTY_SERVICES.filter(ps=>(p.serviciosAsignados||[]).includes(ps.id)&&ps.status==='activo');
     const recentReqs=misReqs.slice(0,5);
@@ -7352,11 +7356,11 @@ function renderPIInsumos(activeTab){
     const ventanaBanner=ventanaAbierta
       ?`<div style="padding:8px 12px;border-radius:8px;background:${dark?'rgba(26,122,59,.15)':'#E8F5EC'};border:.5px solid #1A7A3B;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
           <span style="font-size:13px;">✅</span>
-          <span style="font-size:12px;font-weight:600;color:#1A7A3B;">Ventana de solicitudes abierta (días 15-25)</span>
+          <span style="font-size:12px;font-weight:600;color:#1A7A3B;">Ventana de solicitudes abierta (días ${INSUMOS_CONFIG.diaInicio||15}-${INSUMOS_CONFIG.diaFin||25})</span>
         </div>`
       :`<div style="padding:8px 12px;border-radius:8px;background:${dark?'rgba(160,92,0,.12)':'#FFF3CD'};border:.5px solid #A05C00;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
           <span style="font-size:13px;">📅</span>
-          <span style="font-size:12px;font-weight:600;color:#A05C00;">Las solicitudes se envían del día 15 al 25 de cada mes</span>
+          <span style="font-size:12px;font-weight:600;color:#A05C00;">Las solicitudes se envían del día ${INSUMOS_CONFIG.diaInicio||15} al ${INSUMOS_CONFIG.diaFin||25} de cada mes</span>
         </div>`;
     return`${ventanaBanner}
       <button class="btn-royal" style="width:100%;margin-bottom:14px;" onclick="abrirNuevaInsumoSol()">+ Nueva solicitud</button>
@@ -7547,9 +7551,10 @@ function abrirNuevaInsumoSol(psId){
   /* Si no se pasa psId y tiene 1 solo servicio, usarlo directo */
   const misPS=PROPERTY_SERVICES.filter(ps=>p.serviciosAsignados.includes(ps.id)&&ps.status==='activo');
   if(!misPS.length){showToast('amber','⚠️','No tienes servicios activos asignados.');return;}
-  /* Verificar ventana de envío: del 15 al 25 de cada mes */
+  /* Verificar ventana de envío configurada */
   const hoyDia=new Date().getDate();
-  if(hoyDia<15||hoyDia>25){showToast('amber','📅','Las solicitudes de insumos se pueden enviar del día 15 al 25 de cada mes.');return;}
+  const _dI=INSUMOS_CONFIG.diaInicio||15;const _dF=INSUMOS_CONFIG.diaFin||25;
+  if(hoyDia<_dI||hoyDia>_dF){showToast('amber','📅',`Las solicitudes de insumos se pueden enviar del día ${_dI} al ${_dF} de cada mes.`);return;}
   /* Si tiene múltiples y no se pasó ID, mostrar selector */
   if(!psId&&misPS.length>1){_insumoSeleccionarServicio(p,misPS);return;}
   const ps=psId?PROPERTY_SERVICES.find(x=>x.id===psId):misPS[0];
@@ -7780,7 +7785,8 @@ function clonarInsumoSol(reqId){
   const p=_getPIData();if(!p)return;
   const ps=PROPERTY_SERVICES.find(x=>x.id===r.servicioId);if(!ps)return;
   const hoyDia=new Date().getDate();
-  if(hoyDia<15||hoyDia>25){showToast('amber','📅','Las solicitudes se envían del día 15 al 25 de cada mes.');return;}
+  const _cI=INSUMOS_CONFIG.diaInicio||15;const _cF=INSUMOS_CONFIG.diaFin||25;
+  if(hoyDia<_cI||hoyDia>_cF){showToast('amber','📅',`Las solicitudes se envían del día ${_cI} al ${_cF} de cada mes.`);return;}
   _insumoSolServicioId=ps.id;
   _insumoEditId=null; /* es nueva solicitud, no edición */
   _renderInsumoForm(p,ps);
@@ -7902,8 +7908,24 @@ function renderAdminInsumos(activeTab){
   const tabHistorialHtml=`${_insHistorialFiltros(reqs,'adm')}
     <div id="adm-historial-list">${reqs.length?reqs.map(r=>_insReqCard(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:30px 0;">Sin solicitudes registradas.</p>`}</div>`;
 
+  /* ── Config editable: período de recepción ── */
+  const configHtml=`<div style="border:.5px solid ${bdr};border-radius:10px;padding:12px 16px;margin-bottom:14px;">
+    <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 10px;">⚙️ Período de recepción de insumos</p>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label style="font-size:12px;font-weight:600;color:${txt};">Día inicio</label>
+      <input type="number" id="ins-cfg-inicio" min="1" max="28" value="${INSUMOS_CONFIG.diaInicio||15}"
+        style="width:60px;padding:5px 8px;border-radius:7px;border:.5px solid ${bdr};font-size:13px;font-weight:700;text-align:center;background:${dark?'rgba(255,255,255,.07)':'#F4F8FF'};color:${txt};">
+      <label style="font-size:12px;font-weight:600;color:${txt};">Día fin</label>
+      <input type="number" id="ins-cfg-fin" min="1" max="31" value="${INSUMOS_CONFIG.diaFin||25}"
+        style="width:60px;padding:5px 8px;border-radius:7px;border:.5px solid ${bdr};font-size:13px;font-weight:700;text-align:center;background:${dark?'rgba(255,255,255,.07)':'#F4F8FF'};color:${txt};">
+      <button onclick="guardarInsumosConfig()" style="padding:6px 14px;border-radius:8px;background:#185FA5;color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;">Guardar</button>
+      <span style="font-size:11px;color:${lbl};">Actualmente: día ${INSUMOS_CONFIG.diaInicio||15} al ${INSUMOS_CONFIG.diaFin||25}</span>
+    </div>
+  </div>`;
+
   el.innerHTML=`
     <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">📦 Solicitudes de insumos</p>
+    ${configHtml}
     <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
       <button style="${tabBtnStyle(tab==='actual')}" onclick="renderAdminInsumos('actual')">📅 ${mesNom} ${hoy.getFullYear()}</button>
       <button style="${tabBtnStyle(tab==='historial')}" onclick="renderAdminInsumos('historial')">🕐 Historial</button>
@@ -7911,6 +7933,19 @@ function renderAdminInsumos(activeTab){
     ${tab==='actual'?tabActualHtml:tabHistorialHtml}`;
   el._allReqs=reqs;el._dark=dark;
 }
+function guardarInsumosConfig(){
+  const inicio=parseInt((document.getElementById('ins-cfg-inicio')||{}).value||15);
+  const fin=parseInt((document.getElementById('ins-cfg-fin')||{}).value||25);
+  if(isNaN(inicio)||isNaN(fin)||inicio<1||fin>31||inicio>=fin){
+    showToast('amber','⚠️','Rango inválido. El día inicio debe ser menor que el día fin (ej: 1-28).');return;
+  }
+  INSUMOS_CONFIG.diaInicio=inicio;
+  INSUMOS_CONFIG.diaFin=fin;
+  fbSaveInsumosConfig();
+  renderAdminInsumos();
+  showToast('green','⚙️',`Período actualizado: días ${inicio} al ${fin} de cada mes.`);
+}
+
 function admFiltrarHistorial(){
   const el=document.getElementById('admin-insumos-content');if(!el||!el._allReqs)return;
   const mes=(document.getElementById('adm-f-mes')||{}).value||'';
@@ -8390,7 +8425,7 @@ function renderClienteInmContrato(){
       ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="cinm-dg-item cinm-full"><span>D\xEDas de servicio</span><p style="line-height:1.7;">'+_fmtDiasServicio(ps.diasServicio,'full')+'</p></div>':''}
       <div class="cinm-dg-item cinm-full"><span>Descripción</span><p>${ps.descripcion}</p></div>
       ${ps.presupuestoInsumos?`<div class="cinm-dg-item"><span>💰 Presupuesto insumos</span><p>$${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})} / período</p></div>`:''}
-      ${ps.frecuenciaInsumos?`<div class="cinm-dg-item"><span>🔁 Pedidos de insumos</span><p>${ps.frecuenciaInsumos===1?'Mensual':ps.frecuenciaInsumos===2?'Bimestral':'Trimestral'} · día 15</p></div>`:''}
+      ${ps.frecuenciaInsumos?`<div class="cinm-dg-item"><span>🔁 Pedidos de insumos</span><p>${ps.frecuenciaInsumos===1?'Mensual':ps.frecuenciaInsumos===2?'Bimestral':'Trimestral'} · días ${INSUMOS_CONFIG.diaInicio||15}-${INSUMOS_CONFIG.diaFin||25}</p></div>`:''}
     </div>
 
     <div class="div" style="margin:12px 0;"></div>
