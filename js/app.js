@@ -10176,6 +10176,7 @@ let _weValOpen = new Set();
 let _weSocOpen = new Set();
 let _urgOpen   = new Set();
 const _esc = s => String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+function fmtDate(iso){const d=new Date(iso+'T12:00:00');return d.toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});}
 
 function _wePopulateRedes()  { _renderWeRedes(); }
 function _wePopulateValores(){ _renderWeValores(); }
