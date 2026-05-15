@@ -152,6 +152,7 @@
         <a href="index.html" class="btn-site btn-site-ext" title="Sitio web">🌐 <span class="btn-site-label">Sitio web</span></a>
         <button id="btn-install-pwa" class="btn-site" onclick="installPWA()" title="Agregar a pantalla de inicio" style="display:none;">📲 <span class="btn-site-label">Instalar</span></button>
         <button class="btn-refresh-mob" onclick="location.reload()" title="Refrescar app">↺</button>
+        <button class="btn-tour-trigger" id="btn-tour" onclick="startTour(currentRole)" title="Tour de la app" style="display:none;">❓</button>
         <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar a modo claro" aria-label="Cambiar tema">
           <span class="tt-icon">☀️</span>
           <span class="tt-label">Claro</span>
@@ -1523,7 +1524,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=150"></script>
+<script src="js/app.js?v=151"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 
@@ -1577,6 +1578,44 @@
     </div>
   </div>
   <iframe id="pdf-frame" style="flex:1;border:none;width:100%;background:#fff;" sandbox="allow-same-origin allow-scripts allow-modals allow-popups allow-forms allow-downloads"></iframe>
+</div>
+
+<!-- ══ TOUR INTERACTIVO ══ -->
+<style>
+/* ── Tour overlay ── */
+#tour-overlay{position:fixed;inset:0;z-index:9900;display:none;pointer-events:none;}
+#tour-spotlight{position:fixed;display:none;border-radius:10px;box-shadow:0 0 0 4000px rgba(4,44,83,.75);pointer-events:none;transition:left .3s,top .3s,width .3s,height .3s;z-index:9901;}
+#tour-card{position:fixed;z-index:9902;background:var(--card-bg,#fff);border-radius:16px;padding:20px 22px;width:300px;max-width:calc(100vw - 24px);box-shadow:0 10px 40px rgba(0,0,0,.3);font-family:var(--font-sans,Inter,sans-serif);pointer-events:all;transition:left .3s,top .3s;}
+.tour-progress-lbl{font-size:10px;font-weight:700;color:#8a9bb0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.tour-step-title{font-size:15px;font-weight:700;color:var(--text-main,#042C53);margin-bottom:8px;line-height:1.3;}
+.tour-step-body{font-size:13px;color:var(--text-mid,#5C7A9A);line-height:1.65;margin-bottom:16px;}
+.tour-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.tour-dots-row{display:flex;gap:4px;align-items:center;}
+.td{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,.15);transition:all .25s;}
+.td.on{background:#1A56DB;width:14px;border-radius:4px;}
+.tour-btns-row{display:flex;gap:6px;align-items:center;}
+#t-btn-skip{font-size:11px;color:#8a9bb0;background:none;border:none;cursor:pointer;padding:4px 6px;touch-action:manipulation;}
+#t-btn-prev{background:var(--blue-light,#E6F1FB);color:var(--blue-dark,#042C53);border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;}
+#t-btn-next{background:#1A56DB;color:#fff;border:none;border-radius:9px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;}
+.btn-tour-trigger{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer;touch-action:manipulation;transition:background .15s;}
+.btn-tour-trigger:hover{background:rgba(255,255,255,.25);}
+</style>
+
+<div id="tour-overlay">
+  <div id="tour-spotlight"></div>
+  <div id="tour-card">
+    <p class="tour-progress-lbl" id="tour-step-num">1 / 8</p>
+    <p class="tour-step-title"  id="tour-step-title">Título</p>
+    <p class="tour-step-body"   id="tour-step-body">Descripción.</p>
+    <div class="tour-footer">
+      <div class="tour-dots-row" id="tour-dots"></div>
+      <div class="tour-btns-row">
+        <button id="t-btn-skip" onclick="endTour()">Saltar</button>
+        <button id="t-btn-prev" onclick="tourPrev()" style="display:none;">← Atrás</button>
+        <button id="t-btn-next" onclick="tourNext()">Siguiente →</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 </body>

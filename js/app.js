@@ -1348,6 +1348,11 @@ function launchApp(role,nombre,zona){
   setTimeout(initChatFab, 200);
   /* ── Banner instalación PWA ── */
   setTimeout(_showInstallBanner, 3000);
+  /* ── Botón tour ── */
+  const _tourBtn=document.getElementById('btn-tour');
+  if(_tourBtn)_tourBtn.style.display='';
+  /* ── Auto-tour primer ingreso ── */
+  _checkAutoTour(role);
 }
 
 function doLogout(){
@@ -10620,3 +10625,160 @@ function restoreSession(){
     setTimeout(_checkInsumosReminders, 3000);
   }
 })();
+
+/* ══════════════════════════════════════════════════════════
+   TOUR INTERACTIVO — guía paso a paso por rol
+   ══════════════════════════════════════════════════════════ */
+const _TOUR = {
+  admin:[
+    {c:true,  title:'👋 ¡Bienvenido, Administrador!', body:'Te mostramos las secciones clave de tu panel en menos de 2 minutos. Puedes saltar el tour cuando quieras.'},
+    {target:'#nav-admin',        title:'🗺️ Menú de navegación',        body:'Accede a Resumen, Clientes, Solicitudes, Personal, Quincenas, Servicios, Sitio Web e Inmuebles desde aquí.'},
+    {target:'#a-resumen',        title:'📊 Resumen del negocio',        body:'Vista diaria: solicitudes activas, ingresos del mes, trabajadores disponibles y últimas actividades.', nav:['admin','resumen']},
+    {target:'#a-clientes',       title:'👥 Clientes y solicitudes',     body:'Gestiona reservas, reasigna trabajadores, aprueba servicios y consulta el detalle de cada cliente.', nav:['admin','clientes']},
+    {target:'#a-personal',       title:'🧑‍💼 Personal',               body:'Administra trabajadores y supervisores: zonas, disponibilidad, evaluaciones y acceso a la app.', nav:['admin','personal']},
+    {target:'#a-quincenas',      title:'💰 Quincenas',                  body:'Cierre quincenal por trabajador, montos generados y comprobantes de pago.', nav:['admin','quincenas']},
+    {target:'#a-servicios',      title:'⚙️ Configuración de servicios', body:'Define tipos de servicio, duraciones, zonas de cobertura y niveles de urgencia con sus recargos.', nav:['admin','servicios']},
+    {target:'#a-web',            title:'🌐 Editor del sitio web',       body:'Edita textos, promociones, redes sociales y la sección Portal. Los cambios se reflejan al instante.', nav:['admin','web']},
+    {target:'#a-inmuebles',      title:'🏢 Inmuebles corporativos',     body:'Gestiona contratos de limpieza para edificios y hoteles: personal, asistencias, insumos y reportes.', nav:['admin','inmuebles']},
+    {c:true, finish:true, title:'🎉 ¡Tour completado!', body:'Ya conoces tu panel. Pulsa ❓ en la cabecera para relanzar el tour cuando quieras.'},
+  ],
+  cliente:[
+    {c:true,  title:'👋 ¡Bienvenido a tu portal!',   body:'Te mostramos cómo reservar servicios, ver tu historial y chatear con tu equipo de limpieza.'},
+    {target:'#nav-cliente',      title:'🗺️ Tu menú principal',          body:'Navega entre Inicio, Reservar, Historial, Mensajes y tu Perfil desde esta barra.'},
+    {target:'#c-resumen',        title:'🏠 Tu inicio',                  body:'Promociones activas, tu próximo servicio y acceso rápido para hacer una nueva reserva.', nav:['cliente','resumen']},
+    {target:'#c-reserva',        title:'➕ Reservar un servicio',       body:'Elige tipo de limpieza, fecha, horario y trabajador disponible. Proceso guiado paso a paso.', nav:['cliente','reserva']},
+    {target:'#c-historial',      title:'📋 Tu historial',               body:'Todos tus servicios anteriores con opción de evaluar y ver el detalle de cada sesión.', nav:['cliente','historial']},
+    {target:'#c-mensajes',       title:'💬 Mensajes',                   body:'Chatea con tu trabajador asignado o con soporte de AYALYM para cualquier consulta.', nav:['cliente','mensajes']},
+    {c:true, finish:true, title:'🎉 ¡Listo!',                          body:'Ya sabes usar tu portal. Pulsa ❓ para ver el tour de nuevo en cualquier momento.'},
+  ],
+  trabajador:[
+    {c:true,  title:'👋 ¡Hola, trabajador!',          body:'Aquí gestionas tus servicios, agenda y comunicación con clientes y supervisores.'},
+    {target:'#t-solicitudes',    title:'📋 Solicitudes del día',        body:'Servicios asignados hoy. Acéptalos, revisa la dirección del cliente y márcalos como completados.', nav:['trabajador','solicitudes']},
+    {target:'#t-agenda',         title:'📅 Tu agenda',                  body:'Vista semanal de tus servicios. Identifica horarios libres y ocupados fácilmente.', nav:['trabajador','agenda']},
+    {target:'#t-realizados',     title:'✅ Servicios realizados',       body:'Historial completo de trabajos y las evaluaciones que te han dejado los clientes.', nav:['trabajador','realizados']},
+    {target:'#t-mensajes-t',     title:'💬 Mensajes',                   body:'Comunícate con el cliente, tu supervisor y administración desde una sola pantalla.', nav:['trabajador','mensajes-t']},
+    {c:true, finish:true, title:'🎉 ¡Listo!',                          body:'Ya dominas tu panel. Usa ❓ para ver el tour de nuevo.'},
+  ],
+  supervisor:[
+    {c:true,  title:'👋 ¡Bienvenido, Supervisor!',   body:'Desde aquí monitorizas asistencias, generas reportes de visita y supervisas al personal de inmuebles.'},
+    {target:'#sv-asistencias-sv',title:'✅ Asistencias de hoy',         body:'Ve en tiempo real quién marcó entrada y salida en cada inmueble. Detecta ausencias al instante.', nav:['supervisor','asistencias-sv']},
+    {target:'#sv-inmuebles-sv',  title:'🏢 Inmuebles a cargo',          body:'Lista de contratos asignados. Genera reportes de visita con observaciones y fotos.', nav:['supervisor','inmuebles-sv']},
+    {target:'#sv-mapa-sv',       title:'🗺️ Mapa de personal',           body:'Ubica a tu equipo en tiempo real sobre el mapa y verifica que estén en el lugar correcto.', nav:['supervisor','mapa-sv']},
+    {target:'#sv-eval-sv',       title:'⭐ Evaluaciones',               body:'Consulta el desempeño de los trabajadores de tu equipo y sus calificaciones.', nav:['supervisor','eval-sv']},
+    {c:true, finish:true, title:'🎉 ¡Tour completado!',                 body:'Recuerda generar reportes de visita después de cada supervisión. ¡Buen trabajo!'},
+  ],
+  personal_inm:[
+    {c:true,  title:'👋 ¡Bienvenido!',               body:'Aquí registras tu asistencia, solicitas insumos y revisas la información de tu inmueble.'},
+    {target:'#pi-asistencias',   title:'📍 Tu asistencia',              body:'Marca tu entrada y salida. El sistema detecta automáticamente el inmueble por geolocalización GPS.', nav:['personal_inm','asistencias']},
+    {target:'#pi-insumos',       title:'🧹 Solicitar insumos',          body:'Pide los materiales que necesitas para el período. Tu supervisor revisará y aprobará la solicitud.', nav:['personal_inm','insumos']},
+    {target:'#pi-equipo',        title:'👥 Mi equipo',                  body:'Conoce a los compañeros asignados al mismo inmueble y al supervisor responsable.', nav:['personal_inm','equipo']},
+    {c:true, finish:true, title:'🎉 ¡Listo!',                          body:'Recuerda marcar tu entrada y salida puntualmente. ¡Buen trabajo!'},
+  ],
+  cliente_inm:[
+    {c:true,  title:'👋 ¡Bienvenido a tu portal corporativo!', body:'Monitoreas en tiempo real todo lo que ocurre en tu inmueble — asistencias, reportes e insumos.'},
+    {target:'#cinm-inicio',      title:'📊 Tu resumen',                 body:'KPIs del servicio: asistencias del mes, reportes generados y estado de tu presupuesto de insumos.', nav:['cliente_inm','inicio']},
+    {target:'#cinm-asistencias', title:'👥 Asistencias del personal',   body:'Consulta entradas y salidas con hora exacta y verificación GPS de ubicación.', nav:['cliente_inm','asistencias']},
+    {target:'#cinm-reportes',    title:'📋 Reportes del supervisor',    body:'Cada visita del supervisor genera un reporte digital con observaciones y recomendaciones.', nav:['cliente_inm','reportes']},
+    {target:'#cinm-insumos-ci',  title:'🧹 Insumos y presupuesto',     body:'Ve las solicitudes de materiales aprobadas y el presupuesto del período autorizado.', nav:['cliente_inm','insumos-ci']},
+    {c:true, finish:true, title:'🎉 ¡Tour completado!',                 body:'Recibirás notificaciones automáticas de cada evento importante en tu inmueble.'},
+  ],
+};
+
+let _tourRole='', _tourSteps=[], _tourIdx=0;
+
+function startTour(role){
+  if(!role)return;
+  _tourRole=role;
+  _tourSteps=_TOUR[role]||[];
+  if(!_tourSteps.length)return;
+  _tourIdx=0;
+  const ov=document.getElementById('tour-overlay');
+  if(ov)ov.style.display='block';
+  _renderTourStep();
+}
+
+function _renderTourStep(){
+  const step=_tourSteps[_tourIdx];
+  if(!step){endTour();return;}
+
+  /* Navigate section if needed */
+  if(step.nav){
+    const[role,sec]=step.nav;
+    navGo(role,sec,null);
+    /* Update nav active button visually */
+    const pfx={cliente:'c-',trabajador:'t-',supervisor:'sv-',admin:'a-',personal_inm:'pi-',cliente_inm:'cinm-'}[role];
+    const navEl=document.getElementById('nav-'+role);
+    if(navEl){
+      navEl.querySelectorAll('.bnav-btn,.nav-btn').forEach(b=>{
+        const oc=b.getAttribute('onclick')||'';
+        if(oc.includes("'"+sec+"'")||oc.includes('"'+sec+'"')){b.classList.add('active');}else{b.classList.remove('active');}
+      });
+    }
+  }
+
+  /* Update card */
+  const el=id=>document.getElementById(id);
+  if(el('tour-step-num')) el('tour-step-num').textContent=`${_tourIdx+1} / ${_tourSteps.length}`;
+  if(el('tour-step-title')) el('tour-step-title').textContent=step.title;
+  if(el('tour-step-body'))  el('tour-step-body').textContent=step.body;
+
+  /* Dots */
+  const dots=el('tour-dots');
+  if(dots) dots.innerHTML=_tourSteps.map((_,i)=>`<span class="td${i===_tourIdx?' on':''}"></span>`).join('');
+
+  /* Buttons */
+  const prev=el('t-btn-prev'), next=el('t-btn-next');
+  if(prev) prev.style.display=_tourIdx>0?'':'none';
+  if(next) next.textContent=step.finish?'✓ Finalizar':'Siguiente →';
+
+  /* Spotlight */
+  const sp=el('tour-spotlight'), card=el('tour-card');
+  const target=step.target&&!step.c?document.querySelector(step.target):null;
+
+  if(!target){
+    if(sp) sp.style.display='none';
+    if(card){card.style.top='50%';card.style.left='50%';card.style.transform='translate(-50%,-50%)';}
+  } else {
+    target.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(()=>{
+      const r=target.getBoundingClientRect();
+      const pad=8;
+      if(sp){
+        sp.style.cssText=`position:fixed;display:block;border-radius:10px;box-shadow:0 0 0 4000px rgba(4,44,83,.75);pointer-events:none;z-index:9901;transition:left .3s,top .3s,width .3s,height .3s;left:${r.left-pad}px;top:${r.top-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px;`;
+      }
+      _positionTourCard(r,card,pad);
+    },step.nav?350:80);
+  }
+}
+
+function _positionTourCard(r,card,pad){
+  if(!card)return;
+  const cw=card.offsetWidth||300,ch=card.offsetHeight||200;
+  const vw=window.innerWidth,vh=window.innerHeight,gap=14,m=12;
+  let top,left;
+  if(r.bottom+pad+gap+ch<vh){top=r.bottom+pad+gap;left=Math.min(Math.max(r.left,m),vw-cw-m);}
+  else if(r.top-pad-gap-ch>0){top=r.top-pad-gap-ch;left=Math.min(Math.max(r.left,m),vw-cw-m);}
+  else if(r.right+gap+cw<vw){top=Math.max(m,Math.min(r.top,vh-ch-m));left=r.right+gap;}
+  else{top=Math.max(m,Math.min(r.top,vh-ch-m));left=Math.max(m,r.left-gap-cw);}
+  card.style.transform='none';
+  card.style.top=top+'px';
+  card.style.left=left+'px';
+}
+
+function tourNext(){
+  if(_tourIdx<_tourSteps.length-1){_tourIdx++;_renderTourStep();}
+  else endTour();
+}
+function tourPrev(){
+  if(_tourIdx>0){_tourIdx--;_renderTourStep();}
+}
+function endTour(){
+  const ov=document.getElementById('tour-overlay');
+  if(ov)ov.style.display='none';
+  const sp=document.getElementById('tour-spotlight');
+  if(sp)sp.style.display='none';
+  try{localStorage.setItem('ayalym-tour-v1-'+_tourRole,'1');}catch(e){}
+}
+function _checkAutoTour(role){
+  try{if(!localStorage.getItem('ayalym-tour-v1-'+role))setTimeout(()=>startTour(role),1400);}catch(e){}
+}
