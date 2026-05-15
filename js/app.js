@@ -1223,7 +1223,15 @@ function launchApp(role,nombre,zona){
   const avBg={cliente:'#0C447C',trabajador:'#633806',supervisor:'#085041',admin:'#3C3489',cliente_inm:'#065535',personal_inm:'#5B2C6F'}[role]||'#042C53';
   const av=document.getElementById('header-av');if(av){av.textContent=init;av.style.background=avBg;}
   const uname=document.getElementById('header-uname');if(uname)uname.textContent=nombre;
-  const urole=document.getElementById('header-urole');if(urole)urole.textContent={cliente:'Cliente',trabajador:'Trabajador',supervisor:'Supervisor',admin:'Administrador',cliente_inm:'Cliente Inmuebles',personal_inm:'Personal Inmuebles'}[role];
+  const urole=document.getElementById('header-urole');
+  if(urole){
+    if(role==='personal_inm'){
+      const _piH=PERSONAL_INM.find(x=>x.id===currentPersonalId);
+      urole.textContent=(_piH&&_puestoLabel[_piH.puesto])||'Personal Inmuebles';
+    } else {
+      urole.textContent={cliente:'Cliente',trabajador:'Trabajador',supervisor:'Supervisor',admin:'Administrador',cliente_inm:'Cliente Inmuebles',personal_inm:'Personal Inmuebles'}[role]||role;
+    }
+  }
   document.querySelectorAll('.role-section').forEach(s=>s.style.display='none');
   document.getElementById('role-'+role).style.display='block';
   updateNotifBadge();
@@ -5609,8 +5617,9 @@ function quickLogin(role){
   }
   launchApp(role,p.nombre,p.zona);
   const icons={cliente:'👤',trabajador:'🧹',supervisor:'👁️',admin:'⚙️',personal_inm:'🏢',cliente_inm:'🏢'};
-  const labels={cliente:'Cliente',trabajador:'Trabajador',supervisor:'Supervisor',admin:'Administrador',personal_inm:'Personal Inmuebles',cliente_inm:'Cliente Inmuebles'};
-  showToast('green',icons[role],`Bienvenido/a, ${p.nombre} — ${labels[role]}`);
+  let _toastLabel={cliente:'Cliente',trabajador:'Trabajador',supervisor:'Supervisor',admin:'Administrador',personal_inm:'Personal Inmuebles',cliente_inm:'Cliente Inmuebles'}[role];
+  if(role==='personal_inm'){const _piT=PERSONAL_INM.find(x=>x.id===currentPersonalId);if(_piT&&_puestoLabel[_piT.puesto])_toastLabel=_puestoLabel[_piT.puesto];}
+  showToast('green',icons[role],`Bienvenido/a, ${p.nombre} — ${_toastLabel}`);
 }
 
 /* ═══════════════════════════════════════════
@@ -5920,7 +5929,7 @@ function renderPIPerfil(){
       <div class="av" style="width:52px;height:52px;font-size:${p.photo?'0':'18px'};font-weight:700;background:#085041;color:#fff;flex-shrink:0;">${p.photo?'<img src="'+p.photo+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">':p.initials}</div>
       <div class="pi-session-info">
         <h2>${p.nombre}</h2>
-        <span class="pi-role-badge">🏢 Personal de Inmuebles</span>
+        <span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px;background:${_puestoBg[p.puesto]||'#3D5A7A'};color:${_puestoCol[p.puesto]||'#fff'};">${_puestoLabel[p.puesto]||'Personal'}</span>
         <p style="font-size:11px;color:${lbl};margin-top:4px;">${p.email}</p>
       </div>
     </div>
