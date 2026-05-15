@@ -10295,17 +10295,32 @@ function weAddSocial(){
   _renderWeRedes();
 }
 
-/* ── Live preview of hero ── */
+/* ── Card accordion toggle (for static HTML cards) ── */
+function weToggleCard(bodyId) {
+  const body = document.getElementById(bodyId);
+  const arr  = document.getElementById(bodyId + '-arr');
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (arr) arr.textContent = isOpen ? '▼' : '▲';
+}
+
+/* ── Live preview of hero (dark-mode aware) ── */
 function webPreviewHero() {
+  const dark = document.documentElement.classList.contains('dark-mode');
   const g = id => (document.getElementById(id)||{}).value || '';
+  const prev = document.getElementById('web-hero-preview');
+  if (prev) {
+    prev.style.background = dark ? 'rgba(255,255,255,.05)' : '#f0f4f8';
+  }
   const ey = document.getElementById('wp-eyebrow');
   const h1 = document.getElementById('wp-h1');
   const b1 = document.getElementById('wp-btn1');
   const b2 = document.getElementById('wp-btn2');
-  if (ey) ey.textContent = g('we-hero-eyebrow');
-  if (h1) h1.textContent = [g('we-hero-h1intro'), g('we-hero-h1em'), g('we-hero-h1close')].filter(Boolean).join(' ');
+  if (ey) { ey.textContent = g('we-hero-eyebrow'); ey.style.color = dark ? '#6EAAD8' : '#5A8CB0'; }
+  if (h1) { h1.textContent = [g('we-hero-h1intro'), g('we-hero-h1em'), g('we-hero-h1close')].filter(Boolean).join(' '); h1.style.color = dark ? '#e8edf4' : '#042C53'; }
   if (b1) b1.textContent = g('we-hero-btnprimary');
-  if (b2) b2.textContent = g('we-hero-btnsecondary');
+  if (b2) { b2.textContent = g('we-hero-btnsecondary'); b2.style.color = dark ? '#6EAAD8' : '#1A56DB'; b2.style.borderColor = dark ? '#6EAAD8' : '#1A56DB'; }
 }
 
 /* ── Save functions ── */

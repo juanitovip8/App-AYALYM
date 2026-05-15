@@ -1050,8 +1050,9 @@
 
       <!-- ── PANEL: PROMOCIONES ── -->
       <div id="web-panel-promos">
-        <div class="card promo-admin-card">
-          <p class="ctitle">➕ Nueva promoción</p>
+        <div class="card promo-admin-card" style="padding:0;overflow:hidden;">
+          <div onclick="weToggleCard('we-c-promo-form')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;"><p class="ctitle" style="margin:0;">➕ Nueva promoción</p><span id="we-c-promo-form-arr" style="font-size:12px;color:#5C7A9A;">▲</span></div>
+          <div id="we-c-promo-form" style="padding:0 16px 16px;">
           <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Tipo</p>
           <div class="promo-tipo-pills" id="promo-tipo-pills">
             <button class="ptp-btn active" data-tipo="descuento" onclick="selectPromoTipo('descuento',this)">🏷️ Descuento</button>
@@ -1094,79 +1095,98 @@
           <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;">Vista previa en sitio web</p>
           <div id="promo-preview-wrap"></div>
           <button class="btn-royal" style="margin-top:14px;width:100%;" onclick="addPromocion()">🚀 Publicar en sitio web</button>
+          </div><!-- /we-c-promo-form -->
         </div>
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div onclick="weToggleCard('we-c-promo-list')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;">
             <p class="ctitle" style="margin:0;">📋 Promociones publicadas</p>
-            <span id="promo-count-badge" class="badge" style="background:#E6F1FB;color:#1A56DB;font-size:11px;padding:2px 9px;border-radius:10px;">0 activas</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span id="promo-count-badge" class="badge" style="background:#E6F1FB;color:#1A56DB;font-size:11px;padding:2px 9px;border-radius:10px;">0 activas</span>
+              <span id="we-c-promo-list-arr" style="font-size:12px;color:#5C7A9A;">▲</span>
+            </div>
           </div>
-          <div id="promo-list-admin"><p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin promociones publicadas aún.</p></div>
+          <div id="we-c-promo-list" style="padding:0 16px 14px;">
+            <div id="promo-list-admin"><p style="font-size:13px;color:#5C7A9A;text-align:center;padding:20px 0;">Sin promociones publicadas aún.</p></div>
+          </div>
         </div>
       </div>
 
       <!-- ── PANEL: TEXTOS ── -->
       <div id="web-panel-textos" style="display:none;">
-        <div class="card">
-          <p class="ctitle">✏️ Textos del Hero</p>
-          <div class="fld"><label>Eyebrow (etiqueta sobre el título)</label><input type="text" id="we-hero-eyebrow" placeholder="Limpieza profesional" oninput="webPreviewHero()"></div>
-          <div class="fld"><label>Título — parte 1</label><input type="text" id="we-hero-h1intro" placeholder="¡Espacios" oninput="webPreviewHero()"></div>
-          <div class="fld"><label>Título — parte resaltada (cursiva)</label><input type="text" id="we-hero-h1em" placeholder="limpios," oninput="webPreviewHero()"></div>
-          <div class="fld"><label>Título — cierre</label><input type="text" id="we-hero-h1close" placeholder="entornos felices!" oninput="webPreviewHero()"></div>
-          <div class="fld"><label>Etiqueta precio (antes del monto)</label><input type="text" id="we-hero-pricelabel" placeholder="Reserva desde" oninput="webPreviewHero()"></div>
-          <div class="fld"><label>Botón principal</label><input type="text" id="we-hero-btnprimary" placeholder="✨ Reserva tu limpieza" oninput="webPreviewHero()"></div>
-          <div class="fld"><label>Botón secundario</label><input type="text" id="we-hero-btnsecondary" placeholder="Ver servicios" oninput="webPreviewHero()"></div>
-          <div style="background:#f0f4f8;border-radius:10px;padding:14px;margin:12px 0;" id="web-hero-preview">
-            <p style="font-size:11px;color:#5C7A9A;font-weight:600;text-transform:uppercase;margin-bottom:8px;">Vista previa</p>
-            <div style="font-size:11px;color:#5A8CB0;font-weight:600;margin-bottom:2px;" id="wp-eyebrow"></div>
-            <div style="font-size:18px;font-weight:700;color:#042C53;" id="wp-h1"></div>
-            <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
-              <span style="background:#1A56DB;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;" id="wp-btn1"></span>
-              <span style="border:1.5px solid #1A56DB;color:#1A56DB;padding:4px 10px;border-radius:6px;font-size:12px;" id="wp-btn2"></span>
+        <!-- Card Hero -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div onclick="weToggleCard('we-c-hero')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;">
+            <p class="ctitle" style="margin:0;">✏️ Textos del Hero</p><span id="we-c-hero-arr" style="font-size:12px;color:#5C7A9A;">▲</span>
+          </div>
+          <div id="we-c-hero" style="padding:0 16px 16px;">
+            <div class="fld"><label>Eyebrow (etiqueta sobre el título)</label><input type="text" id="we-hero-eyebrow" placeholder="Limpieza profesional" oninput="webPreviewHero()"></div>
+            <div class="fld"><label>Título — parte 1</label><input type="text" id="we-hero-h1intro" placeholder="¡Espacios" oninput="webPreviewHero()"></div>
+            <div class="fld"><label>Título — parte resaltada (cursiva)</label><input type="text" id="we-hero-h1em" placeholder="limpios," oninput="webPreviewHero()"></div>
+            <div class="fld"><label>Título — cierre</label><input type="text" id="we-hero-h1close" placeholder="entornos felices!" oninput="webPreviewHero()"></div>
+            <div class="fld"><label>Etiqueta precio (antes del monto)</label><input type="text" id="we-hero-pricelabel" placeholder="Reserva desde" oninput="webPreviewHero()"></div>
+            <div class="fld"><label>Botón principal</label><input type="text" id="we-hero-btnprimary" placeholder="✨ Reserva tu limpieza" oninput="webPreviewHero()"></div>
+            <div class="fld"><label>Botón secundario</label><input type="text" id="we-hero-btnsecondary" placeholder="Ver servicios" oninput="webPreviewHero()"></div>
+            <div id="web-hero-preview" style="border-radius:10px;padding:14px;margin:12px 0;border:.5px solid #D8E8F5;">
+              <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;color:#5C7A9A;">Vista previa</p>
+              <div style="font-size:11px;font-weight:600;margin-bottom:2px;" id="wp-eyebrow"></div>
+              <div style="font-size:18px;font-weight:700;" id="wp-h1"></div>
+              <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+                <span style="background:#1A56DB;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;" id="wp-btn1"></span>
+                <span style="border:1.5px solid #1A56DB;padding:4px 10px;border-radius:6px;font-size:12px;" id="wp-btn2"></span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="card">
-          <p class="ctitle">📊 Stats / Números clave</p>
-          <div class="frow">
-            <div><label>Stat 1 — número</label><input type="text" id="we-s1num" placeholder="+500"></div>
-            <div><label>Stat 1 — etiqueta</label><input type="text" id="we-s1lbl" placeholder="Servicios realizados"></div>
+        <!-- Card Stats -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div onclick="weToggleCard('we-c-stats')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;">
+            <p class="ctitle" style="margin:0;">📊 Stats / Números clave</p><span id="we-c-stats-arr" style="font-size:12px;color:#5C7A9A;">▼</span>
           </div>
-          <div class="frow">
-            <div><label>Stat 2 — número</label><input type="text" id="we-s2num" placeholder="100%"></div>
-            <div><label>Stat 2 — etiqueta</label><input type="text" id="we-s2lbl" placeholder="Satisfacción garantizada"></div>
-          </div>
-          <div class="frow">
-            <div><label>Stat 3 — número</label><input type="text" id="we-s3num" placeholder="REPSE"></div>
-            <div><label>Stat 3 — etiqueta</label><input type="text" id="we-s3lbl" placeholder="ACR15827 / 2025"></div>
-          </div>
-          <div class="frow">
-            <div><label>Stat 4 — número</label><input type="text" id="we-s4num" placeholder="CDMX"></div>
-            <div><label>Stat 4 — etiqueta</label><input type="text" id="we-s4lbl" placeholder="Área Metropolitana"></div>
+          <div id="we-c-stats" style="display:none;padding:0 16px 16px;">
+            <div class="frow"><div><label>Stat 1 — número</label><input type="text" id="we-s1num" placeholder="+500"></div><div><label>Stat 1 — etiqueta</label><input type="text" id="we-s1lbl" placeholder="Servicios realizados"></div></div>
+            <div class="frow"><div><label>Stat 2 — número</label><input type="text" id="we-s2num" placeholder="100%"></div><div><label>Stat 2 — etiqueta</label><input type="text" id="we-s2lbl" placeholder="Satisfacción garantizada"></div></div>
+            <div class="frow"><div><label>Stat 3 — número</label><input type="text" id="we-s3num" placeholder="REPSE"></div><div><label>Stat 3 — etiqueta</label><input type="text" id="we-s3lbl" placeholder="ACR15827 / 2025"></div></div>
+            <div class="frow"><div><label>Stat 4 — número</label><input type="text" id="we-s4num" placeholder="CDMX"></div><div><label>Stat 4 — etiqueta</label><input type="text" id="we-s4lbl" placeholder="Área Metropolitana"></div></div>
           </div>
         </div>
-        <div class="card">
-          <p class="ctitle">🏢 Sección Nosotros</p>
-          <div class="fld"><label>Párrafo destacado</label><textarea id="we-nos-highlight" rows="3" style="resize:vertical;"></textarea></div>
-          <div class="fld"><label>Párrafo 1</label><textarea id="we-nos-p1" rows="3" style="resize:vertical;"></textarea></div>
-          <div class="fld"><label>Párrafo 2</label><textarea id="we-nos-p2" rows="3" style="resize:vertical;"></textarea></div>
+        <!-- Card Nosotros -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div onclick="weToggleCard('we-c-nosotros')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;">
+            <p class="ctitle" style="margin:0;">🏢 Sección Nosotros</p><span id="we-c-nosotros-arr" style="font-size:12px;color:#5C7A9A;">▼</span>
+          </div>
+          <div id="we-c-nosotros" style="display:none;padding:0 16px 16px;">
+            <div class="fld"><label>Párrafo destacado</label><textarea id="we-nos-highlight" rows="3" style="resize:vertical;"></textarea></div>
+            <div class="fld"><label>Párrafo 1</label><textarea id="we-nos-p1" rows="3" style="resize:vertical;"></textarea></div>
+            <div class="fld"><label>Párrafo 2</label><textarea id="we-nos-p2" rows="3" style="resize:vertical;"></textarea></div>
+          </div>
         </div>
-        <button class="btn-royal" style="width:100%;" onclick="saveWebTextos()">💾 Guardar textos</button>
+        <button class="btn-royal" style="width:100%;margin-top:4px;" onclick="saveWebTextos()">💾 Guardar textos</button>
       </div>
 
       <!-- ── PANEL: CONTACTO ── -->
       <div id="web-panel-contacto" style="display:none;">
-        <div class="card">
-          <p class="ctitle">📞 Datos de contacto</p>
-          <div class="fld"><label>Dirección</label><textarea id="we-ctc-dir" rows="3" style="resize:vertical;" placeholder="Prol. Paseo de la Reforma No. 799..."></textarea></div>
-          <div class="fld"><label>Horario de atención</label><textarea id="we-ctc-horario" rows="2" style="resize:vertical;" placeholder="Lunes a Viernes: 8:00 — 18:00 hrs"></textarea></div>
-          <div class="fld"><label>Enlace WhatsApp (wa.me/...)</label><input type="url" id="we-ctc-wa" placeholder="https://wa.me/521XXXXXXXXXX"></div>
+        <!-- Card Contacto -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div onclick="weToggleCard('we-c-ctc')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;">
+            <p class="ctitle" style="margin:0;">📞 Datos de contacto</p><span id="we-c-ctc-arr" style="font-size:12px;color:#5C7A9A;">▲</span>
+          </div>
+          <div id="we-c-ctc" style="padding:0 16px 16px;">
+            <div class="fld"><label>Dirección</label><textarea id="we-ctc-dir" rows="3" style="resize:vertical;" placeholder="Prol. Paseo de la Reforma No. 799..."></textarea></div>
+            <div class="fld"><label>Horario de atención</label><textarea id="we-ctc-horario" rows="2" style="resize:vertical;" placeholder="Lunes a Viernes: 8:00 — 18:00 hrs"></textarea></div>
+            <div class="fld"><label>Enlace WhatsApp (wa.me/...)</label><input type="url" id="we-ctc-wa" placeholder="https://wa.me/521XXXXXXXXXX"></div>
+          </div>
         </div>
-        <div class="card">
-          <p class="ctitle">📜 Registro REPSE</p>
-          <div class="fld"><label>Número de registro</label><input type="text" id="we-repse-num" placeholder="Aviso de registro REPSE"></div>
-          <div class="fld"><label>Empresa registrada</label><input type="text" id="we-repse-empresa" placeholder="No. ACR15827/2025 — AYA..."></div>
+        <!-- Card REPSE -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div onclick="weToggleCard('we-c-repse')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;">
+            <p class="ctitle" style="margin:0;">📜 Registro REPSE</p><span id="we-c-repse-arr" style="font-size:12px;color:#5C7A9A;">▼</span>
+          </div>
+          <div id="we-c-repse" style="display:none;padding:0 16px 16px;">
+            <div class="fld"><label>Número de registro</label><input type="text" id="we-repse-num" placeholder="Aviso de registro REPSE"></div>
+            <div class="fld"><label>Empresa registrada</label><input type="text" id="we-repse-empresa" placeholder="No. ACR15827/2025 — AYA..."></div>
+          </div>
         </div>
-        <button class="btn-royal" style="width:100%;" onclick="saveWebContacto()">💾 Guardar contacto</button>
+        <button class="btn-royal" style="width:100%;margin-top:4px;" onclick="saveWebContacto()">💾 Guardar contacto</button>
       </div>
 
       <!-- ── PANEL: REDES SOCIALES ── -->
@@ -1472,7 +1492,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-db.js?v=9"></script>
-<script src="js/app.js?v=146"></script>
+<script src="js/app.js?v=147"></script>
 <!-- Google Maps se carga dinámicamente solo cuando se abre la sección de mapa -->
 <script src="js/theme.js?v=1"></script>
 
