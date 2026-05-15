@@ -5733,6 +5733,13 @@ function renderPIServicios(){
           </div>
         </div>
         ${diasHtml?'<div style="margin-top:8px;"><span style="font-size:10px;font-weight:600;color:'+_lbl+';text-transform:uppercase;letter-spacing:.5px;">D\xEDas de servicio</span>'+diasHtml+'</div>':''}
+        ${(()=>{const piD=_getPIData();if(!piD||!piD.puedeInsumos||!ps.presupuestoInsumos)return'';const frLbl=ps.frecuenciaInsumos===2?'Bimestral':ps.frecuenciaInsumos===3?'Trimestral':'Mensual';return`<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:${_dark?'rgba(24,95,165,.12)':'#EEF5FF'};border:.5px solid ${_dark?'rgba(24,95,165,.3)':'#C5D8EC'};">
+          <p style="font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 4px;">📦 Insumos</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:11px;color:${_txt};font-weight:600;">💰 Presupuesto: $${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>
+            <span style="font-size:11px;color:${_txt};font-weight:600;">🔁 ${frLbl} · Solicitud el día 15</span>
+          </div>
+        </div>`;})()}
       </div>`;}).join('')
     :'<p style="font-size:12px;color:#5C7A9A;text-align:center;padding:24px 0;">Sin servicios asignados aún.</p>';
   el.innerHTML=`
@@ -6105,6 +6112,66 @@ function buildPersonalAsignadoHtml(psId,showActions){
   </div>`;
 }
 
+/* ── Bloque de info de insumos para el detalle de contrato ── */
+function _insumosInfoBlock(ps){
+  if(!ps.presupuestoInsumos&&!ps.frecuenciaInsumos)return'';
+  const dark=document.documentElement.classList.contains('dark-mode');
+  const txt=dark?'#e8edf4':'#042C53';const lbl=dark?'#8AACCA':'#5C7A9A';
+  const frLbl=ps.frecuenciaInsumos===2?'Bimestral':ps.frecuenciaInsumos===3?'Trimestral':'Mensual';
+  /* Solicitudes del período actual */
+  const frecMeses=ps.frecuenciaInsumos||1;
+  const hoy=new Date();
+  const mesBase=Math.floor(hoy.getMonth()/frecMeses)*frecMeses;
+  const periodoInicio=new Date(hoy.getFullYear(),mesBase,1).toISOString().slice(0,7);
+  const periodoFin=new Date(hoy.getFullYear(),mesBase+frecMeses,1).toISOString().slice(0,7);
+  const solPeriodo=(INSUMOS_REQUESTS||[]).filter(r=>r.servicioId===ps.id&&r.status!=='rechazado'&&(r.fecha||'')>=periodoInicio&&(r.fecha||'')<periodoFin);
+  const tieneSol=solPeriodo.length>0;
+  const solInfo=tieneSol?solPeriodo.map(r=>`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:7px;background:${_insStatusBg[r.status]||'#eee'};color:${_insStatusCol[r.status]||'#333'};">${r.folio} · ${_insStatusLabel[r.status]||r.status}</span>`).join(' '):'';
+  return`<div style="margin-top:10px;padding:10px 14px;border-radius:10px;background:${dark?'rgba(24,95,165,.10)':'#EEF5FF'};border:.5px solid ${dark?'rgba(24,95,165,.25)':'#C5D8EC'};">
+    <p style="font-size:11px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px;">📦 Insumos</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+      ${ps.presupuestoInsumos?`<span style="font-size:12px;font-weight:600;color:${txt};">💰 Presupuesto: $${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})}</span>`:''}
+      <span style="font-size:12px;font-weight:600;color:${txt};">🔁 ${frLbl} · Solicitud el día 15</span>
+      ${tieneSol
+        ?`<span style="font-size:11px;color:#1A7A3B;font-weight:600;">✅ Período cubierto: ${solInfo}</span>`
+        :`<span style="font-size:11px;color:#C0392B;font-weight:600;">⏳ Sin solicitud en el período actual</span>`}
+    </div>
+  </div>`;
+}
+
+/* ── Recordatorios del día 15 ── */
+function _checkInsumosReminders(){
+  const hoy=new Date();
+  if(hoy.getDate()!==15)return; /* Solo el día 15 */
+  const mesBase15=hoy.getMonth();
+  const yearBase=hoy.getFullYear();
+  /* Servicios activos con insumos configurados */
+  const svActivos=(PROPERTY_SERVICES||[]).filter(ps=>ps.status==='activo'&&(ps.presupuestoInsumos||ps.frecuenciaInsumos));
+  if(!svActivos.length)return;
+  /* Para cada servicio, verificar si hay solicitud en el período actual */
+  const faltantes=svActivos.filter(ps=>{
+    const frecMeses=ps.frecuenciaInsumos||1;
+    const mesBase=Math.floor(mesBase15/frecMeses)*frecMeses;
+    if(mesBase15!==mesBase)return false; // este mes no le toca
+    const pInicio=new Date(yearBase,mesBase,1).toISOString().slice(0,7);
+    const pFin=new Date(yearBase,mesBase+frecMeses,1).toISOString().slice(0,7);
+    return!(INSUMOS_REQUESTS||[]).some(r=>r.servicioId===ps.id&&r.status!=='rechazado'&&(r.fecha||'')>=pInicio&&(r.fecha||'')<pFin);
+  });
+  if(!faltantes.length)return;
+  /* Notificar a PI de cada servicio faltante */
+  faltantes.forEach(ps=>{
+    const piAsignados=(PERSONAL_INM||[]).filter(p=>p.puedeInsumos&&(p.serviciosAsignados||[]).includes(ps.id));
+    piAsignados.forEach(()=>{
+      pushNotif('personal_inm','📦','amber','📅 Recordatorio: Solicitud de insumos',`Hoy es día 15 — solicita tus insumos para ${ps.folio} · ${ps.cliente.nombre}`);
+    });
+  });
+  /* Notificar al supervisor con resumen de faltantes */
+  if(faltantes.length){
+    const folios=faltantes.map(ps=>ps.folio).join(', ');
+    pushNotif('supervisor','📋','amber','📅 Insumos pendientes',`${faltantes.length} contrato(s) sin solicitud de insumos hoy: ${folios}`);
+  }
+}
+
 /* ── Detalle expandido de un servicio ── */
 function buildInmDetail(ps,showActions){
   const cs=ps.contratoStatus||'sin_contrato';
@@ -6203,6 +6270,7 @@ function buildInmDetail(ps,showActions){
   ${pagoHtml}
   ${fiscHtml}
   ${ps.notas?`<p style="font-size:11px;color:#5C7A9A;margin-top:8px;background:var(--blue-light);border-radius:6px;padding:6px 10px;">📝 ${ps.notas}</p>`:''}
+  ${_insumosInfoBlock(ps)}
   ${histHtml}
   ${buildPersonalAsignadoHtml(ps.id,showActions)}
   ${reportesHtml}
@@ -6876,6 +6944,7 @@ function buildInmDetailSV(ps){
     ${ps.descripcion?`<div class="inm-field" style="grid-column:1/-1;"><strong>Descripción</strong>${ps.descripcion}</div>`:''}
   </div>
   ${ps.notas?`<p style="font-size:11px;color:#5C7A9A;margin-top:8px;background:var(--blue-light);border-radius:6px;padding:6px 10px;">📝 ${ps.notas}</p>`:''}
+  ${_insumosInfoBlock(ps)}
   ${buildPersonalAsignadoHtml(ps.id,false)}
   ${reportesHtml}
   <div id="att-sv-${ps.id}">${_buildSvAttHtml('sv_'+ps.id,ps)}</div>`;
@@ -7376,6 +7445,9 @@ function abrirNuevaInsumoSol(psId){
   /* Si no se pasa psId y tiene 1 solo servicio, usarlo directo */
   const misPS=PROPERTY_SERVICES.filter(ps=>p.serviciosAsignados.includes(ps.id)&&ps.status==='activo');
   if(!misPS.length){showToast('amber','⚠️','No tienes servicios activos asignados.');return;}
+  /* Verificar que sea día 15 */
+  const hoyDia=new Date().getDate();
+  if(hoyDia!==15){showToast('amber','📅','Las solicitudes de insumos solo se pueden enviar el día 15 de cada mes.');return;}
   /* Si tiene múltiples y no se pasó ID, mostrar selector */
   if(!psId&&misPS.length>1){_insumoSeleccionarServicio(p,misPS);return;}
   const ps=psId?PROPERTY_SERVICES.find(x=>x.id===psId):misPS[0];
@@ -8187,13 +8259,15 @@ function renderClienteInmContrato(){
     <div class="div" style="margin:12px 0;"></div>
     <p class="cinm-section-title">🧹 Servicio</p>
     <div class="cinm-detail-grid">
-      <div class="cinm-dg-item"><span>Frecuencia</span><p>${_cinmFreqLabel(ps.frecuencia)}</p></div>
+      <div class="cinm-dg-item"><span>Frecuencia de servicio</span><p>${_cinmFreqLabel(ps.frecuencia)}</p></div>
       <div class="cinm-dg-item"><span>Hora entrada</span><p>${ps.hora} hrs</p></div>
       ${ps.horaSalida?'<div class="cinm-dg-item"><span>Hora salida</span><p>'+ps.horaSalida+' hrs</p></div>':''}
       <div class="cinm-dg-item"><span>Inicio</span><p>${formatDateShort(ps.fechaInicio)}</p></div>
       <div class="cinm-dg-item"><span>Fin</span><p>${formatDateShort(ps.fechaFin)}</p></div>
       ${(ps.diasServicio&&ps.diasServicio.length)?'<div class="cinm-dg-item cinm-full"><span>D\xEDas de servicio</span><p style="line-height:1.7;">'+_fmtDiasServicio(ps.diasServicio,'full')+'</p></div>':''}
       <div class="cinm-dg-item cinm-full"><span>Descripción</span><p>${ps.descripcion}</p></div>
+      ${ps.presupuestoInsumos?`<div class="cinm-dg-item"><span>💰 Presupuesto insumos</span><p>$${ps.presupuestoInsumos.toLocaleString('es-MX',{minimumFractionDigits:2})} / período</p></div>`:''}
+      ${ps.frecuenciaInsumos?`<div class="cinm-dg-item"><span>🔁 Pedidos de insumos</span><p>${ps.frecuenciaInsumos===1?'Mensual':ps.frecuenciaInsumos===2?'Bimestral':'Trimestral'} · día 15</p></div>`:''}
     </div>
 
     <div class="div" style="margin:12px 0;"></div>
@@ -9165,5 +9239,7 @@ function restoreSession(){
   } finally {
     if (overlay) overlay.style.display = 'none';
     restoreSession(); /* auto-login si hay sesión guardada */
+    /* Recordatorios de insumos el día 15 (se ejecuta con datos ya cargados) */
+    setTimeout(_checkInsumosReminders, 3000);
   }
 })();
