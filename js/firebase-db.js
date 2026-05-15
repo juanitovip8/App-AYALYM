@@ -233,6 +233,10 @@ async function loadAllData() {
   } else {
     PROMOTIONS.length = 0;
   }
+  /* Sync active promos to localStorage for landing page (landing-promos.js) */
+  try {
+    localStorage.setItem('ayalym-promos', JSON.stringify(PROMOTIONS.filter(function(p){ return p.activo !== false; })));
+  } catch(ex){}
 
   /* 9. SUPERVISOR ASISTENCIAS — siempre cargar desde Firestore (datos operativos, nunca purgar) */
   var svAstSnap = await _col('sv_asistencias').get();

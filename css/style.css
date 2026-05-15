@@ -18,8 +18,8 @@
   --red-light:#FCEBEB;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font-sans);background:#F4F8FD;-webkit-font-smoothing:antialiased;overflow-x:hidden;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;}
-html{scroll-behavior:auto;}
+html{scroll-behavior:auto;overflow-x:hidden;}
+body{font-family:var(--font-sans);background:#F4F8FD;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;}
 
 /* ── TOUCH OPTIMIZATIONS — global ── */
 button,.btn-royal,.btn-sm,.btn-sec,.btn-light,.btn-danger,.btn-amber,.btn-revoke,.btn-restore,.btn-edit,.btn-logout,.status-pill,.nav-btn,.bnav-btn,.dash-tab,.msg-tab,.svc-tab,.df-btn,.ctab,.srole-btn,.clean-type-card,.pay-btn,.promo-card,.notif-bell,.lb-eye{

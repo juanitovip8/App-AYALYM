@@ -1054,7 +1054,7 @@
       <div id="web-panel-promos">
         <div class="card promo-admin-card" style="padding:0;overflow:hidden;">
           <div onclick="weToggleCard('we-c-promo-form')" style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;user-select:none;"><p class="ctitle" style="margin:0;">➕ Nueva promoción</p><span id="we-c-promo-form-arr" style="font-size:12px;color:#5C7A9A;">▲</span></div>
-          <div id="we-c-promo-form" style="padding:0 16px 16px;">
+          <div id="we-c-promo-form" style="padding:0 16px 16px;max-height:calc(100vh - 200px);overflow-y:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;">
           <p style="font-size:11px;font-weight:600;color:#5C7A9A;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Tipo</p>
           <div class="promo-tipo-pills" id="promo-tipo-pills">
             <button class="ptp-btn active" data-tipo="descuento" onclick="selectPromoTipo('descuento',this)">🏷️ Descuento</button>
