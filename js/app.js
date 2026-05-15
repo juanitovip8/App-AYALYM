@@ -7812,15 +7812,65 @@ function renderSVInsumos(activeTab){
       :`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes en ${mesNom} ${hoy.getFullYear()}.</p>`);
   const tabHistorialHtml=`${_insHistorialFiltros(allReqs,'sv')}
     <div id="sv-historial-list">${allReqs.length?allReqs.map(r=>_insReqRowAcordeon(r,dark,true)).join(''):`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin solicitudes registradas.</p>`}</div>`;
+  const tabCatalogoHtml=_renderSVCatalogo(dark,txt,lbl,bdr);
   el.innerHTML=`
-    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">🧹 Solicitudes de insumos</p>
-    <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;">
+    <p style="font-size:15px;font-weight:700;color:${txt};margin:0 0 12px;">🧹 Insumos</p>
+    <div style="display:flex;gap:6px;margin-bottom:14px;background:${dark?'rgba(255,255,255,.05)':'#F0F6FF'};border-radius:10px;padding:4px;flex-wrap:wrap;">
       <button style="${tabBtnStyle(tab==='actual')}" onclick="renderSVInsumos('actual')">📅 ${mesNom} ${hoy.getFullYear()}</button>
       <button style="${tabBtnStyle(tab==='historial')}" onclick="renderSVInsumos('historial')">🕐 Historial</button>
+      <button style="${tabBtnStyle(tab==='catalogo')}" onclick="renderSVInsumos('catalogo')">📋 Catálogo</button>
     </div>
-    ${tab==='actual'?tabActualHtml:tabHistorialHtml}`;
+    ${tab==='actual'?tabActualHtml:tab==='historial'?tabHistorialHtml:tabCatalogoHtml}`;
   /* Guardar reqs para filtro */
   el._allReqs=allReqs;el._dark=dark;
+}
+
+/* ── Catálogo de insumos — vista solo lectura para supervisor ── */
+function _renderSVCatalogo(dark,txt,lbl,bdr){
+  if(!INSUMOS_CATALOGO||!INSUMOS_CATALOGO.length){
+    return`<p style="font-size:13px;color:${lbl};text-align:center;padding:40px 0;">Sin productos en el catálogo.</p>`;
+  }
+  const cats=[...new Set(INSUMOS_CATALOGO.map(x=>x.categoria||'otro'))];
+  const activosTot=INSUMOS_CATALOGO.filter(x=>x.activo).length;
+  const gruposHtml=cats.map(cat=>{
+    const items=INSUMOS_CATALOGO.filter(x=>x.categoria===cat);
+    const activos=items.filter(x=>x.activo).length;
+    const gid='sv-cat-grp-'+cat;
+    return`<div style="border:.5px solid ${bdr};border-radius:10px;overflow:hidden;margin-bottom:10px;">
+      <div onclick="toggleSVCatGroup('${gid}')" style="padding:10px 14px;background:${dark?'rgba(255,255,255,.05)':'#EEF5FF'};display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:13px;font-weight:700;color:#185FA5;">${_CATS_LABEL[cat]||cat}</span>
+          <span style="font-size:11px;color:${lbl};background:${dark?'rgba(255,255,255,.08)':'#D9ECFF'};padding:2px 9px;border-radius:10px;">${activos}/${items.length} activos</span>
+        </div>
+        <span id="${gid}-arrow" style="font-size:11px;color:${lbl};">▼</span>
+      </div>
+      <div id="${gid}" style="display:none;">
+        <div style="display:grid;grid-template-columns:1fr 58px 82px 60px;background:${dark?'rgba(255,255,255,.03)':'#F8FBFF'};">
+          <div style="padding:5px 14px;font-size:10px;font-weight:700;color:${lbl};">PRODUCTO</div>
+          <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:center;">UNIDAD</div>
+          <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:right;">PRECIO</div>
+          <div style="padding:5px 8px;font-size:10px;font-weight:700;color:${lbl};text-align:center;">ESTADO</div>
+        </div>
+        ${items.map(item=>`<div style="display:grid;grid-template-columns:1fr 58px 82px 60px;border-top:.5px solid ${bdr};align-items:center;opacity:${item.activo?1:0.45};">
+          <span style="padding:9px 14px;font-size:12px;color:${txt};font-weight:${item.activo?'500':'400'};">${item.nombre}</span>
+          <span style="padding:9px 8px;font-size:11px;color:${lbl};text-align:center;">${item.unidad}</span>
+          <span style="padding:9px 8px;font-size:12px;font-weight:700;color:${txt};text-align:right;">$${item.precio.toFixed(2)}</span>
+          <span style="padding:9px 8px;font-size:13px;text-align:center;">${item.activo?'✅':'⭕'}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  return`<div>
+    <p style="font-size:13px;font-weight:700;color:${txt};margin:0 0 12px;">📋 Catálogo de productos · <span style="color:#185FA5;">${activosTot} activos / ${INSUMOS_CATALOGO.length} total</span></p>
+    ${gruposHtml}
+  </div>`;
+}
+function toggleSVCatGroup(gid){
+  const el=document.getElementById(gid);const arrow=document.getElementById(gid+'-arrow');
+  if(!el)return;
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  if(arrow)arrow.textContent=open?'▼':'▲';
 }
 function svFiltrarHistorial(){
   const el=document.getElementById('sv-insumos-content');if(!el||!el._allReqs)return;
