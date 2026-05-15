@@ -4238,7 +4238,7 @@ function exportAsistenciasPDF(){
   .header-text{}
   .logo{font-size:22px;font-weight:800;color:#042C53;letter-spacing:-0.5px;line-height:1;}
   .logo span{color:#185FA5;}
-  .logo-tag{font-size:9px;color:#5C7A9A;margin-top:2px;letter-spacing:.5px;}
+  .logo-tag{font-size:9px;color:#5C7A9A;margin-top:2px;letter-spacing:.3px;line-height:1.6;}
   h2{font-size:13px;color:#042C53;margin:0 0 3px;}
   p.sub{font-size:10px;color:#666;margin-bottom:0;}
   .filter-badge{display:inline-block;background:#E6F1FB;color:#0C447C;border-radius:4px;padding:2px 8px;font-size:9px;font-weight:600;margin-top:4px;}
@@ -4250,10 +4250,10 @@ function exportAsistenciasPDF(){
   @media print{@page{margin:12mm 15mm;} button{display:none;}}
 </style></head><body>
   <div class="header">
-    <img src="${logoSrc}" alt="AYA Limpieza y Mantenimiento">
+    <img src="${logoSrc}" alt="AYALYM">
     <div class="header-text">
       <div class="logo">AYA<span>LYM</span></div>
-      <div class="logo-tag">Limpieza y Mantenimiento Profesional</div>
+      <div class="logo-tag">Servicios de limpieza profesional.<br><span style="color:#185FA5;font-weight:700;">¡Espacios limpios, Entornos felices!</span></div>
     </div>
     <div style="margin-left:auto;text-align:right;">
       <h2>Reporte de Asistencias de Supervisores</h2>
@@ -4322,7 +4322,7 @@ function exportPIAsistenciasPDF(){
   .header img.logo-img{width:52px;height:52px;object-fit:contain;border-radius:10px;}
   .logo{font-size:22px;font-weight:800;color:#042C53;letter-spacing:-0.5px;line-height:1;}
   .logo span{color:#185FA5;}
-  .logo-tag{font-size:9px;color:#5C7A9A;margin-top:2px;letter-spacing:.5px;}
+  .logo-tag{font-size:9px;color:#5C7A9A;margin-top:2px;letter-spacing:.3px;line-height:1.6;}
   h2{font-size:13px;color:#042C53;margin:0 0 3px;}
   p.sub{font-size:10px;color:#666;margin-bottom:0;}
   .filter-badge{display:inline-block;background:#E1F5EE;color:#085041;border-radius:4px;padding:2px 8px;font-size:9px;font-weight:600;margin-top:4px;}
@@ -4334,10 +4334,10 @@ function exportPIAsistenciasPDF(){
   @media print{@page{margin:12mm 15mm;} button{display:none;}}
 </style></head><body>
   <div class="header">
-    <img class="logo-img" src="${logoSrc}" alt="AYA Limpieza y Mantenimiento">
+    <img class="logo-img" src="${logoSrc}" alt="AYALYM">
     <div>
       <div class="logo">AYA<span>LYM</span></div>
-      <div class="logo-tag">Limpieza y Mantenimiento Profesional</div>
+      <div class="logo-tag">Servicios de limpieza profesional.<br><span style="color:#185FA5;font-weight:700;">¡Espacios limpios, Entornos felices!</span></div>
     </div>
     ${workerPhotoHtml}
     <div style="margin-left:auto;text-align:right;">
