@@ -10841,7 +10841,8 @@ function _checkAutoTour(role){
    MÓDULO AGENDA — Servicios especiales asignados por admin/supervisor
    ══════════════════════════════════════════════════════════════════ */
 
-const AGENDA_ROL_COLORS={trabajador:'#1A56DB',supervisor:'#7C3AED',personal_inm:'#059669',cliente:'#D97706'};
+const AGENDA_ROL_COLORS={trabajador:'#1A56DB',supervisor:'#7C3AED',personal_inm:'#059669',admin:'#042C53',cliente:'#D97706'};
+function _refreshAgenda(){if(currentRole==='admin')renderAdminAgenda();else if(currentRole==='supervisor')renderSupervisorAgenda();}
 const AGENDA_TIPO_LABELS={limpieza:'Limpieza',mantenimiento:'Mantenimiento',inspeccion:'Inspección',capacitacion:'Capacitación',reunion:'Reunión',otro:'Otro'};
 const AGENDA_ESTADO_LABELS={pendiente:'⏳ Pendiente',confirmado:'✅ Confirmado',en_curso:'🔄 En curso',completado:'✔️ Completado',cancelado:'❌ Cancelado'};
 
@@ -10917,9 +10918,9 @@ function _renderAgCalendar(){
     </div>`;
   }
   return`<div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-    <button class="btn-sm" style="padding:4px 12px;" onclick="_agMonth--;if(_agMonth<0){_agMonth=11;_agYear--;}renderAdminAgenda()">‹</button>
+    <button class="btn-sm" style="padding:4px 12px;" onclick="_agMonth--;if(_agMonth<0){_agMonth=11;_agYear--;}_refreshAgenda()">‹</button>
     <p style="font-weight:600;font-size:13px;margin:0;">${MESES[m]} ${y}</p>
-    <button class="btn-sm" style="padding:4px 12px;" onclick="_agMonth++;if(_agMonth>11){_agMonth=0;_agYear++;}renderAdminAgenda()">›</button>
+    <button class="btn-sm" style="padding:4px 12px;" onclick="_agMonth++;if(_agMonth>11){_agMonth=0;_agYear++;}_refreshAgenda()">›</button>
   </div>
   <div class="ag-cal-grid">${days.map(d=>`<div class="ag-cal-head">${d}</div>`).join('')}${cells}</div></div>`;
 }
@@ -10962,20 +10963,27 @@ function _renderAgDayEvents(ctx){
 function openAgendaModal(id){
   _agEditId=id;
   const item=id!=null?AGENDA_ITEMS.find(a=>a.id===id):null;
-  const assignees=[];
-  WORKERS.forEach(w=>assignees.push({id:w.id,nombre:w.name,rol:'trabajador'}));
-  SUPERVISORS.forEach(s=>assignees.push({id:s.id,nombre:s.name,rol:'supervisor'}));
-  PERSONAL_INM.forEach(p=>assignees.push({id:p.id,nombre:p.nombre,rol:'personal_inm'}));
-  let list=assignees;
-  if(currentRole==='supervisor'&&currentSupervisorRef){
-    const myIds=currentSupervisorRef.assignedWorkers||[];
-    list=assignees.filter(a=>a.rol==='trabajador'&&myIds.includes(a.id));
-  }
+  const isSinAsignar=item?.asignadoA?.rol==='admin';
   const tipos=['limpieza','mantenimiento','inspeccion','capacitacion','reunion','otro'];
   const estados=['pendiente','confirmado','en_curso','completado','cancelado'];
-  const selA=item?.asignadoA?`${item.asignadoA.rol}:${item.asignadoA.id}`:'';
   const modal=document.getElementById('modal-agenda');if(!modal)return;
-  modal.innerHTML=`<div class="confirm-card" style="max-width:480px;max-height:90vh;overflow-y:auto;">
+  const initFiltro=(!item||isSinAsignar)?'trabajador':(item.asignadoA?.rol==='personal_inm'?'personal_inm':item.asignadoA?.rol==='supervisor'?'supervisor':'trabajador');
+  const selA=item&&!isSinAsignar?`${item.asignadoA.rol}:${item.asignadoA.id}`:'';
+  const _buildOpts=(rolF,selV)=>{
+    let lst=[];
+    if(rolF==='trabajador'){
+      let ws=[...WORKERS];
+      if(currentRole==='supervisor'&&currentSupervisorRef){const myIds=currentSupervisorRef.assignedWorkers||[];ws=ws.filter(w=>myIds.includes(w.id));}
+      ws.forEach(w=>lst.push({id:w.id,nombre:w.name,rol:'trabajador'}));
+    } else if(rolF==='personal_inm'){
+      PERSONAL_INM.forEach(p=>lst.push({id:p.id,nombre:p.nombre,rol:'personal_inm'}));
+    } else if(rolF==='supervisor'&&currentRole==='admin'){
+      SUPERVISORS.forEach(s=>lst.push({id:s.id,nombre:s.name,rol:'supervisor'}));
+    }
+    const rl={trabajador:'Trabaj. Reservas',supervisor:'Supervisor',personal_inm:'Personal Inm.'};
+    return'<option value="">-- Selecciona persona --</option>'+lst.map(a=>`<option value="${a.rol}:${a.id}"${selV===`${a.rol}:${a.id}`?' selected':''}>${_esc(a.nombre)} (${rl[a.rol]||a.rol})</option>`).join('');
+  };
+  modal.innerHTML=`<div class="confirm-card" style="max-width:500px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <p class="ctitle" style="margin:0;">${item?'✏️ Editar servicio':'➕ Nuevo servicio en agenda'}</p>
       <button class="btn-sec" style="padding:4px 10px;" onclick="document.getElementById('modal-agenda').style.display='none'">✕</button>
@@ -10983,10 +10991,23 @@ function openAgendaModal(id){
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div class="fld"><label>Título *</label><input type="text" id="ag-titulo" placeholder="Ej: Limpieza de oficinas" value="${_esc(item?.titulo||'')}"></div>
       <div class="fld"><label>Tipo de servicio</label><select id="ag-tipo">${tipos.map(t=>`<option value="${t}"${item?.tipo===t?' selected':''}>${AGENDA_TIPO_LABELS[t]}</option>`).join('')}</select></div>
-      <div class="fld"><label>Asignar a *</label><select id="ag-asignado" onchange="_checkAgDisp()">
-        <option value="">-- Selecciona persona --</option>
-        ${list.map(a=>{const rl={trabajador:'Trabajador',supervisor:'Supervisor',personal_inm:'Personal Inm.'}[a.rol]||a.rol;return`<option value="${a.rol}:${a.id}"${selA===`${a.rol}:${a.id}`?' selected':''}>${_esc(a.nombre)} (${rl})</option>`;}).join('')}
-      </select></div>
+      ${currentRole==='admin'?`<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:#042C53;padding:8px 10px;border-radius:8px;background:var(--blue-light,#EFF6FF);">
+        <input type="checkbox" id="ag-sin-asignar" ${isSinAsignar?'checked':''} style="width:15px;height:15px;accent-color:#042C53;" onchange="_toggleSinAsignar()">
+        Sin asignar a trabajador — lo realiza el Admin</label>`:''}
+      <div id="ag-asignado-wrap" style="${isSinAsignar?'display:none;':''}">
+        <div class="fld"><label>Tipo de personal</label>
+          <select id="ag-tipo-filtro" onchange="_filterAgAssignees()">
+            <option value="trabajador"${initFiltro==='trabajador'?' selected':''}>👷 Trabajadores de reservas</option>
+            <option value="personal_inm"${initFiltro==='personal_inm'?' selected':''}>🏢 Personal inmuebles</option>
+            ${currentRole==='admin'?`<option value="supervisor"${initFiltro==='supervisor'?' selected':''}>🧑‍💼 Supervisores</option>`:''}
+          </select>
+        </div>
+        <div class="fld"><label>Asignar a *</label>
+          <select id="ag-asignado" onchange="_checkAgDisp()">
+            ${_buildOpts(initFiltro,selA)}
+          </select>
+        </div>
+      </div>
       <div class="frow">
         <div class="fld"><label>Fecha *</label><input type="date" id="ag-fecha" value="${item?.fecha||new Date().toISOString().split('T')[0]}" onchange="_checkAgDisp()"></div>
       </div>
@@ -11034,6 +11055,32 @@ function _checkAgDisp(){
   }
 }
 
+function _filterAgAssignees(){
+  const rolF=(document.getElementById('ag-tipo-filtro')||{}).value||'trabajador';
+  const selEl=document.getElementById('ag-asignado');if(!selEl)return;
+  let lst=[];
+  if(rolF==='trabajador'){
+    let ws=[...WORKERS];
+    if(currentRole==='supervisor'&&currentSupervisorRef){const myIds=currentSupervisorRef.assignedWorkers||[];ws=ws.filter(w=>myIds.includes(w.id));}
+    ws.forEach(w=>lst.push({id:w.id,nombre:w.name,rol:'trabajador'}));
+  } else if(rolF==='personal_inm'){
+    PERSONAL_INM.forEach(p=>lst.push({id:p.id,nombre:p.nombre,rol:'personal_inm'}));
+  } else if(rolF==='supervisor'&&currentRole==='admin'){
+    SUPERVISORS.forEach(s=>lst.push({id:s.id,nombre:s.name,rol:'supervisor'}));
+  }
+  const rl={trabajador:'Trabaj. Reservas',supervisor:'Supervisor',personal_inm:'Personal Inm.'};
+  selEl.innerHTML='<option value="">-- Selecciona persona --</option>'+
+    lst.map(a=>`<option value="${a.rol}:${a.id}">${_esc(a.nombre)} (${rl[a.rol]||a.rol})</option>`).join('');
+  _checkAgDisp();
+}
+function _toggleSinAsignar(){
+  const cb=document.getElementById('ag-sin-asignar');
+  const wrap=document.getElementById('ag-asignado-wrap');
+  const dispMsg=document.getElementById('ag-disp-msg');
+  if(!cb||!wrap)return;
+  if(cb.checked){wrap.style.display='none';if(dispMsg)dispMsg.style.display='none';}
+  else{wrap.style.display='';_checkAgDisp();}
+}
 function saveAgendaItem(){
   const titulo=((document.getElementById('ag-titulo')||{}).value||'').trim();
   const tipo=(document.getElementById('ag-tipo')||{}).value||'otro';
@@ -11044,14 +11091,20 @@ function saveAgendaItem(){
   const notas=((document.getElementById('ag-notas')||{}).value||'').trim();
   const estadoEl=document.getElementById('ag-estado');
   const estado=estadoEl?estadoEl.value:'pendiente';
+  const sinAsignarCb=document.getElementById('ag-sin-asignar');
+  const sinAsignar=sinAsignarCb&&sinAsignarCb.checked;
   if(!titulo){showToast('amber','⚠️','Escribe un título');return;}
-  if(!aVal){showToast('amber','⚠️','Selecciona a quién asignar');return;}
+  if(!sinAsignar&&!aVal){showToast('amber','⚠️','Selecciona a quién asignar');return;}
   if(!fecha){showToast('amber','⚠️','Selecciona una fecha');return;}
-  const[rol,idStr]=aVal.split(':');const assigneeId=parseInt(idStr);
-  let nombre='';
-  if(rol==='trabajador'){const w=WORKERS.find(x=>x.id===assigneeId);nombre=w?.name||'';}
-  else if(rol==='supervisor'){const s=SUPERVISORS.find(x=>x.id===assigneeId);nombre=s?.name||'';}
-  else if(rol==='personal_inm'){const p=PERSONAL_INM.find(x=>x.id===assigneeId);nombre=p?.nombre||'';}
+  let rol,assigneeId,nombre;
+  if(sinAsignar){rol='admin';assigneeId=0;nombre='Admin';}
+  else{
+    [rol]=aVal.split(':');assigneeId=parseInt(aVal.split(':')[1]);
+    if(rol==='trabajador'){const w=WORKERS.find(x=>x.id===assigneeId);nombre=w?.name||'';}
+    else if(rol==='supervisor'){const s=SUPERVISORS.find(x=>x.id===assigneeId);nombre=s?.name||'';}
+    else if(rol==='personal_inm'){const p=PERSONAL_INM.find(x=>x.id===assigneeId);nombre=p?.nombre||'';}
+    else nombre='';
+  }
   let porNombre='Admin',porRol=currentRole,porId=0;
   if(currentRole==='supervisor'&&currentSupervisorRef){porNombre=currentSupervisorRef.name;porId=currentSupervisorRef.id;}
   if(_agEditId!=null){
@@ -11088,12 +11141,9 @@ function renderSupervisorAgenda(){
     if(!a.asignadoA)return false;
     if(a.asignadoA.rol==='trabajador'&&myIds.includes(a.asignadoA.id))return true;
     if(a.asignadoA.rol==='supervisor'&&a.asignadoA.id===currentSupervisorRef.id)return true;
+    if(a.asignadoA.rol==='personal_inm')return true;
     return false;
   });
-  const upcoming=all.filter(a=>a.fecha>=todayStr&&a.estado!=='cancelado'&&a.estado!=='completado')
-    .sort((a,b)=>(a.fecha+' '+(a.horaInicio||''))>(b.fecha+' '+(b.horaInicio||''))?1:-1);
-  const past=all.filter(a=>a.fecha<todayStr||a.estado==='completado'||a.estado==='cancelado')
-    .sort((a,b)=>(a.fecha+' '+(a.horaInicio||''))>(b.fecha+' '+(b.horaInicio||''))?-1:1).slice(0,8);
   const card=a=>{
     const c=AGENDA_ROL_COLORS[a.asignadoA?.rol]||'#6B7280';
     const byAdmin=a.asignadoPor?.rol==='admin';
@@ -11122,8 +11172,8 @@ function renderSupervisorAgenda(){
       <button class="btn-sm" onclick="openAgendaModal(null)">+ Asignar servicio</button>
     </div>
     ${_renderAgUpcoming('supervisor')}
-    ${upcoming.length?`<p class="csub" style="font-weight:600;margin:12px 0 8px;">📅 Próximos (${upcoming.length})</p>${upcoming.map(card).join('')}`:'<p style="font-size:13px;color:#5C7A9A;text-align:center;padding:1rem 0;">Sin servicios próximos asignados</p>'}
-    ${past.length?`<p class="csub" style="font-weight:600;margin:12px 0 8px;">📋 Historial reciente</p>${past.map(card).join('')}`:''}
+    ${_renderAgCalendar()}
+    <div id="ag-day-events" style="margin-top:14px;">${_renderAgDayEvents('supervisor')}</div>
   </div>`;
 }
 
